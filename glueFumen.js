@@ -44,8 +44,6 @@ rotationDict.set(1, "left");
 rotationDict.set(2, "reverse");
 rotationDict.set(3, "right");
 
-var allPiecesArr = [];
-
 function checkRotation(x, y, field, piecesArr){
     const piece = field.at(x, y);
 
@@ -167,27 +165,31 @@ function checkFieldEmpty(field){
     return true;
 }
 
-var fumenCode = process.argv[2];
-var page = decoder.decode(fumenCode)[0];
-var field = page.field;
-const height = field.str().split("\n").length - 1;
-var emptyField = makeEmptyField(field, height);
+var fumenCodes = process.argv.slice(2);
+var allPiecesArr = [];
+for(let code of fumenCodes){
+    let inputPages = decoder.decode(code);
+    for(let pageNum = 0; pageNum < inputPages.length; pageNum++){
+        let field = inputPages[pageNum].field;
+        const height = field.str().split("\n").length - 1;
+        let emptyField = makeEmptyField(field, height);
+        allPiecesArr = []
 
-scanField(0, height - 1, field, []);
-var allFumens = [];
-for(let piecesArr of allPiecesArr){
-    let pages = [];
-    pages.push({
-        field: emptyField,
-        operation: piecesArr[0]
-    })
-    for(let i = 1; i < piecesArr.length; i++){
-        pages.push({
-            operation: piecesArr[i]
-        })
+        scanField(0, height - 1, field, []);
+
+        for(let piecesArr of allPiecesArr){
+            let pages = [];
+            pages.push({
+                field: emptyField,
+                operation: piecesArr[0]
+            })
+            for(let i = 1; i < piecesArr.length; i++){
+                pages.push({
+                    operation: piecesArr[i]
+                })
+            }
+            let pieceFumen = encoder.encode(pages);
+            console.log(pieceFumen);
+        }
     }
-    let pieceFumen = encoder.encode(pages);
-    allFumens.push(pieceFumen);
 }
-
-console.log(allFumens.join(" "));
