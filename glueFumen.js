@@ -95,18 +95,15 @@ function checkRotation(x, y, field, piecesArr){
                 newField.set(posX, posY, "X");
             }
 
-            let possPiecesArr = scanField(x, y, newField, newPiecesArr);
-            if(possPiecesArr != null){
-                newField = removeLineClears(newField);
+            newField = removeLineClears(newField);
 
-                const height = newField.str().split("\n").length - 1;
+            const height = newField.str().split("\n").length - 1;
 
-                possPiecesArr = scanField(0, height - 1, newField, possPiecesArr)
-
-                // if the field doesn't have any more pieces it's good
-                if(checkFieldEmpty(newField)){
-                    allPiecesArr.push(possPiecesArr);
-                }
+            let possPiecesArr = scanField(0, height, newField, newPiecesArr)
+            
+            // if the field doesn't have any more pieces it's good
+            if(checkFieldEmpty(newField)){
+                allPiecesArr.push(possPiecesArr);
             }
         }
     }
@@ -165,8 +162,12 @@ function checkFieldEmpty(field){
     return true;
 }
 
-var fumenCodes = process.argv.slice(2);
+var fumenCodes = []
+for(let rawInput of process.argv.slice(2)){
+    fumenCodes.push(...rawInput.split(" "));
+}
 var allPiecesArr = [];
+var allFumens = [];
 for(let code of fumenCodes){
     let inputPages = decoder.decode(code);
     for(let pageNum = 0; pageNum < inputPages.length; pageNum++){
@@ -189,7 +190,8 @@ for(let code of fumenCodes){
                 })
             }
             let pieceFumen = encoder.encode(pages);
-            console.log(pieceFumen);
+            allFumens.push(pieceFumen);
         }
     }
 }
+console.log(allFumens.join(" "));
