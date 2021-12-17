@@ -177,6 +177,10 @@ for(let code of fumenCodes){
         allPiecesArr = []
 
         scanField(0, height - 1, field, []);
+        
+        if(allPiecesArr.length == 0){
+            console.log(code + " couldn't be glued");
+        }
 
         for(let piecesArr of allPiecesArr){
             let pages = [];
@@ -194,4 +198,8 @@ for(let code of fumenCodes){
         }
     }
 }
+if(fumenCodes.length > allFumens.length){
+    console.log("Warning: " + (fumenCodes.length - allFumens.length) + " fumens couldn't be glued");
+}
+
 console.log(allFumens.join(" "));
