@@ -168,6 +168,7 @@ for(let rawInput of process.argv.slice(2)){
 }
 var allPiecesArr = [];
 var allFumens = [];
+var fumenIssues = 0;
 for(let code of fumenCodes){
     let inputPages = decoder.decode(code);
     for(let pageNum = 0; pageNum < inputPages.length; pageNum++){
@@ -180,6 +181,7 @@ for(let code of fumenCodes){
         
         if(allPiecesArr.length == 0){
             console.log(code + " couldn't be glued");
+            fumenIssues++;
         }
 
         for(let piecesArr of allPiecesArr){
@@ -199,7 +201,7 @@ for(let code of fumenCodes){
     }
 }
 if(fumenCodes.length > allFumens.length){
-    console.log("Warning: " + (fumenCodes.length - allFumens.length) + " fumens couldn't be glued");
+    console.log("Warning: " + fumenIssues + " fumens couldn't be glued");
 }
 
 console.log(allFumens.join(" "));
