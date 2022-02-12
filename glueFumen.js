@@ -173,6 +173,7 @@ for(let code of fumenCodes){
     let inputPages = decoder.decode(code);
     for(let pageNum = 0; pageNum < inputPages.length; pageNum++){
         let field = inputPages[pageNum].field;
+        field = removeLineClears(field);
         const height = field.str().split("\n").length - 1;
         let emptyField = makeEmptyField(field, height);
         allPiecesArr = []
