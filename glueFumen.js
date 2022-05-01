@@ -94,16 +94,20 @@ function checkRotation(x, y, field, piecesArr){
                 // change the field to be the piece to be replaced by gray
                 newField.set(posX, posY, "X");
             }
-
             newField = removeLineClears(newField);
 
             const height = newField.str().split("\n").length - 1;
+
+            let oldLen = allPiecesArr.length;
 
             let possPiecesArr = scanField(0, height, newField, newPiecesArr)
             
             // if the field doesn't have any more pieces it's good
             if(checkFieldEmpty(newField)){
                 allPiecesArr.push(possPiecesArr);
+            } else if(oldLen == allPiecesArr.length){
+                // the piece didn't result into a correct glued fumen
+                found = false;
             }
         }
     }
@@ -162,7 +166,7 @@ function checkFieldEmpty(field){
     return true;
 }
 
-var fumenCodes = []
+var fumenCodes = [];
 for(let rawInput of process.argv.slice(2)){
     fumenCodes.push(...rawInput.split(" "));
 }
@@ -198,6 +202,11 @@ for(let code of fumenCodes){
             }
             let pieceFumen = encoder.encode(pages);
             allFumens.push(pieceFumen);
+        }
+
+        if(allPiecesArr.length > 1){
+            // multiple outputs warning
+            console.log(code + " led to " + allPiecesArr.length + " outputs: " + allFumens.join(" "));
         }
     }
 }
