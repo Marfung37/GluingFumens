@@ -199,7 +199,7 @@ function findRemainingPieces(field){
 
 var fumenCodes = [];
 for(let rawInput of process.argv.slice(2)){
-    fumenCodes.push(...rawInput.split(" "));
+    fumenCodes.push(...rawInput.split(/\s/));
 }
 var allPiecesArr = [];
 var allFumens = [];
