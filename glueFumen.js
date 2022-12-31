@@ -44,7 +44,7 @@ rotationDict.set(1, "left");
 rotationDict.set(2, "reverse");
 rotationDict.set(3, "right");
 
-function checkRotation(x, y, field, piecesArr, depth){
+function checkRotation(x, y, field, piecesArr, allPiecesArr, removeLineClearBool, depth=0){
     const piece = field.at(x, y);
 
     const rotationStates = pieceMappings.get(piece);
@@ -98,7 +98,10 @@ function checkRotation(x, y, field, piecesArr, depth){
                 newField.set(posX, posY, "X");
             }
             let oldHeight = newField.str().split("\n").length - 1;
-            newField = removeLineClears(newField);
+            if(removeLineClearBool){
+                newField = removeLineClears(newField);
+            }
+            
 
             const height = newField.str().split("\n").length - 1;
 
@@ -113,7 +116,7 @@ function checkRotation(x, y, field, piecesArr, depth){
 
             let oldLen = allPiecesArr.length;
 
-            let data = scanField(startx, starty, newField, newPiecesArr, depth + 1)
+            let data = scanField(startx, starty, newField, newPiecesArr, allPiecesArr, removeLineClearBool, depth + 1)
             let possPiecesArr = data[0];
             leftoverPieces = data[1];
 
@@ -137,13 +140,13 @@ function checkRotation(x, y, field, piecesArr, depth){
     return [found, leftoverPieces]
 }
 
-function scanField(x, y, field, piecesArr, depth){
+function scanField(x, y, field, piecesArr, allPiecesArr, removeLineClearBool, depth=0){
     var newX = x;
     for(let newY = y; newY >= 0; newY--){
         for(; newX < rowLen; newX++){
             // if it is a piece
             if(field.at(newX, newY) != "X" && field.at(newX, newY) != "_"){
-                let [rotationWorked, leftover] = checkRotation(newX, newY, field, piecesArr, depth)
+                let [rotationWorked, leftover] = checkRotation(newX, newY, field, piecesArr, allPiecesArr, removeLineClearBool, depth)
                 if(rotationWorked){
                     // a rotation works for the piece so just end the function as the scan finished
                     return [null, leftover];
@@ -197,52 +200,71 @@ function findRemainingPieces(field){
     return piecesFound;
 }
 
-var fumenCodes = [];
-for(let rawInput of process.argv.slice(2)){
-    fumenCodes.push(...rawInput.split(/\s/));
-}
-var allPiecesArr = [];
-var allFumens = [];
-var fumenIssues = 0;
-for(let code of fumenCodes){
-    let inputPages = decoder.decode(code);
-    for(let pageNum = 0; pageNum < inputPages.length; pageNum++){
-        let field = inputPages[pageNum].field;
-        field = removeLineClears(field);
-        const height = field.str().split("\n").length - 1;
-        let emptyField = makeEmptyField(field, height);
-        allPiecesArr = []
+function glueFumen(customInput=process.argv.slice(2), removeLineClearBool=true){
+    var fumenCodes = [];
 
-        scanField(0, height - 1, field, [], 0);
-        
-        if(allPiecesArr.length == 0){
-            console.log(code + " couldn't be glued");
-            fumenIssues++;
-        }
-
-        for(let piecesArr of allPiecesArr){
-            let pages = [];
-            pages.push({
-                field: emptyField,
-                operation: piecesArr[0]
-            })
-            for(let i = 1; i < piecesArr.length; i++){
-                pages.push({
-                    operation: piecesArr[i]
-                })
-            }
-            let pieceFumen = encoder.encode(pages);
-            allFumens.push(pieceFumen);
-        }
-
-        if(allPiecesArr.length > 1){
-            // multiple outputs warning
-            console.log(code + " led to " + allPiecesArr.length + " outputs: " + allFumens.slice(-allPiecesArr.length).join(" "));
-        }
+    if(typeof customInput != 'object'){
+        throw new Error("Custom input for glueFumen must be an array")
     }
-}
-if(fumenCodes.length > allFumens.length){
-    console.log("Warning: " + fumenIssues + " fumens couldn't be glued");
+
+    for(let rawInput of customInput){
+        fumenCodes.push(...rawInput.split(/\s/));
+    }
+
+    var allPiecesArr = [];
+    var allFumens = [];
+    var fumenIssues = 0;
+    for(let code of fumenCodes){
+        let inputPages = decoder.decode(code);
+        let thisGlueFumens = []; // holds the glue fumens for this fumenCode
+        for(let pageNum = 0; pageNum < inputPages.length; pageNum++){
+            let field = inputPages[pageNum].field;
+            field = removeLineClears(field);
+            const height = field.str().split("\n").length - 1;
+            let emptyField = makeEmptyField(field, height);
+            allPiecesArr = []
+
+            scanField(0, height - 1, field, [], allPiecesArr, removeLineClearBool);
+            
+            if(allPiecesArr.length == 0){
+                console.log(code + " couldn't be glued");
+                fumenIssues++;
+            }
+            
+            for(let piecesArr of allPiecesArr){
+                let pages = [];
+                pages.push({
+                    field: emptyField,
+                    operation: piecesArr[0]
+                })
+                for(let i = 1; i < piecesArr.length; i++){
+                    pages.push({
+                        operation: piecesArr[i]
+                    })
+                }
+                let pieceFumen = encoder.encode(pages);
+                thisGlueFumens.push(pieceFumen);
+            }
+
+            if(allPiecesArr.length > 1){
+                // multiple outputs warning
+                allFumens.push("Warning: " + code + " led to " + allPiecesArr.length + " outputs: " + thisGlueFumens.join(" "));
+            }
+        }
+
+        // add the glue fumens for this code to all the fumens
+        allFumens.push(...thisGlueFumens)
+    }
+    if(fumenCodes.length > allFumens.length){
+        console.log("Warning: " + fumenIssues + " fumens couldn't be glued");
+    }
+
+    return allFumens
 }
 
-console.log(allFumens.join("\n"));
+exports.glueFumen = glueFumen;
+
+if(require.main == module){
+    allFumens = glueFumen()
+    console.log(allFumens.join("\n"));
+}
