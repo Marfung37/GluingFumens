@@ -1,53 +1,54 @@
 const {decoder, encoder, Field} = require('tetris-fumen');
-const Hashmap = require('hashmap');
 
 const rowLen = 10;
 
-const pieceMappings = new Hashmap();
-pieceMappings.set("T", [
-    [[0, -1], [0, 0], [-1, -1], [1, -1]],
-    [[0, -1], [0, 0], [-1, -1], [0, -2]],
-    [[1, 0], [0, 0], [2, 0], [1, -1]],
-    [[0, -1], [0, 0], [1, -1], [0, -2]]
-    ])
-pieceMappings.set("I", [
-    [[1, 0], [0, 0], [2, 0], [3, 0]],
-    [[0, -2], [0, 0], [0, -1], [0, -3]]
-    ])
-pieceMappings.set("L", [
-    [[-1, -1], [0, 0], [-2, -1], [0, -1]],
-    [[1, -1], [0, 0], [1, 0], [1, -2]],
-    [[1, 0], [0, 0], [2, 0], [0, -1]],
-    [[0, -1], [0, 0], [0, -2], [1, -2]]
-    ])
-pieceMappings.set("J", [
-    [[1, -1], [0, 0], [0, -1], [2, -1]],
-    [[0, -1], [0, 0], [-1, -2], [0, -2]],
-    [[1, 0], [0, 0], [2, 0], [2, -1]],
-    [[0, -1], [0, 0], [1, 0], [0, -2]]
-    ])
-pieceMappings.set("S", [
-    [[0, -1], [0, 0], [1, 0], [-1, -1]],
-    [[1, -1], [0, 0], [0, -1], [1, -2]]
-    ])
-pieceMappings.set("Z", [
-    [[1, -1], [0, 0], [1, 0], [2, -1]],
-    [[0, -1], [0, 0], [-1, -1], [-1, -2]]
-    ])
-pieceMappings.set("O", [
-    [[0, -1], [0, 0], [1, 0], [1, -1]]
-    ])
+const pieceMappings = {
+    "T": [
+        [[0, -1], [0, 0], [-1, -1], [1, -1]],
+        [[0, -1], [0, 0], [-1, -1], [0, -2]],
+        [[1, 0], [0, 0], [2, 0], [1, -1]],
+        [[0, -1], [0, 0], [1, -1], [0, -2]]
+        ],
+    "I": [
+        [[1, 0], [0, 0], [2, 0], [3, 0]],
+        [[0, -2], [0, 0], [0, -1], [0, -3]]
+        ],
+    "L": [
+        [[-1, -1], [0, 0], [-2, -1], [0, -1]],
+        [[1, -1], [0, 0], [1, 0], [1, -2]],
+        [[1, 0], [0, 0], [2, 0], [0, -1]],
+        [[0, -1], [0, 0], [0, -2], [1, -2]]
+        ],
+    "J": [
+        [[1, -1], [0, 0], [0, -1], [2, -1]],
+        [[0, -1], [0, 0], [-1, -2], [0, -2]],
+        [[1, 0], [0, 0], [2, 0], [2, -1]],
+        [[0, -1], [0, 0], [1, 0], [0, -2]]
+        ],
+    "S": [
+        [[0, -1], [0, 0], [1, 0], [-1, -1]],
+        [[1, -1], [0, 0], [0, -1], [1, -2]]
+        ],
+    "Z": [
+        [[1, -1], [0, 0], [1, 0], [2, -1]],
+        [[0, -1], [0, 0], [-1, -1], [-1, -2]]
+        ],
+    "O": [
+        [[0, -1], [0, 0], [1, 0], [1, -1]]
+        ]
+}
 
-const rotationDict = new Hashmap();
-rotationDict.set(0, "spawn");
-rotationDict.set(1, "left");
-rotationDict.set(2, "reverse");
-rotationDict.set(3, "right");
+const rotationDict = {
+    0: "spawn",
+    1: "left",
+    2: "reverse",
+    3: "right"
+}
 
 function checkRotation(x, y, field, piecesArr, allPiecesArr, removeLineClearBool, depth=0){
     const piece = field.at(x, y);
 
-    const rotationStates = pieceMappings.get(piece);
+    const rotationStates = pieceMappings[piece];
 
     let found = false;
     let leftoverPieces = null;
@@ -84,7 +85,7 @@ function checkRotation(x, y, field, piecesArr, allPiecesArr, removeLineClearBool
             // a rotation that works
             let operPiece = {
                 type: piece,
-                rotation: rotationDict.get(state),
+                rotation: rotationDict[state],
                 x: minoPositions[0][0],
                 y: minoPositions[0][1]
             }

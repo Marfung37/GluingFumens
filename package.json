@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "hashmap": "^2.4.0",
     "tetris-fumen": "^1.1.3"
   }
 }
