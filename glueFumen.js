@@ -1,4 +1,9 @@
 const {decoder, encoder, Field} = require('tetris-fumen');
+const {parseRotationName, 
+      parseRotation, 
+      parsePieceName,
+      parsePiece} = require('./node_modules/tetris-fumen/lib/defines');
+
 
 const width = 10;
 
@@ -87,6 +92,42 @@ function removeLineClears(field){
     const newField = Field.create(lines.slice(0, -1).join(""), lines[-1]);
     return newField;
 }
+// encode operations for faster comparisons
+function encodeOp(operation) {
+    // encode into 15 bit
+    // type has 9 possible (4 bits)
+    // rotation has 4 possible (2 bits)
+    // x has width (10) possible (4 bits)
+    // y has height (20) possible (5 bits)
+    let ct = parsePiece(operation.type);
+    ct = (ct << 2) + parseRotation(operation.rotation);
+    ct = (ct << 4) + operation.x;
+    ct = (ct << 5) + operation.y;
+    return ct
+}
+
+function decodeOp(ct) {
+    let y = ct & 0x1F; ct >>= 5;
+    let x = ct & 0xF; ct >>= 4;
+    let rotation = parseRotationName(ct & 0x3); ct >>= 2;
+    let type = parsePieceName(ct)
+
+    return {
+        type: type,
+        rotation: rotation,
+        x: x,
+        y: y
+    }
+}
+
+function eqPermutatation (arr1, arr2) {
+    if (arr1.size !== arr2.size)
+        return false;
+    
+    arrSet = new Set(arr2);
+
+    return arr1.every((x) => arrSet.has(x));
+}
 
 function checkRotation(x, y, field, piecesArr, allPiecesArr, removeLineClearBool, visualizeArr, depth=0){
     const piece = field.at(x, y);
@@ -128,7 +169,7 @@ function checkRotation(x, y, field, piecesArr, allPiecesArr, removeLineClearBool
                 x: minoPositions[0][0],
                 y: minoPositions[0][1]
             }
-            newPiecesArr.push(operPiece)
+            newPiecesArr.push(encodeOp(operPiece))
 
             let newField = field.copy()
             placePiece(newField, minoPositions);
@@ -137,7 +178,6 @@ function checkRotation(x, y, field, piecesArr, allPiecesArr, removeLineClearBool
             if(removeLineClearBool){
                 newField = removeLineClears(newField);
             }
-
 
             // check if a line clear occurred
             let startx = x;
@@ -165,7 +205,17 @@ function checkRotation(x, y, field, piecesArr, allPiecesArr, removeLineClearBool
             
             // if the field doesn't have any more pieces it's good
             if(possPiecesArr != null && leftoverPieces.length == 0){
-                allPiecesArr.push(possPiecesArr);
+                // check if duplicate
+                let duplicate = false;
+                for(let arr of allPiecesArr) {
+                    if(eqPermutatation(arr, possPiecesArr)){
+                        duplicate = true;
+                        break;
+                    }
+                }
+                if(!duplicate)
+                    allPiecesArr.push(possPiecesArr);
+
             } else if(oldLen == allPiecesArr.length){
                 // the piece didn't result into a correct glued fumen
                 if(!leftoverPieces.includes(piece)){
@@ -242,11 +292,11 @@ function glueFumen(customInput=process.argv.slice(2), removeLineClearBool=true, 
                 let pages = [];
                 pages.push({
                     field: emptyField,
-                    operation: piecesArr[0]
+                    operation: decodeOp(piecesArr[0])
                 })
                 for(let i = 1; i < piecesArr.length; i++){
                     pages.push({
-                        operation: piecesArr[i]
+                        operation: decodeOp(piecesArr[i])
                     })
                 }
                 if(visualize)
@@ -277,6 +327,6 @@ function glueFumen(customInput=process.argv.slice(2), removeLineClearBool=true, 
 exports.glueFumen = glueFumen;
 
 if(require.main == module){
-    allFumens = glueFumen("v115@fgi0G8whi0F8whi0F8whi0F8whi0F8h0H8i0G8JeAg?WGAqPNPCq/AAA", true, false);
+    allFumens = glueFumen();
     console.log(allFumens.join("\n"));
 }
