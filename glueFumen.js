@@ -4,7 +4,6 @@ const {parseRotationName,
       parsePieceName,
       parsePiece} = require('./node_modules/tetris-fumen/lib/defines');
 
-
 const width = 10;
 
 const pieceMappings = {
@@ -83,14 +82,19 @@ function findRemainingPieces(field){
 }
 
 function removeLineClears(field){
-    var lines = field.str().split("\n");
+    let lines = field.str().split("\n").slice(0, -1);
+    let linesCleared = [];
     for(let i = lines.length-1; i >= 0; i--){
         if(lines[i].match(/X{10}/)){
             lines.splice(i, 1);
+            linesCleared.push(lines.length - i);
         }
     }
-    const newField = Field.create(lines.slice(0, -1).join(""), lines[-1]);
-    return newField;
+    const newField = Field.create(lines.join(""));
+    return {
+      field: newField, 
+      linesCleared: linesCleared
+    };
 }
 // encode operations for faster comparisons
 function encodeOp(operation) {
@@ -98,16 +102,19 @@ function encodeOp(operation) {
     // type has 9 possible (4 bits)
     // rotation has 4 possible (2 bits)
     // x has width (10) possible (4 bits)
+    // absY has height (20) possible (5 bits)
     // y has height (20) possible (5 bits)
     let ct = parsePiece(operation.type);
     ct = (ct << 2) + parseRotation(operation.rotation);
     ct = (ct << 4) + operation.x;
+    ct = (ct << 5) + operation.absY;
     ct = (ct << 5) + operation.y;
     return ct
 }
 
 function decodeOp(ct) {
     let y = ct & 0x1F; ct >>= 5;
+    ct >>= 5; // remove the absolute Y position
     let x = ct & 0xF; ct >>= 4;
     let rotation = parseRotationName(ct & 0x3); ct >>= 2;
     let type = parsePieceName(ct)
@@ -129,7 +136,7 @@ function eqPermutatation (arr1, arr2) {
     return arr1.every((x) => arrSet.has(x));
 }
 
-function checkRotation(x, y, field, piecesArr, allPiecesArr, removeLineClearBool, visualizeArr, depth=0){
+function checkRotation(x, y, field, piecesArr, allPiecesArr, totalLinesCleared, visualizeArr, depth=0){
     const piece = field.at(x, y);
 
     const rotationStates = pieceMappings[piece];
@@ -162,31 +169,49 @@ function checkRotation(x, y, field, piecesArr, allPiecesArr, removeLineClearBool
             let foundBefore = found;
             found = true;
 
-            // a rotation that works
-            let operPiece = {
-                type: piece,
-                rotation: rotationDict[state],
-                x: minoPositions[0][0],
-                y: minoPositions[0][1]
-            }
-            newPiecesArr.push(encodeOp(operPiece))
-
             let newField = field.copy()
             placePiece(newField, minoPositions);
 
-            let oldHeight = height(newField);
-            if(removeLineClearBool){
-                newField = removeLineClears(newField);
+            let linesCleared;
+            let data = removeLineClears(newField);
+            newField = data.field;
+            linesCleared = data.linesCleared;
+
+            // determine the absolute position of the piece
+            let absY = minoPositions[0][1];
+            for(let i = 0; i < totalLinesCleared.length && totalLinesCleared[i] < absY; i++) {
+                absY++;
             }
 
             // check if a line clear occurred
             let startx = x;
             let starty = y;
-            if(oldHeight > height(newField)){
+            let newTotalLinesCleared = [...totalLinesCleared];
+            if(linesCleared.length > 0){
                 // start position to 0 otherwise it's where we left off scanning the field
                 startx = 0;
                 starty = 0;
+
+                // determine the absolute position of the line numbers
+                for(let lineNum of linesCleared) {
+                    let i;
+                    for(i = 0; i < newTotalLinesCleared.length && newTotalLinesCleared[i] <= lineNum; i++){
+                        lineNum++;
+                    }
+                    newTotalLinesCleared.splice(i, 0, lineNum);
+                }
+
             }
+
+            // a rotation that works
+            let operPiece = {
+                type: piece,
+                rotation: rotationDict[state],
+                x: minoPositions[0][0],
+                y: minoPositions[0][1],
+                absY: absY,
+            }
+            newPiecesArr.push(encodeOp(operPiece))
 
             let oldLen = allPiecesArr.length;
 
@@ -196,7 +221,7 @@ function checkRotation(x, y, field, piecesArr, allPiecesArr, removeLineClearBool
               newField, 
               newPiecesArr, 
               allPiecesArr, 
-              removeLineClearBool, 
+              newTotalLinesCleared,
               visualizeArr, 
               depth + 1
             )
@@ -207,8 +232,12 @@ function checkRotation(x, y, field, piecesArr, allPiecesArr, removeLineClearBool
             if(possPiecesArr != null && leftoverPieces.length == 0){
                 // check if duplicate
                 let duplicate = false;
+                // new array without y but keep absolute y
+                let absPossPiecesArr = possPiecesArr.map((x) => x >> 5);
+                
                 for(let arr of allPiecesArr) {
-                    if(eqPermutatation(arr, possPiecesArr)){
+                    let absArr = arr.map((x) => x >> 5);
+                    if(eqPermutatation(absArr, absPossPiecesArr)){
                         duplicate = true;
                         break;
                     }
@@ -230,13 +259,13 @@ function checkRotation(x, y, field, piecesArr, allPiecesArr, removeLineClearBool
 }
 
 // scan until find next colored mino to run checkRotation on it
-function scanField(x0, y0, field, piecesArr, allPiecesArr, removeLineClearBool, visualizeArr, depth=0){
+function scanField(x0, y0, field, piecesArr, allPiecesArr, totalLinesCleared, visualizeArr, depth=0){
     const fieldHeight = height(field);
     for(let y = y0; y < fieldHeight; y++){
         for(let x = (y == y0) ? x0 : 0; x < width; x++){
             // if it is a piece
             if(field.at(x, y).match(/[TILJSZO]/)){
-                checkRotation(x, y, field, piecesArr, allPiecesArr, removeLineClearBool, visualizeArr, depth)
+                checkRotation(x, y, field, piecesArr, allPiecesArr, [...totalLinesCleared], visualizeArr, depth)
                 // continue on with possiblity this is piece is cut
             }
         }
@@ -258,7 +287,7 @@ function makeEmptyField(field){
     return emptyField;
 }
 
-function glueFumen(customInput=process.argv.slice(2), removeLineClearBool=true, visualize=false){
+function glueFumen(customInput=process.argv.slice(2), visualize=false){
     var fumenCodes = [];
 
     if(!Array.isArray(customInput)){
@@ -281,7 +310,7 @@ function glueFumen(customInput=process.argv.slice(2), removeLineClearBool=true, 
             let emptyField = makeEmptyField(field, height);
             allPiecesArr = []
 
-            scanField(0, 0, field, [], allPiecesArr, removeLineClearBool, visualizeArr);
+            scanField(0, 0, field, [], allPiecesArr, [], visualizeArr);
             
             if(allPiecesArr.length == 0){
                 console.log(code + " couldn't be glued");
@@ -327,6 +356,6 @@ function glueFumen(customInput=process.argv.slice(2), removeLineClearBool=true, 
 exports.glueFumen = glueFumen;
 
 if(require.main == module){
-    allFumens = glueFumen();
+    allFumens = glueFumen('v115@fgi0G8whi0F8whi0F8whi0F8whi0F8h0H8i0G8JeAg?WGAqPNPCq/AAA');
     console.log(allFumens.join("\n"));
 }
