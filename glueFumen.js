@@ -356,6 +356,6 @@ function glueFumen(customInput=process.argv.slice(2), visualize=false){
 exports.glueFumen = glueFumen;
 
 if(require.main == module){
-    allFumens = glueFumen('v115@fgi0G8whi0F8whi0F8whi0F8whi0F8h0H8i0G8JeAg?WGAqPNPCq/AAA');
+    allFumens = glueFumen();
     console.log(allFumens.join("\n"));
 }
