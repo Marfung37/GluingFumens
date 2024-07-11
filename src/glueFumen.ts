@@ -69,6 +69,18 @@ function isInside(field: Field, x: number, y: number): boolean {
     return (0 <= x && x < WIDTH) && (0 <= y && y < height(field));
 }
 
+function isFloating(field: Field, minoPositions: Pos[]): boolean {
+    // if there's a 'X' under any of the minos
+    for (let pos of minoPositions) {
+        // on floor
+        if(pos.y == 0 || field.at(pos.x, pos.y - 1) == 'X'){
+            return false;
+        }
+    }
+
+    return true;
+}
+
 function centerMino(minoPositions: Pos[]): Pos {
     return minoPositions[0];
 }
@@ -252,7 +264,7 @@ function glue(
                     );
 
                     // if there's less than minos
-                    if(minoPositions.length < TETROMINO){
+                    if(minoPositions.length < TETROMINO || isFloating(field, minoPositions)){
                         continue
                     }
 
