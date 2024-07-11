@@ -1,17 +1,6 @@
-"use strict";
-
-export class Pos {
+export interface Pos {
     x: number
     y: number
-
-    constructor(x: number, y: number) {
-        this.x = x;
-        this.y = y;
-    }
-    *[Symbol.iterator](): IterableIterator<number> {
-        yield this.x;
-        yield this.y;
-    }
 }
 export interface Operation {
     type: PieceType;
@@ -19,7 +8,7 @@ export interface Operation {
     x: number;
     y: number;
 }
-export declare enum Piece {
+export const enum Piece {
     Empty = 0,
     I = 1,
     L = 2,
@@ -30,7 +19,7 @@ export declare enum Piece {
     S = 7,
     Gray = 8
 }
-export declare enum Rotation {
+export const enum Rotation {
     Spawn = 0,
     Right = 1,
     Reverse = 2,

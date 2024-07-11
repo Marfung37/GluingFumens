@@ -1,12 +1,10 @@
 import {decoder, encoder, Field, Page, Pages} from 'tetris-fumen';
 import {Pos,
         Operation,
-        Piece, 
         PieceType,
         parsePiece, 
         parsePieceName, 
         Rotation,
-        RotationType,
         parseRotation, 
         parseRotationName} from './defines';
 
@@ -76,30 +74,10 @@ function centerMino(minoPositions: Pos[]): Pos {
 }
 
 function placePiece(field: Field, minoPositions: Pos[], piece: PieceType = 'X'): void {
-    for (let [x, y] of minoPositions){
-        field.set(x, y, piece)
+    for (let pos of minoPositions){
+        field.set(pos.x, pos.y, piece)
     }
 }
-
-function findRemainingPieces(field: Field): Set<PieceType> {
-    let lines: string[] = field.str().split("\n").slice(0, -1);
-    let piecesFound: Set<PieceType> = new Set<PieceType>();
-
-    // each line
-    for(let line of lines){
-        let pieces = line.match(/[TILJSZO]/g)
-
-        // check if there's any pieces in this line
-        if(pieces != null){
-            // add each piece in the line to the set
-            for(let piece of pieces){
-                piecesFound.add(piece as PieceType)
-            }
-        }
-    }
-    return piecesFound;
-}
-
 
 function removeLineClears(field: Field): removeLineClearsRet {
     let lines: string[] = field.str().split("\n").slice(0, -1);
@@ -109,7 +87,7 @@ function removeLineClears(field: Field): removeLineClearsRet {
     for(let i = lines.length - 1; i >= 0; i--){
         if(lines[i] === "X".repeat(WIDTH)){
             lines.splice(i, 1); // remove line
-            linesCleared.push(lines.length - i); // add line num that was cleared
+            linesCleared.push(lines.length - i); // add relative line num that was cleared
         }
     }
 
@@ -118,7 +96,7 @@ function removeLineClears(field: Field): removeLineClearsRet {
 
     return {
       field: newField, 
-      linesCleared: linesCleared
+      linesCleared: linesCleared // relative line clear positions ex: [0, 0] (first two lines)
     };
 }
 // encode operations for faster comparisons
@@ -149,7 +127,7 @@ function decodeOp(ct: number): Operation {
         rotation: rotation,
         x: x,
         y: y
-    }
+    } as Operation
 }
 
 function eqPermutatation (arr1: encodedOperation[], arr2: encodedOperation[]): boolean {
@@ -182,12 +160,12 @@ function getMinoPositions(
     y: number, 
     piece: PieceType,
 		rotationState: number[][],
-		visualizeArr: Pages? = null): Pos[]
+		visualizeArr: Pages | null = null): Pos[]
 {
 		let minoPositions: Pos[] = [];
 
     // empty the field of all colored minos
-    let visualizeField: Field? = null;
+    let visualizeField: Field | null = null;
     if(visualizeArr !== null) {
         // create fumen of trying to put piece there
         visualizeField = makeEmptyField(field)
@@ -206,7 +184,7 @@ function getMinoPositions(
 
             // mino matches the piece
             if(field.at(px, py) === piece) {
-                minoPositions.push(new Pos(x, y));
+                minoPositions.push({x: px, y: py} as Pos);
             }
         }
     }
@@ -265,7 +243,7 @@ function glue(
                     thisLinesCleared = data.linesCleared;
 
                     // determine the absolute position of the piece
-                    let absY = minoPositions[0][1];
+                    let absY = centerMino(minoPositions).y;
                     for(let i = 0; i < totalLinesCleared.length && totalLinesCleared[i] < absY; i++) {
                         absY++;
                     }
@@ -300,7 +278,7 @@ function glue(
                     }
                     newPiecesArr.push(encodeOp(operPiece))
 
-                    glue(startx, starty, newField, newPiecesArr, allPiecesArr, totalLinesCleared, visualizeArr, visualize);
+                    glue(startx, starty, newField, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, visualize);
 
                     // continue on with possiblity another piece could be placed instead of this one
                 }
