@@ -115,27 +115,16 @@ function decodeOp(ct) {
         y: y
     };
 }
-function duplicateGlue(subArr, arrays) {
-    // check if duplicate
-    var duplicate = false;
-    // new array without y but keep absolute y
-    var absSubArr = subArr.map(function (x) { return x >> 5; });
-    var arrSet = new Set(absSubArr);
-    for (var _i = 0, arrays_1 = arrays; _i < arrays_1.length; _i++) {
-        var arr = arrays_1[_i];
-        // check if the two arrays are the same length
-        if (subArr.length !== arr.length) {
-            duplicate = false;
-            break;
-        }
-        // check if two arrays are permutations
-        var absArr = arr.map(function (x) { return x >> 5; });
-        if (absArr.every(function (x) { return arrSet.has(x); })) {
-            duplicate = true;
-            break;
+function anyColoredMinos(field) {
+    var lines = field.str().split("\n").slice(0, -1);
+    for (var _i = 0, lines_1 = lines; _i < lines_1.length; _i++) {
+        var line = lines_1[_i];
+        var pieces = line.match(/[TILJSZO]/g);
+        if (pieces != null) {
+            return true;
         }
     }
-    return duplicate;
+    return false;
 }
 function makeEmptyField(field) {
     var emptyField = field.copy();
@@ -181,16 +170,36 @@ function getMinoPositions(field, x, y, piece, rotationState, visualizeArr) {
     }
     return minoPositions;
 }
+function duplicateGlue(subArr, arrays) {
+    // check if duplicate
+    var duplicate = false;
+    // new array without y but keep absolute y
+    var absSubArr = subArr.map(function (x) { return x >> 5; });
+    var arrSet = new Set(absSubArr);
+    for (var _i = 0, arrays_1 = arrays; _i < arrays_1.length; _i++) {
+        var arr = arrays_1[_i];
+        // check if the two arrays are the same length
+        if (subArr.length !== arr.length) {
+            duplicate = false;
+            break;
+        }
+        // check if two arrays are permutations
+        var absArr = arr.map(function (x) { return x >> 5; });
+        if (absArr.every(function (x) { return arrSet.has(x); })) {
+            duplicate = true;
+            break;
+        }
+    }
+    return duplicate;
+}
 function glue(x0, y0, field, piecesArr, allPiecesArr, totalLinesCleared, visualizeArr, visualize) {
     var fieldHeight = height(field);
-    var anyColorMinoFound = false;
     // scan through board for any colored minos
     for (var y = y0; y < fieldHeight; y++) {
         for (var x = (y == y0) ? x0 : 0; x < WIDTH; x++) {
             // if it is a piece
             var piece = field.at(x, y);
             if (piece.match(/[TILJSZO]/)) {
-                anyColorMinoFound = true;
                 // checking if one of the rotations works
                 var rotationStates = pieceMappings[piece];
                 for (var state = 0; state < rotationStates.length; state++) {
@@ -247,7 +256,7 @@ function glue(x0, y0, field, piecesArr, allPiecesArr, totalLinesCleared, visuali
         }
     }
     // if the field doesn't have any more pieces it's good
-    if (!anyColorMinoFound && !duplicateGlue(piecesArr, allPiecesArr)) {
+    if (!anyColoredMinos(field) && !duplicateGlue(piecesArr, allPiecesArr)) {
         allPiecesArr.push(piecesArr);
     }
 }

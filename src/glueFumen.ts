@@ -130,30 +130,15 @@ function decodeOp(ct: number): Operation {
     } as Operation
 }
 
-function duplicateGlue (subArr: encodedOperation[], arrays: encodedOperation[][]): boolean {
-    // check if duplicate
-    let duplicate = false;
-
-    // new array without y but keep absolute y
-    let absSubArr = subArr.map((x: number) => x >> 5);
-    const arrSet: Set<encodedOperation> = new Set<encodedOperation>(absSubArr);
-
-    for(let arr of arrays) {
-        // check if the two arrays are the same length
-        if (subArr.length !== arr.length) {
-            duplicate = false;
-            break;
-        }
-
-        // check if two arrays are permutations
-        let absArr = arr.map((x: number) => x >> 5);
-        if(absArr.every((x) => arrSet.has(x))) {
-            duplicate = true;
-            break;
+function anyColoredMinos(field: Field): boolean {
+    let lines = field.str().split("\n").slice(0, -1);
+    for(let line of lines){
+        let pieces = line.match(/[TILJSZO]/g)
+        if(pieces != null){
+            return true;
         }
     }
-
-    return duplicate;
+    return false;
 }
 
 function makeEmptyField(field: Field): Field{
@@ -213,6 +198,32 @@ function getMinoPositions(
     return minoPositions;
 }
 
+function duplicateGlue (subArr: encodedOperation[], arrays: encodedOperation[][]): boolean {
+    // check if duplicate
+    let duplicate = false;
+
+    // new array without y but keep absolute y
+    let absSubArr = subArr.map((x: number) => x >> 5);
+    const arrSet: Set<encodedOperation> = new Set<encodedOperation>(absSubArr);
+
+    for(let arr of arrays) {
+        // check if the two arrays are the same length
+        if (subArr.length !== arr.length) {
+            duplicate = false;
+            break;
+        }
+
+        // check if two arrays are permutations
+        let absArr = arr.map((x: number) => x >> 5);
+        if(absArr.every((x) => arrSet.has(x))) {
+            duplicate = true;
+            break;
+        }
+    }
+
+    return duplicate;
+}
+
 function glue(
     x0: number, 
     y0: number, 
@@ -224,7 +235,6 @@ function glue(
     visualize: boolean): void 
 {
     const fieldHeight = height(field);
-    let anyColorMinoFound = false;
 
     // scan through board for any colored minos
     for(let y = y0; y < fieldHeight; y++){
@@ -232,8 +242,6 @@ function glue(
             // if it is a piece
             let piece = field.at(x, y);
             if(piece.match(/[TILJSZO]/)){
-                anyColorMinoFound = true;
-
                 // checking if one of the rotations works
                 const rotationStates = pieceMappings[piece];
                 for(let state: Rotation = 0; state < rotationStates.length; state++){
@@ -303,7 +311,7 @@ function glue(
     }
 
     // if the field doesn't have any more pieces it's good
-    if(!anyColorMinoFound && !duplicateGlue(piecesArr, allPiecesArr)){
+    if(!anyColoredMinos(field) && !duplicateGlue(piecesArr, allPiecesArr)){
         allPiecesArr.push(piecesArr);
     }
 }
