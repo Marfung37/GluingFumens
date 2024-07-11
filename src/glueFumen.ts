@@ -130,14 +130,30 @@ function decodeOp(ct: number): Operation {
     } as Operation
 }
 
-function eqPermutatation (arr1: encodedOperation[], arr2: encodedOperation[]): boolean {
-    // check if two arrays are permutations
-    if (arr1.length !== arr2.length)
-        return false;
-    
-    const arrSet: Set<encodedOperation> = new Set<encodedOperation>(arr2);
+function duplicateGlue (subArr: encodedOperation[], arrays: encodedOperation[][]): boolean {
+    // check if duplicate
+    let duplicate = false;
 
-    return arr1.every((x) => arrSet.has(x));
+    // new array without y but keep absolute y
+    let absSubArr = subArr.map((x: number) => x >> 5);
+    const arrSet: Set<encodedOperation> = new Set<encodedOperation>(absSubArr);
+
+    for(let arr of arrays) {
+        // check if the two arrays are the same length
+        if (subArr.length !== arr.length) {
+            duplicate = false;
+            break;
+        }
+
+        // check if two arrays are permutations
+        let absArr = arr.map((x: number) => x >> 5);
+        if(absArr.every((x) => arrSet.has(x))) {
+            duplicate = true;
+            break;
+        }
+    }
+
+    return duplicate;
 }
 
 function makeEmptyField(field: Field): Field{
@@ -202,7 +218,7 @@ function glue(
     y0: number, 
     field: Field, 
     piecesArr: encodedOperation[], 
-    allPiecesArr: encodedOperation[][], 
+    allPiecesArr: encodedOperation[][],
     totalLinesCleared: number[], 
     visualizeArr: Pages, 
     visualize: boolean): void 
@@ -287,22 +303,8 @@ function glue(
     }
 
     // if the field doesn't have any more pieces it's good
-    if(!anyColorMinoFound){
-        // check if duplicate
-        let duplicate = false;
-
-        // new array without y but keep absolute y
-        let absPossPiecesArr = piecesArr.map((x: number) => x >> 5);
-        
-        for(let arr of allPiecesArr) {
-            let absArr = arr.map((x) => x >> 5);
-            if(eqPermutatation(absArr, absPossPiecesArr)){
-                duplicate = true;
-                break;
-            }
-        }
-        if(!duplicate)
-            allPiecesArr.push(piecesArr);
+    if(!anyColorMinoFound && !duplicateGlue(piecesArr, allPiecesArr)){
+        allPiecesArr.push(piecesArr);
     }
 }
 
@@ -318,7 +320,6 @@ export default function glueFumen(customInput: string | string[] = process.argv.
     }
 
     // all "global" variables
-    let allPiecesArr: number[][] = [];
     let allFumens: string[] = [];
     let visualizeArr: Pages = [];
     let fumenIssues = 0;
@@ -332,8 +333,9 @@ export default function glueFumen(customInput: string | string[] = process.argv.
         for(let page of inputPages){
             let field: Field = page.field;
             let emptyField: Field = makeEmptyField(field);
-            allPiecesArr = []
+            let allPiecesArr: encodedOperation[][] = [];
 
+            // try to glue this field and put into all pieces arr
             glue(0, 0, field, [], allPiecesArr, [], visualizeArr, visualize);
             
             // couldn't glue
