@@ -229,15 +229,14 @@ function glue(x0, y0, field, piecesArr, allPiecesArr, totalLinesCleared, visuali
                     thisLinesCleared = data.linesCleared;
                     // determine the absolute position of the piece
                     var absY = centerMino(minoPositions).y;
-                    for (var i = 0; i < totalLinesCleared.length && totalLinesCleared[i] < absY; i++) {
+                    for (var i = 0; i < totalLinesCleared.length && totalLinesCleared[i] <= absY; i++) {
                         absY++;
                     }
                     // check if a line clear occurred
-                    var startx = x;
-                    var starty = y;
+                    var startx = Math.max(x - 1, 0);
+                    var starty = Math.max(y - 1, 0);
                     var newTotalLinesCleared = __spreadArray([], totalLinesCleared, true);
                     if (thisLinesCleared.length > 0) {
-                        // start position to 0 otherwise it's where we left off scanning the field
                         startx = 0;
                         starty = 0;
                         // determine the absolute position of the line numbers

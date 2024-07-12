@@ -236,7 +236,7 @@ function duplicateGlue (subArr: encodedOperation[], arrays: encodedOperation[][]
 }
 
 function glue(
-    x0: number, 
+    x0: number,
     y0: number, 
     field: Field, 
     piecesArr: encodedOperation[], 
@@ -279,16 +279,15 @@ function glue(
 
                     // determine the absolute position of the piece
                     let absY = centerMino(minoPositions).y;
-                    for(let i = 0; i < totalLinesCleared.length && totalLinesCleared[i] < absY; i++) {
+                    for(let i = 0; i < totalLinesCleared.length && totalLinesCleared[i] <= absY; i++) {
                         absY++;
                     }
 
                     // check if a line clear occurred
-                    let startx: number = x;
-                    let starty: number = y;
+                    let startx: number = Math.max(x - 1, 0);
+                    let starty: number = Math.max(y - 1, 0);
                     let newTotalLinesCleared: number[] = [...totalLinesCleared];
                     if(thisLinesCleared.length > 0){
-                        // start position to 0 otherwise it's where we left off scanning the field
                         startx = 0;
                         starty = 0;
 
