@@ -221,8 +221,7 @@ function duplicateGlue (subArr: encodedOperation[], arrays: encodedOperation[][]
     for(let arr of arrays) {
         // check if the two arrays are the same length
         if (subArr.length !== arr.length) {
-            duplicate = false;
-            break;
+            continue
         }
 
         // check if two arrays are permutations

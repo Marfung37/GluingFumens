@@ -191,8 +191,7 @@ function duplicateGlue(subArr, arrays) {
         var arr = arrays_1[_i];
         // check if the two arrays are the same length
         if (subArr.length !== arr.length) {
-            duplicate = false;
-            break;
+            continue;
         }
         // check if two arrays are permutations
         var absArr = arr.map(function (x) { return x >> 5; });
