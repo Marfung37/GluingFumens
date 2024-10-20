@@ -181,26 +181,41 @@ function getMinoPositions(field, x, y, piece, rotationState, visualizeArr) {
     }
     return minoPositions;
 }
-function duplicateGlue(subArr, arrays) {
+function duplicateGlue(subArr, arrays, checkLength) {
     // check if duplicate
-    var duplicate = false;
+    if (checkLength === void 0) { checkLength = true; }
     // new array without y but keep absolute y
     var absSubArr = subArr.map(function (x) { return x >> 5; });
     var arrSet = new Set(absSubArr);
     for (var _i = 0, arrays_1 = arrays; _i < arrays_1.length; _i++) {
         var arr = arrays_1[_i];
         // check if the two arrays are the same length
-        if (subArr.length !== arr.length) {
-            continue;
+        if (checkLength) {
+            if (subArr.length !== arr.length) {
+                continue;
+            }
+            // check if two arrays are permutations
+            var absArr = arr.map(function (x) { return x >> 5; });
+            if (absArr.every(function (x) { return arrSet.has(x); })) {
+                return true;
+            }
         }
-        // check if two arrays are permutations
-        var absArr = arr.map(function (x) { return x >> 5; });
-        if (absArr.every(function (x) { return arrSet.has(x); })) {
-            duplicate = true;
-            break;
+        else {
+            var countMatch = 0;
+            // check if all elements of sub arr in the arr
+            var absArr = arr.map(function (x) { return x >> 5; });
+            for (var _a = 0, absArr_1 = absArr; _a < absArr_1.length; _a++) {
+                var x = absArr_1[_a];
+                if (arrSet.has(x)) {
+                    countMatch++;
+                }
+            }
+            if (countMatch == subArr.length) {
+                return true;
+            }
         }
     }
-    return duplicate;
+    return false;
 }
 function glue(x0, y0, field, piecesArr, allPiecesArr, totalLinesCleared, visualizeArr, visualize) {
     var fieldHeight = height(field);
@@ -258,6 +273,9 @@ function glue(x0, y0, field, piecesArr, allPiecesArr, totalLinesCleared, visuali
                         absY: absY,
                     };
                     newPiecesArr.push(encodeOp(operPiece));
+                    if (duplicateGlue(newPiecesArr, allPiecesArr, false)) {
+                        continue;
+                    }
                     glue(startx, starty, newField, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, visualize);
                     // continue on with possiblity another piece could be placed instead of this one
                 }

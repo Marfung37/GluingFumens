@@ -210,9 +210,8 @@ function getMinoPositions(
     return minoPositions;
 }
 
-function duplicateGlue (subArr: encodedOperation[], arrays: encodedOperation[][]): boolean {
+function duplicateGlue (subArr: encodedOperation[], arrays: encodedOperation[][], checkLength: boolean = true): boolean {
     // check if duplicate
-    let duplicate = false;
 
     // new array without y but keep absolute y
     let absSubArr = subArr.map((x: number) => x >> 5);
@@ -220,19 +219,35 @@ function duplicateGlue (subArr: encodedOperation[], arrays: encodedOperation[][]
 
     for(let arr of arrays) {
         // check if the two arrays are the same length
-        if (subArr.length !== arr.length) {
-            continue
-        }
+        if (checkLength) {
+          if (subArr.length !== arr.length) {
+              continue
+          }
 
-        // check if two arrays are permutations
-        let absArr = arr.map((x: number) => x >> 5);
-        if(absArr.every((x) => arrSet.has(x))) {
-            duplicate = true;
-            break;
+          // check if two arrays are permutations
+          let absArr = arr.map((x: number) => x >> 5);
+          if(absArr.every((x) => arrSet.has(x))) {
+            return true;
+          }
+
+        } else {
+          let countMatch = 0;
+
+          // check if all elements of sub arr in the arr
+          let absArr = arr.map((x: number) => x >> 5);
+          for(let x of absArr) {
+            if(arrSet.has(x)) {
+              countMatch++;
+            }
+          }
+          if(countMatch == subArr.length) {
+            return true;
+          }
+
         }
     }
 
-    return duplicate;
+    return false;
 }
 
 function glue(
@@ -311,6 +326,10 @@ function glue(
                         absY: absY,
                     }
                     newPiecesArr.push(encodeOp(operPiece))
+
+                    if (duplicateGlue(newPiecesArr, allPiecesArr, false)) {
+                      continue;
+                    }
 
                     glue(startx, starty, newField, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, visualize);
 
