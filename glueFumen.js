@@ -186,6 +186,52 @@ function makeEmptyField(field) {
     }
     return emptyField;
 }
+function getNewStart(field, x, y, minoPositions) {
+    // get new start with several checks if a piece is hanging or not
+    // also check if maybe need to clear the lines below it
+    // get right most mino
+    var rightMostPos = minoPositions.reduce(function (maxPos, currentPos) {
+        return currentPos.x > maxPos.x ? currentPos : maxPos;
+    }, minoPositions[0]); // Initialize with the first pair
+    // check if this piece would be floating without the piece under it
+    var wouldFloat = true;
+    // if there's a non 'X' under all of the minos
+    for (var _i = 0, minoPositions_3 = minoPositions; _i < minoPositions_3.length; _i++) {
+        var pos = minoPositions_3[_i];
+        var newY = pos.y - 1;
+        var foundNonX = false;
+        while (newY >= 0) {
+            if (field.at(pos.x, newY) != 'X') {
+                foundNonX = true;
+                break;
+            }
+            newY--;
+        }
+        if (!foundNonX) {
+            wouldFloat = false;
+            break;
+        }
+    }
+    if (wouldFloat) {
+        // starting from a line below is sufficent
+        return { x: 0, y: y - 1 };
+    }
+    if (x > 0 && y > 0 && field.at(x - 1, y - 1) == 'J')
+        return { x: x - 1, y: y - 1 }; // if J hanging from left
+    else if (y > 0 && field.at(rightMostPos.x + 1, rightMostPos.y - 1) == 'L')
+        return { x: x + 1, y: y - 1 }; // if L hanging from right
+    else if (x >= 2 && field.at(x - 2, y).match(/[LS]/))
+        return { x: x - 2, y: y }; // if S or L (facing down) hanging from left
+    else if (x >= 1 && field.at(x - 1, y).match(/[TLZ]/))
+        return { x: x - 1, y: y }; // if T, L (facing down), Z hanging from left
+    // get the right most mino on current y value
+    var rightMostXCurrY = Math.max.apply(Math, minoPositions.filter(function (s) { return s.y == y; }).map(function (s) { return s.x; }));
+    // at the end of the line
+    if (rightMostXCurrY == 9) {
+        return { x: 0, y: y + 1 };
+    }
+    return { x: rightMostXCurrY + 1, y: y };
+}
 function getMinoPositions(field, x, y, piece, rotationState, visualizeArr) {
     if (visualizeArr === void 0) { visualizeArr = null; }
     var minoPositions = [];
@@ -284,12 +330,9 @@ function glue(x0, y0, field, piecesArr, allPiecesArr, totalLinesCleared, visuali
                         absY++;
                     }
                     // check if a line clear occurred
-                    var startx = Math.max(x - 1, 0);
-                    var starty = Math.max(y - 1, 0);
+                    var startPos = { x: 0, y: 0 };
                     var newTotalLinesCleared = __spreadArray([], totalLinesCleared, true);
                     if (thisLinesCleared.length > 0) {
-                        startx = 0;
-                        starty = 0;
                         // determine the absolute position of the line numbers
                         for (var _i = 0, thisLinesCleared_1 = thisLinesCleared; _i < thisLinesCleared_1.length; _i++) {
                             var lineNum = thisLinesCleared_1[_i];
@@ -299,6 +342,9 @@ function glue(x0, y0, field, piecesArr, allPiecesArr, totalLinesCleared, visuali
                             }
                             newTotalLinesCleared.splice(i, 0, lineNum);
                         }
+                    }
+                    else {
+                        startPos = getNewStart(field, x, y, minoPositions);
                     }
                     // a rotation that works
                     var operPiece = {
@@ -312,7 +358,7 @@ function glue(x0, y0, field, piecesArr, allPiecesArr, totalLinesCleared, visuali
                     if (duplicateGlue(newPiecesArr, allPiecesArr, false)) {
                         continue;
                     }
-                    glue(startx, starty, newField, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, visualize);
+                    glue(startPos.x, startPos.y, newField, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, visualize);
                     // continue on with possiblity another piece could be placed instead of this one
                 }
             }
@@ -422,9 +468,9 @@ if (require.main == module) {
                     }
                     return [4 /*yield*/, Promise.all(inputPromises)];
                 case 1:
-                    inputs = (_a.sent())[0].split(/\s+/);
-                    // Combine raw string argument and stdin and exclude empty strings
-                    input_1 = __spreadArray(__spreadArray([], args, true), inputs, true).filter(Boolean);
+                    inputs = _a.sent();
+                    // Combine raw string argument and stdin and exclude empty strings and undefined
+                    input_1 = __spreadArray(__spreadArray([], args, true), inputs, true).filter(Boolean).join('\n').trim().split(/\s+/);
                     allFumens = glueFumen(input_1);
                     console.log(allFumens.join("\n"));
                     return [2 /*return*/];

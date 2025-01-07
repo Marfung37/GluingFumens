@@ -167,6 +167,60 @@ function makeEmptyField(field: Field): Field{
     return emptyField;
 }
 
+function getNewStart(field: Field, x: number, y: number, minoPositions: Pos[]): Pos {
+    // get new start with several checks if a piece is hanging or not
+    // also check if maybe need to clear the lines below it
+
+    // get right most mino
+    const rightMostPos: Pos = minoPositions.reduce((maxPos, currentPos) => {
+        return currentPos.x > maxPos.x ? currentPos : maxPos;
+        }, minoPositions[0]); // Initialize with the first pair
+
+    // check if this piece would be floating without the piece under it
+    let wouldFloat: boolean = true;
+
+    // if there's a non 'X' under all of the minos
+    for (let pos of minoPositions) {
+        let newY: number = pos.y - 1;
+        let foundNonX: boolean = false;
+        while (newY >= 0) {
+            if(field.at(pos.x, newY) != 'X'){
+                foundNonX = true;
+                break;
+            }
+            newY--;
+        } 
+        if (!foundNonX) {
+            wouldFloat = false;
+            break;
+        }
+    }
+
+    if (wouldFloat) {
+        // starting from a line below is sufficent
+        return {x: 0, y: y - 1}
+    }
+
+    if(x > 0 && y > 0 && field.at(x - 1, y - 1) == 'J')
+        return {x: x - 1, y: y - 1}; // if J hanging from left
+    else if(y > 0 && field.at(rightMostPos.x + 1, rightMostPos.y - 1) == 'L')
+        return {x: x + 1, y: y - 1}; // if L hanging from right
+    else if(x >= 2 && field.at(x - 2, y).match(/[LS]/))
+        return {x: x - 2, y: y}; // if S or L (facing down) hanging from left
+    else if(x >= 1 && field.at(x - 1, y).match(/[TLZ]/))
+        return {x: x - 1, y: y}; // if T, L (facing down), Z hanging from left
+
+    // get the right most mino on current y value
+    const rightMostXCurrY: number = Math.max(...minoPositions.filter(s => s.y == y).map(s => s.x))
+
+    // at the end of the line
+    if (rightMostXCurrY == 9) {
+        return {x: 0, y: y + 1}
+    }
+
+    return {x: rightMostXCurrY + 1, y: y};
+}
+
 function getMinoPositions(
     field: Field, 
     x: number, 
@@ -210,7 +264,7 @@ function getMinoPositions(
     return minoPositions;
 }
 
-function duplicateGlue (subArr: encodedOperation[], arrays: encodedOperation[][], checkLength: boolean = true): boolean {
+function duplicateGlue(subArr: encodedOperation[], arrays: encodedOperation[][], checkLength: boolean = true): boolean {
     // check if duplicate
 
     // new array without y but keep absolute y
@@ -273,7 +327,7 @@ function glue(
                 for(let state: Rotation = 0; state < rotationStates.length; state++){
                     let newPiecesArr = [...piecesArr];
 
-                    let minoPositions = getMinoPositions(
+                    let minoPositions: Pos[] = getMinoPositions(
                         field, x, y, piece, rotationStates[state],(visualize) ? visualizeArr : null
                     );
 
@@ -299,13 +353,9 @@ function glue(
                     }
 
                     // check if a line clear occurred
-                    let startx: number = Math.max(x - 1, 0);
-                    let starty: number = Math.max(y - 1, 0);
+                    let startPos: Pos = {x: 0, y: 0};
                     let newTotalLinesCleared: number[] = [...totalLinesCleared];
                     if(thisLinesCleared.length > 0){
-                        startx = 0;
-                        starty = 0;
-
                         // determine the absolute position of the line numbers
                         for(let lineNum of thisLinesCleared) {
                             let i: number;
@@ -314,7 +364,8 @@ function glue(
                             }
                             newTotalLinesCleared.splice(i, 0, lineNum);
                         }
-
+                    } else {
+                        startPos = getNewStart(field, x, y, minoPositions)
                     }
 
                     // a rotation that works
@@ -331,7 +382,7 @@ function glue(
                       continue;
                     }
 
-                    glue(startx, starty, newField, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, visualize);
+                    glue(startPos.x, startPos.y, newField, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, visualize);
 
                     // continue on with possiblity another piece could be placed instead of this one
                 }
@@ -455,10 +506,10 @@ if(require.main == module) {
       }
 
       // Wait for all input sources to resolve and split by newline
-      const inputs = (await Promise.all(inputPromises))[0].split(/\s+/);
+      const inputs = await Promise.all(inputPromises);
 
-      // Combine raw string argument and stdin and exclude empty strings
-      input = [...args, ...inputs].filter(Boolean);
+      // Combine raw string argument and stdin and exclude empty strings and undefined
+      input = [...args, ...inputs].filter(Boolean).join('\n').trim().split(/\s+/);
 
       // Run glue
       let allFumens = glueFumen(input);
