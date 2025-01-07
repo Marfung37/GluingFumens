@@ -69,18 +69,6 @@ function isInside(field: Field, x: number, y: number): boolean {
     return (0 <= x && x < WIDTH) && (0 <= y && y < height(field));
 }
 
-function isFloating(field: Field, minoPositions: Pos[]): boolean {
-    // if there's a 'X' under any of the minos
-    for (let pos of minoPositions) {
-        // on floor
-        if(pos.y == 0 || field.at(pos.x, pos.y - 1) == 'X'){
-            return false;
-        }
-    }
-
-    return true;
-}
-
 function centerMino(minoPositions: Pos[]): Pos {
     return minoPositions[0];
 }
@@ -168,67 +156,6 @@ function makeEmptyField(field: Field): Field{
 }
 
 function getNewStart(field: Field, x: number, y: number, minoPositions: Pos[]): Pos {
-    // get new start with several checks if a piece is hanging or not
-    // also check if maybe need to clear the lines below it
-
-    // check if this piece would be floating without the piece under it
-    let wouldFloat: boolean = true;
-
-    // if there's a non 'X' under all of the minos
-    let nonXHeights: number[] = [];
-    let numBottomMinos = 0;
-    for (let pos of minoPositions) {
-        if (y == 0) {
-            wouldFloat = false;
-            break;
-        } else if (pos.y > y)
-            continue
-
-        numBottomMinos++;
-
-        // not supported by an X
-        if (field.at(pos.x, pos.y - 1) != 'X'){
-            continue;
-        }
-
-        let foundNonX: boolean = false;
-        for (let newY = pos.y - 2; newY >= 0; newY--) {
-            if(field.at(pos.x, newY) != 'X'){
-                foundNonX = true;
-                nonXHeights.push(newY);
-                break;
-            }
-        } 
-
-        if (!foundNonX) {
-            wouldFloat = false;
-            break;
-        }
-    }
-    if((nonXHeights.length > 0 && !nonXHeights.every(v => v === nonXHeights[0])) ||
-       (nonXHeights.length == 0 && numBottomMinos > 0)){
-        wouldFloat = false;
-    }
-
-    if (wouldFloat) {
-        // starting as far down to possibly get this line below to clear
-        return {x: 0, y: Math.max(y - 4, 0)}
-    }
-
-    // get right most mino
-    const rightMostPos: Pos = minoPositions.reduce((maxPos, currentPos) => {
-        return currentPos.x > maxPos.x ? currentPos : maxPos;
-        }, minoPositions[0]); // Initialize with the first pair
-
-    if(x > 0 && y > 0 && field.at(x - 1, y - 1) == 'J')
-        return {x: x - 1, y: y - 1}; // if J hanging from left
-    else if(y > 0 && field.at(rightMostPos.x + 1, rightMostPos.y - 1) == 'L')
-        return {x: x + 1, y: y - 1}; // if L hanging from right
-    else if(x >= 2 && field.at(x - 2, y).match(/[LS]/))
-        return {x: x - 2, y: y}; // if S or L (facing down) hanging from left
-    else if(x >= 1 && field.at(x - 1, y).match(/[TLZ]/))
-        return {x: x - 1, y: y}; // if T, L (facing down), Z hanging from left
-
     // get the right most mino on current y value
     const rightMostXCurrY: number = Math.max(...minoPositions.filter(s => s.y == y).map(s => s.x))
 
@@ -357,7 +284,7 @@ function glue(
                 );
 
                 // if there's less than minos
-                if(minoPositions.length < TETROMINO || isFloating(field, minoPositions)){
+                if(minoPositions.length < TETROMINO){
                     continue
                 }
 

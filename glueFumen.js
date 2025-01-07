@@ -93,24 +93,13 @@ function height(field) {
 function isInside(field, x, y) {
     return (0 <= x && x < WIDTH) && (0 <= y && y < height(field));
 }
-function isFloating(field, minoPositions) {
-    // if there's a 'X' under any of the minos
-    for (var _i = 0, minoPositions_1 = minoPositions; _i < minoPositions_1.length; _i++) {
-        var pos = minoPositions_1[_i];
-        // on floor
-        if (pos.y == 0 || field.at(pos.x, pos.y - 1) == 'X') {
-            return false;
-        }
-    }
-    return true;
-}
 function centerMino(minoPositions) {
     return minoPositions[0];
 }
 function placePiece(field, minoPositions, piece) {
     if (piece === void 0) { piece = 'X'; }
-    for (var _i = 0, minoPositions_2 = minoPositions; _i < minoPositions_2.length; _i++) {
-        var pos = minoPositions_2[_i];
+    for (var _i = 0, minoPositions_1 = minoPositions; _i < minoPositions_1.length; _i++) {
+        var pos = minoPositions_1[_i];
         field.set(pos.x, pos.y, piece);
     }
 }
@@ -187,59 +176,6 @@ function makeEmptyField(field) {
     return emptyField;
 }
 function getNewStart(field, x, y, minoPositions) {
-    // get new start with several checks if a piece is hanging or not
-    // also check if maybe need to clear the lines below it
-    // check if this piece would be floating without the piece under it
-    var wouldFloat = true;
-    // if there's a non 'X' under all of the minos
-    var nonXHeights = [];
-    var numBottomMinos = 0;
-    for (var _i = 0, minoPositions_3 = minoPositions; _i < minoPositions_3.length; _i++) {
-        var pos = minoPositions_3[_i];
-        if (y == 0) {
-            wouldFloat = false;
-            break;
-        }
-        else if (pos.y > y)
-            continue;
-        numBottomMinos++;
-        // not supported by an X
-        if (field.at(pos.x, pos.y - 1) != 'X') {
-            continue;
-        }
-        var foundNonX = false;
-        for (var newY = pos.y - 2; newY >= 0; newY--) {
-            if (field.at(pos.x, newY) != 'X') {
-                foundNonX = true;
-                nonXHeights.push(newY);
-                break;
-            }
-        }
-        if (!foundNonX) {
-            wouldFloat = false;
-            break;
-        }
-    }
-    if ((nonXHeights.length > 0 && !nonXHeights.every(function (v) { return v === nonXHeights[0]; })) ||
-        (nonXHeights.length == 0 && numBottomMinos > 0)) {
-        wouldFloat = false;
-    }
-    if (wouldFloat) {
-        // starting as far down to possibly get this line below to clear
-        return { x: 0, y: Math.max(y - 4, 0) };
-    }
-    // get right most mino
-    var rightMostPos = minoPositions.reduce(function (maxPos, currentPos) {
-        return currentPos.x > maxPos.x ? currentPos : maxPos;
-    }, minoPositions[0]); // Initialize with the first pair
-    if (x > 0 && y > 0 && field.at(x - 1, y - 1) == 'J')
-        return { x: x - 1, y: y - 1 }; // if J hanging from left
-    else if (y > 0 && field.at(rightMostPos.x + 1, rightMostPos.y - 1) == 'L')
-        return { x: x + 1, y: y - 1 }; // if L hanging from right
-    else if (x >= 2 && field.at(x - 2, y).match(/[LS]/))
-        return { x: x - 2, y: y }; // if S or L (facing down) hanging from left
-    else if (x >= 1 && field.at(x - 1, y).match(/[TLZ]/))
-        return { x: x - 1, y: y }; // if T, L (facing down), Z hanging from left
     // get the right most mino on current y value
     var rightMostXCurrY = Math.max.apply(Math, minoPositions.filter(function (s) { return s.y == y; }).map(function (s) { return s.x; }));
     // at the end of the line
@@ -334,7 +270,7 @@ function glue(x0, y0, field, piecesArr, allPiecesArr, totalLinesCleared, visuali
                 var newPiecesArr = __spreadArray([], piecesArr, true);
                 var minoPositions = getMinoPositions(field, x, y, piece, rotationStates[state], (visualize) ? visualizeArr : null);
                 // if there's less than minos
-                if (minoPositions.length < TETROMINO || isFloating(field, minoPositions)) {
+                if (minoPositions.length < TETROMINO) {
                     continue;
                 }
                 // place piece
