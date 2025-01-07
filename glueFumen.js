@@ -192,21 +192,37 @@ function getNewStart(field, x, y, minoPositions) {
     // check if this piece would be floating without the piece under it
     var wouldFloat = true;
     // if there's a non 'X' under all of the minos
+    var nonXHeights = [];
+    var numBottomMinos = 0;
     for (var _i = 0, minoPositions_3 = minoPositions; _i < minoPositions_3.length; _i++) {
         var pos = minoPositions_3[_i];
-        var newY = pos.y - 2;
+        if (y == 0) {
+            wouldFloat = false;
+            break;
+        }
+        else if (pos.y > y)
+            continue;
+        numBottomMinos++;
+        // not supported by an X
+        if (field.at(pos.x, pos.y - 1) != 'X') {
+            continue;
+        }
         var foundNonX = false;
-        while (newY >= 0) {
+        for (var newY = pos.y - 2; newY >= 0; newY--) {
             if (field.at(pos.x, newY) != 'X') {
                 foundNonX = true;
+                nonXHeights.push(newY);
                 break;
             }
-            newY--;
         }
         if (!foundNonX) {
             wouldFloat = false;
             break;
         }
+    }
+    if ((nonXHeights.length > 0 && !nonXHeights.every(function (v) { return v === nonXHeights[0]; })) ||
+        (nonXHeights.length == 0 && numBottomMinos > 0)) {
+        wouldFloat = false;
     }
     if (wouldFloat) {
         // starting as far down to possibly get this line below to clear

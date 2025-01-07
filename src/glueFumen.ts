@@ -175,20 +175,39 @@ function getNewStart(field: Field, x: number, y: number, minoPositions: Pos[]): 
     let wouldFloat: boolean = true;
 
     // if there's a non 'X' under all of the minos
+    let nonXHeights: number[] = [];
+    let numBottomMinos = 0;
     for (let pos of minoPositions) {
-        let newY: number = pos.y - 2;
+        if (y == 0) {
+            wouldFloat = false;
+            break;
+        } else if (pos.y > y)
+            continue
+
+        numBottomMinos++;
+
+        // not supported by an X
+        if (field.at(pos.x, pos.y - 1) != 'X'){
+            continue;
+        }
+
         let foundNonX: boolean = false;
-        while (newY >= 0) {
+        for (let newY = pos.y - 2; newY >= 0; newY--) {
             if(field.at(pos.x, newY) != 'X'){
                 foundNonX = true;
+                nonXHeights.push(newY);
                 break;
             }
-            newY--;
         } 
+
         if (!foundNonX) {
             wouldFloat = false;
             break;
         }
+    }
+    if((nonXHeights.length > 0 && !nonXHeights.every(v => v === nonXHeights[0])) ||
+       (nonXHeights.length == 0 && numBottomMinos > 0)){
+        wouldFloat = false;
     }
 
     if (wouldFloat) {
