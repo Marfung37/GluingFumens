@@ -171,17 +171,12 @@ function getNewStart(field: Field, x: number, y: number, minoPositions: Pos[]): 
     // get new start with several checks if a piece is hanging or not
     // also check if maybe need to clear the lines below it
 
-    // get right most mino
-    const rightMostPos: Pos = minoPositions.reduce((maxPos, currentPos) => {
-        return currentPos.x > maxPos.x ? currentPos : maxPos;
-        }, minoPositions[0]); // Initialize with the first pair
-
     // check if this piece would be floating without the piece under it
     let wouldFloat: boolean = true;
 
     // if there's a non 'X' under all of the minos
     for (let pos of minoPositions) {
-        let newY: number = pos.y - 1;
+        let newY: number = pos.y - 2;
         let foundNonX: boolean = false;
         while (newY >= 0) {
             if(field.at(pos.x, newY) != 'X'){
@@ -197,9 +192,14 @@ function getNewStart(field: Field, x: number, y: number, minoPositions: Pos[]): 
     }
 
     if (wouldFloat) {
-        // starting from a line below is sufficent
-        return {x: 0, y: y - 1}
+        // starting as far down to possibly get this line below to clear
+        return {x: 0, y: Math.max(y - 4, 0)}
     }
+
+    // get right most mino
+    const rightMostPos: Pos = minoPositions.reduce((maxPos, currentPos) => {
+        return currentPos.x > maxPos.x ? currentPos : maxPos;
+        }, minoPositions[0]); // Initialize with the first pair
 
     if(x > 0 && y > 0 && field.at(x - 1, y - 1) == 'J')
         return {x: x - 1, y: y - 1}; // if J hanging from left

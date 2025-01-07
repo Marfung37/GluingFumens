@@ -189,16 +189,12 @@ function makeEmptyField(field) {
 function getNewStart(field, x, y, minoPositions) {
     // get new start with several checks if a piece is hanging or not
     // also check if maybe need to clear the lines below it
-    // get right most mino
-    var rightMostPos = minoPositions.reduce(function (maxPos, currentPos) {
-        return currentPos.x > maxPos.x ? currentPos : maxPos;
-    }, minoPositions[0]); // Initialize with the first pair
     // check if this piece would be floating without the piece under it
     var wouldFloat = true;
     // if there's a non 'X' under all of the minos
     for (var _i = 0, minoPositions_3 = minoPositions; _i < minoPositions_3.length; _i++) {
         var pos = minoPositions_3[_i];
-        var newY = pos.y - 1;
+        var newY = pos.y - 2;
         var foundNonX = false;
         while (newY >= 0) {
             if (field.at(pos.x, newY) != 'X') {
@@ -213,9 +209,13 @@ function getNewStart(field, x, y, minoPositions) {
         }
     }
     if (wouldFloat) {
-        // starting from a line below is sufficent
-        return { x: 0, y: y - 1 };
+        // starting as far down to possibly get this line below to clear
+        return { x: 0, y: Math.max(y - 4, 0) };
     }
+    // get right most mino
+    var rightMostPos = minoPositions.reduce(function (maxPos, currentPos) {
+        return currentPos.x > maxPos.x ? currentPos : maxPos;
+    }, minoPositions[0]); // Initialize with the first pair
     if (x > 0 && y > 0 && field.at(x - 1, y - 1) == 'J')
         return { x: x - 1, y: y - 1 }; // if J hanging from left
     else if (y > 0 && field.at(rightMostPos.x + 1, rightMostPos.y - 1) == 'L')
