@@ -254,6 +254,10 @@ function getMinoPositions(field, x, y, piece, rotationState, visualizeArr) {
             // mino matches the piece
             if (field.at(px, py) === piece) {
                 minoPositions.push({ x: px, y: py });
+                // if not trying to visualize then failed to place
+            }
+            else if (visualizeField === null) {
+                break;
             }
         }
     }
@@ -306,61 +310,61 @@ function glue(x0, y0, field, piecesArr, allPiecesArr, totalLinesCleared, visuali
         for (var x = (y == y0) ? x0 : 0; x < WIDTH; x++) {
             // if it is a piece
             var piece = field.at(x, y);
-            if (piece.match(/[TILJSZO]/)) {
-                // checking if one of the rotations works
-                var rotationStates = pieceMappings[piece];
-                for (var state = 0; state < rotationStates.length; state++) {
-                    var newPiecesArr = __spreadArray([], piecesArr, true);
-                    var minoPositions = getMinoPositions(field, x, y, piece, rotationStates[state], (visualize) ? visualizeArr : null);
-                    // if there's less than minos
-                    if (minoPositions.length < TETROMINO || isFloating(field, minoPositions)) {
-                        continue;
-                    }
-                    // place piece
-                    var newField = field.copy();
-                    placePiece(newField, minoPositions);
-                    // clear lines
-                    var thisLinesCleared = void 0;
-                    var data = removeLineClears(newField);
-                    newField = data.field;
-                    thisLinesCleared = data.linesCleared;
-                    // determine the absolute position of the piece
-                    var absY = centerMino(minoPositions).y;
-                    for (var i = 0; i < totalLinesCleared.length && totalLinesCleared[i] <= absY; i++) {
-                        absY++;
-                    }
-                    // check if a line clear occurred
-                    var startPos = { x: 0, y: 0 };
-                    var newTotalLinesCleared = __spreadArray([], totalLinesCleared, true);
-                    if (thisLinesCleared.length > 0) {
-                        // determine the absolute position of the line numbers
-                        for (var _i = 0, thisLinesCleared_1 = thisLinesCleared; _i < thisLinesCleared_1.length; _i++) {
-                            var lineNum = thisLinesCleared_1[_i];
-                            var i = void 0;
-                            for (i = 0; i < newTotalLinesCleared.length && newTotalLinesCleared[i] <= lineNum; i++) {
-                                lineNum++;
-                            }
-                            newTotalLinesCleared.splice(i, 0, lineNum);
-                        }
-                    }
-                    else {
-                        startPos = getNewStart(field, x, y, minoPositions);
-                    }
-                    // a rotation that works
-                    var operPiece = {
-                        type: piece,
-                        rotation: (0, defines_1.parseRotationName)(state),
-                        x: centerMino(minoPositions).x,
-                        y: centerMino(minoPositions).y,
-                        absY: absY,
-                    };
-                    newPiecesArr.push(encodeOp(operPiece));
-                    if (duplicateGlue(newPiecesArr, allPiecesArr, false)) {
-                        continue;
-                    }
-                    glue(startPos.x, startPos.y, newField, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, visualize);
-                    // continue on with possiblity another piece could be placed instead of this one
+            if (!piece.match(/[TILJSZO]/))
+                continue;
+            // checking if one of the rotations works
+            var rotationStates = pieceMappings[piece];
+            for (var state = 0; state < rotationStates.length; state++) {
+                var newPiecesArr = __spreadArray([], piecesArr, true);
+                var minoPositions = getMinoPositions(field, x, y, piece, rotationStates[state], (visualize) ? visualizeArr : null);
+                // if there's less than minos
+                if (minoPositions.length < TETROMINO || isFloating(field, minoPositions)) {
+                    continue;
                 }
+                // place piece
+                var newField = field.copy();
+                placePiece(newField, minoPositions);
+                // clear lines
+                var thisLinesCleared = void 0;
+                var data = removeLineClears(newField);
+                newField = data.field;
+                thisLinesCleared = data.linesCleared;
+                // determine the absolute position of the piece
+                var absY = centerMino(minoPositions).y;
+                for (var i = 0; i < totalLinesCleared.length && totalLinesCleared[i] <= absY; i++) {
+                    absY++;
+                }
+                // check if a line clear occurred
+                var startPos = { x: 0, y: 0 };
+                var newTotalLinesCleared = __spreadArray([], totalLinesCleared, true);
+                if (thisLinesCleared.length > 0) {
+                    // determine the absolute position of the line numbers
+                    for (var _i = 0, thisLinesCleared_1 = thisLinesCleared; _i < thisLinesCleared_1.length; _i++) {
+                        var lineNum = thisLinesCleared_1[_i];
+                        var i = void 0;
+                        for (i = 0; i < newTotalLinesCleared.length && newTotalLinesCleared[i] <= lineNum; i++) {
+                            lineNum++;
+                        }
+                        newTotalLinesCleared.splice(i, 0, lineNum);
+                    }
+                }
+                else {
+                    startPos = getNewStart(field, x, y, minoPositions);
+                }
+                // a rotation that works
+                var operPiece = {
+                    type: piece,
+                    rotation: (0, defines_1.parseRotationName)(state),
+                    x: centerMino(minoPositions).x,
+                    y: centerMino(minoPositions).y,
+                    absY: absY,
+                };
+                newPiecesArr.push(encodeOp(operPiece));
+                if (duplicateGlue(newPiecesArr, allPiecesArr, false)) {
+                    continue;
+                }
+                glue(startPos.x, startPos.y, newField, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, visualize);
+                // continue on with possiblity another piece could be placed instead of this one
             }
         }
     }

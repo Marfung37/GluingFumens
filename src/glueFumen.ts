@@ -252,6 +252,9 @@ function getMinoPositions(
             // mino matches the piece
             if(field.at(px, py) === piece) {
                 minoPositions.push({x: px, y: py} as Pos);
+            // if not trying to visualize then failed to place
+            } else if (visualizeField === null) {
+                break
             }
         }
     }
@@ -321,71 +324,73 @@ function glue(
         for(let x = (y == y0) ? x0 : 0; x < WIDTH; x++){
             // if it is a piece
             let piece = field.at(x, y);
-            if(piece.match(/[TILJSZO]/)){
-                // checking if one of the rotations works
-                const rotationStates = pieceMappings[piece];
-                for(let state: Rotation = 0; state < rotationStates.length; state++){
-                    let newPiecesArr = [...piecesArr];
 
-                    let minoPositions: Pos[] = getMinoPositions(
-                        field, x, y, piece, rotationStates[state],(visualize) ? visualizeArr : null
-                    );
+            if(!piece.match(/[TILJSZO]/))
+                continue
 
-                    // if there's less than minos
-                    if(minoPositions.length < TETROMINO || isFloating(field, minoPositions)){
-                        continue
-                    }
+            // checking if one of the rotations works
+            const rotationStates = pieceMappings[piece];
+            for(let state: Rotation = 0; state < rotationStates.length; state++){
+                let newPiecesArr = [...piecesArr];
 
-                    // place piece
-                    let newField = field.copy()
-                    placePiece(newField, minoPositions);
+                let minoPositions: Pos[] = getMinoPositions(
+                    field, x, y, piece, rotationStates[state],(visualize) ? visualizeArr : null
+                );
 
-                    // clear lines
-                    let thisLinesCleared: number[];
-                    let data = removeLineClears(newField);
-                    newField = data.field;
-                    thisLinesCleared = data.linesCleared;
-
-                    // determine the absolute position of the piece
-                    let absY = centerMino(minoPositions).y;
-                    for(let i = 0; i < totalLinesCleared.length && totalLinesCleared[i] <= absY; i++) {
-                        absY++;
-                    }
-
-                    // check if a line clear occurred
-                    let startPos: Pos = {x: 0, y: 0};
-                    let newTotalLinesCleared: number[] = [...totalLinesCleared];
-                    if(thisLinesCleared.length > 0){
-                        // determine the absolute position of the line numbers
-                        for(let lineNum of thisLinesCleared) {
-                            let i: number;
-                            for(i = 0; i < newTotalLinesCleared.length && newTotalLinesCleared[i] <= lineNum; i++){
-                                lineNum++;
-                            }
-                            newTotalLinesCleared.splice(i, 0, lineNum);
-                        }
-                    } else {
-                        startPos = getNewStart(field, x, y, minoPositions)
-                    }
-
-                    // a rotation that works
-                    let operPiece = {
-                        type: piece,
-                        rotation: parseRotationName(state),
-                        x: centerMino(minoPositions).x,
-                        y: centerMino(minoPositions).y,
-                        absY: absY,
-                    }
-                    newPiecesArr.push(encodeOp(operPiece))
-
-                    if (duplicateGlue(newPiecesArr, allPiecesArr, false)) {
-                      continue;
-                    }
-
-                    glue(startPos.x, startPos.y, newField, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, visualize);
-
-                    // continue on with possiblity another piece could be placed instead of this one
+                // if there's less than minos
+                if(minoPositions.length < TETROMINO || isFloating(field, minoPositions)){
+                    continue
                 }
+
+                // place piece
+                let newField = field.copy()
+                placePiece(newField, minoPositions);
+
+                // clear lines
+                let thisLinesCleared: number[];
+                let data = removeLineClears(newField);
+                newField = data.field;
+                thisLinesCleared = data.linesCleared;
+
+                // determine the absolute position of the piece
+                let absY = centerMino(minoPositions).y;
+                for(let i = 0; i < totalLinesCleared.length && totalLinesCleared[i] <= absY; i++) {
+                    absY++;
+                }
+
+                // check if a line clear occurred
+                let startPos: Pos = {x: 0, y: 0};
+                let newTotalLinesCleared: number[] = [...totalLinesCleared];
+                if(thisLinesCleared.length > 0){
+                    // determine the absolute position of the line numbers
+                    for(let lineNum of thisLinesCleared) {
+                        let i: number;
+                        for(i = 0; i < newTotalLinesCleared.length && newTotalLinesCleared[i] <= lineNum; i++){
+                            lineNum++;
+                        }
+                        newTotalLinesCleared.splice(i, 0, lineNum);
+                    }
+                } else {
+                    startPos = getNewStart(field, x, y, minoPositions)
+                }
+
+                // a rotation that works
+                let operPiece = {
+                    type: piece,
+                    rotation: parseRotationName(state),
+                    x: centerMino(minoPositions).x,
+                    y: centerMino(minoPositions).y,
+                    absY: absY,
+                }
+                newPiecesArr.push(encodeOp(operPiece))
+
+                if (duplicateGlue(newPiecesArr, allPiecesArr, false)) {
+                  continue;
+                }
+
+                glue(startPos.x, startPos.y, newField, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, visualize);
+
+                // continue on with possiblity another piece could be placed instead of this one
             }
         }
     }
