@@ -345,7 +345,7 @@ function glue(
     }
 }
 
-export default function glueFumen(customInput: string | string[] = process.argv.slice(2), visualize: boolean = false){
+export default function glueFumen(customInput: string | string[], visualize: boolean = false){
     let inputFumenCodes: string[] = [];
 
     if(!Array.isArray(customInput)){
@@ -426,6 +426,46 @@ export default function glueFumen(customInput: string | string[] = process.argv.
 }
 
 if(require.main == module) {
-    let allFumens = glueFumen();
-    console.log(allFumens.join("\n"));
+    let input: string[] = [];
+
+    // Read standard input
+    const readStdin = (): Promise<string> => {
+      return new Promise((resolve) => {
+        let stdinData = "";
+        process.stdin.on("data", (chunk: Buffer) => {
+          stdinData += chunk.toString();
+        });
+
+        process.stdin.on("end", () => {
+          resolve(stdinData);
+        });
+
+        process.stdin.resume();
+      });
+    };
+
+    // Main function
+    const main = async () => {
+      const args: string[] = process.argv.slice(2); // Command-line arguments
+      const inputPromises: Promise<string>[] = [];
+
+      if (!process.stdin.isTTY) {
+        // Add stdin data if it's piped or redirected
+        inputPromises.push(readStdin());
+      }
+
+      // Wait for all input sources to resolve and split by newline
+      const inputs = (await Promise.all(inputPromises))[0].split(/\s+/);
+
+      // Combine raw string argument and stdin and exclude empty strings
+      input = [...args, ...inputs].filter(Boolean);
+
+      // Run glue
+      let allFumens = glueFumen(input);
+      console.log(allFumens.join("\n"));
+    };
+
+    main().catch((err) => {
+      console.error("Error:", err.message);
+    });
 }
