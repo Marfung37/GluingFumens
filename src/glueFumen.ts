@@ -174,40 +174,31 @@ function getNewStart(field: Field, x: number, y: number, minoPositions: Pos[]): 
     // check if this piece would be floating without the piece under it
     let wouldFloat: boolean = true;
 
-    // if there's a non 'X' under all of the minos
-    let nonXHeights: number[] = [];
-    let numBottomMinos = 0;
-    for (let pos of minoPositions) {
-        if (y == 0) {
-            wouldFloat = false;
-            break;
-        } else if (pos.y > y)
-            continue
-
-        numBottomMinos++;
-
-        // not supported by an X
-        if (field.at(pos.x, pos.y - 1) != 'X'){
-            continue;
-        }
-
-        let foundNonX: boolean = false;
-        for (let newY = pos.y - 2; newY >= 0; newY--) {
-            if(field.at(pos.x, newY) != 'X'){
-                foundNonX = true;
-                nonXHeights.push(newY);
-                break;
-            }
-        } 
-
-        if (!foundNonX) {
-            wouldFloat = false;
-            break;
-        }
-    }
-    if((nonXHeights.length > 0 && !nonXHeights.every(v => v === nonXHeights[0])) ||
-       (nonXHeights.length == 0 && numBottomMinos > 0)){
+    if(y === 0){
         wouldFloat = false;
+    } else {
+        // check if there's X's all the way to the floor
+        const XHeights: Set<number> = new Set<number>();
+
+        for (let pos of minoPositions) {
+            for (let newY = pos.y - 1; newY >= 0; newY--) {
+                if(field.at(pos.x, newY) === 'X'){
+                    XHeights.add(newY)
+                }
+            } 
+
+            let found: boolean = true;
+            for (let checkY = 0; checkY < y; checkY++) {
+                if(!XHeights.has(checkY)) {
+                    found = false;
+                    break
+                }
+            }
+            if(found) {
+                wouldFloat = false
+                break
+            }
+        }
     }
 
     if (wouldFloat) {
