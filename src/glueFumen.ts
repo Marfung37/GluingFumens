@@ -167,6 +167,30 @@ function makeEmptyField(field: Field): Field{
     return emptyField;
 }
 
+function checkGlueable(field: Field): boolean{
+    // check if there's enough minos of each color to place pieces
+    let fieldStr = field.str();
+
+    const frequencyCounter: Record<string, number> = {};
+
+    for (const element of fieldStr) {
+      /* 
+        If the element is not in the frequencyCounter,
+        add it with a count of 1. Otherwise, increment the count.
+      */
+      frequencyCounter[element] = (frequencyCounter[element] || 0) + 1;
+    }
+
+    for (const char in frequencyCounter){
+        if(char.match(/[TILJSZO]/)){
+            if(frequencyCounter[char] % TETROMINO != 0){
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 function getNewStart(field: Field, x: number, y: number, minoPositions: Pos[]): Pos {
     // get new start with several checks if a piece is hanging or not
     // also check if maybe need to clear the lines below it
@@ -440,7 +464,9 @@ export default function glueFumen(customInput: string | string[], fast: boolean 
             let allPiecesArr: encodedOperation[][] = [];
 
             // try to glue this field and put into all pieces arr
-            glue(0, 0, field, [], allPiecesArr, [], visualizeArr, fast, visualize);
+            if(checkGlueable(field)){
+                glue(0, 0, field, [], allPiecesArr, [], visualizeArr, fast, visualize);
+            }
             
             // couldn't glue
             if(allPiecesArr.length == 0){

@@ -186,6 +186,27 @@ function makeEmptyField(field) {
     }
     return emptyField;
 }
+function checkGlueable(field) {
+    // check if there's enough minos of each color to place pieces
+    var fieldStr = field.str();
+    var frequencyCounter = {};
+    for (var _i = 0, fieldStr_1 = fieldStr; _i < fieldStr_1.length; _i++) {
+        var element = fieldStr_1[_i];
+        /*
+          If the element is not in the frequencyCounter,
+          add it with a count of 1. Otherwise, increment the count.
+        */
+        frequencyCounter[element] = (frequencyCounter[element] || 0) + 1;
+    }
+    for (var char in frequencyCounter) {
+        if (char.match(/[TILJSZO]/)) {
+            if (frequencyCounter[char] % TETROMINO != 0) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
 function getNewStart(field, x, y, minoPositions) {
     // get new start with several checks if a piece is hanging or not
     // also check if maybe need to clear the lines below it
@@ -409,7 +430,9 @@ function glueFumen(customInput, fast, visualize) {
             var emptyField = makeEmptyField(field);
             var allPiecesArr = [];
             // try to glue this field and put into all pieces arr
-            glue(0, 0, field, [], allPiecesArr, [], visualizeArr, fast, visualize);
+            if (checkGlueable(field)) {
+                glue(0, 0, field, [], allPiecesArr, [], visualizeArr, fast, visualize);
+            }
             // couldn't glue
             if (allPiecesArr.length == 0) {
                 console.log(code + " couldn't be glued");
