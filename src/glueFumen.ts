@@ -191,58 +191,94 @@ function checkGlueable(field: Field): boolean{
     return true;
 }
 
+function checkWouldFloatPiece(field: Field, y: number, minoPositions: Pos[]): boolean {
+    // check if this piece would be floating without the piece under it
+    if(y === 0){
+        return false
+    }
+
+    // check if there's X's all the way to the floor
+    const XHeights: Set<number> = new Set<number>();
+
+    for (let pos of minoPositions) {
+        for (let newY = pos.y - 1; newY >= 0; newY--) {
+            if(field.at(pos.x, newY) === 'X'){
+                XHeights.add(newY)
+            }
+        } 
+
+        let found = true;
+        for (let checkY = 0; checkY < y; checkY++) {
+            if(!XHeights.has(checkY)) {
+                found = false;
+                break;
+            }
+        }
+        if(found) {
+            return false;
+        }
+    }
+
+    return true
+}
+
 function getNewStart(field: Field, x: number, y: number, minoPositions: Pos[]): Pos {
     // get new start with several checks if a piece is hanging or not
     // also check if maybe need to clear the lines below it
 
-    // check if this piece would be floating without the piece under it
-    let wouldFloat: boolean = true;
-
-    if(y === 0){
-        wouldFloat = false;
-    } else {
-        // check if there's X's all the way to the floor
-        const XHeights: Set<number> = new Set<number>();
-
-        for (let pos of minoPositions) {
-            for (let newY = pos.y - 1; newY >= 0; newY--) {
-                if(field.at(pos.x, newY) === 'X'){
-                    XHeights.add(newY)
-                }
-            } 
-
-            let found: boolean = true;
-            for (let checkY = 0; checkY < y; checkY++) {
-                if(!XHeights.has(checkY)) {
-                    found = false;
-                    break
-                }
-            }
-            if(found) {
-                wouldFloat = false
-                break
-            }
-        }
-    }
-
-    if (wouldFloat) {
+    if (checkWouldFloatPiece(field, y, minoPositions)) {
         // starting as far down to possibly get this line below to clear
         return {x: 0, y: Math.max(y - 4, 0)}
     }
 
-    // get right most mino
+    // get top right most mino
     const rightMostPos: Pos = minoPositions.reduce((maxPos, currentPos) => {
-        return currentPos.x > maxPos.x ? currentPos : maxPos;
+        return currentPos.x > maxPos.x || (currentPos.x == maxPos.x && currentPos.y > maxPos.y) ? currentPos : maxPos;
         }, minoPositions[0]); // Initialize with the first pair
 
-    if(x > 0 && y > 0 && field.at(x - 1, y - 1) == 'J')
-        return {x: x - 1, y: y - 1}; // if J hanging from left
-    else if(y > 0 && field.at(rightMostPos.x + 1, rightMostPos.y - 1) == 'L')
-        return {x: x + 1, y: y - 1}; // if L hanging from right
-    else if(x >= 2 && field.at(x - 2, y).match(/[LS]/))
-        return {x: x - 2, y: y}; // if S or L (facing down) hanging from left
-    else if(x >= 1 && field.at(x - 1, y).match(/[TLZ]/))
-        return {x: x - 1, y: y}; // if T, L (facing down), Z hanging from left
+    let testMinoPositions: Pos[] = [];
+
+    if(x > 0 && y > 0 && field.at(x - 1, y - 1) == 'J' && field.at(x, y + 1) == 'J') {
+        testMinoPositions = getMinoPositions(field, x - 1, y - 1, 'J', pieceMappings['J'][1])
+        if(testMinoPositions.length == TETROMINO){
+            return {x: x - 1, y: y - 1}; // if J hanging from left
+        }
+    }
+    if(y > 0 && field.at(rightMostPos.x + 1, rightMostPos.y - 1) == 'L' && field.at(rightMostPos.x, rightMostPos.y + 1) == 'L'){
+        let testMinoPositions = getMinoPositions(field, rightMostPos.x + 1, rightMostPos.y - 1, 'L', pieceMappings['L'][3])
+        if(testMinoPositions.length == TETROMINO){
+            return {x: rightMostPos.x + 1, y: rightMostPos.y - 1}; // if L hanging from right
+        }
+    }
+    if(x >= 2 && field.at(x, y + 1).match(/[LS]/)){
+        switch(field.at(x - 2, y)){
+            case 'L':
+                testMinoPositions = getMinoPositions(field, x - 2, y, 'L', pieceMappings['L'][2])
+                break;
+            case 'S':
+                testMinoPositions = getMinoPositions(field, x - 2, y, 'S', pieceMappings['S'][0])
+                break;
+        }
+        if(testMinoPositions.length == TETROMINO)
+            return {x: x - 2, y: y}; // if L or S hanging from the left
+    }
+    if(x >= 1 && field.at(x, y + 1).match(/[TLZ]/)){
+        switch(field.at(x - 1, y)){
+            case 'L':
+                testMinoPositions = getMinoPositions(field, x - 1, y, 'L', pieceMappings['L'][2])
+                break;
+            case 'Z':
+                testMinoPositions = getMinoPositions(field, x - 1, y, 'Z', pieceMappings['Z'][1])
+                break;
+            case 'T':
+                testMinoPositions = getMinoPositions(field, x - 1, y, 'T', pieceMappings['T'][1])
+                if(testMinoPositions.length != TETROMINO)
+                    testMinoPositions = getMinoPositions(field, x - 1, y, 'T', pieceMappings['T'][2]) // different rotation
+                break;
+        }
+        if(testMinoPositions.length == TETROMINO)
+            return {x: x - 1, y: y}; // if T, L (facing down), Z hanging from left
+    }
 
     // get the right most mino on current y value
     const rightMostXCurrY: number = Math.max(...minoPositions.filter(s => s.y == y).map(s => s.x))
@@ -361,7 +397,12 @@ function glue(
             let piece = field.at(x, y);
 
             if(!piece.match(/[TILJSZO]/))
-                continue
+                continue;
+
+            // if highest level and not I
+            if(y == fieldHeight - 1 && piece != 'I'){
+                continue;
+            }
 
             // checking if one of the rotations works
             const rotationStates = pieceMappings[piece];

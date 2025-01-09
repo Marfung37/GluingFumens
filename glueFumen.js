@@ -207,53 +207,86 @@ function checkGlueable(field) {
     }
     return true;
 }
-function getNewStart(field, x, y, minoPositions) {
-    // get new start with several checks if a piece is hanging or not
-    // also check if maybe need to clear the lines below it
+function checkWouldFloatPiece(field, y, minoPositions) {
     // check if this piece would be floating without the piece under it
-    var wouldFloat = true;
     if (y === 0) {
-        wouldFloat = false;
+        return false;
     }
-    else {
-        // check if there's X's all the way to the floor
-        var XHeights = new Set();
-        for (var _i = 0, minoPositions_3 = minoPositions; _i < minoPositions_3.length; _i++) {
-            var pos = minoPositions_3[_i];
-            for (var newY = pos.y - 1; newY >= 0; newY--) {
-                if (field.at(pos.x, newY) === 'X') {
-                    XHeights.add(newY);
-                }
+    // check if there's X's all the way to the floor
+    var XHeights = new Set();
+    for (var _i = 0, minoPositions_3 = minoPositions; _i < minoPositions_3.length; _i++) {
+        var pos = minoPositions_3[_i];
+        for (var newY = pos.y - 1; newY >= 0; newY--) {
+            if (field.at(pos.x, newY) === 'X') {
+                XHeights.add(newY);
             }
-            var found = true;
-            for (var checkY = 0; checkY < y; checkY++) {
-                if (!XHeights.has(checkY)) {
-                    found = false;
-                    break;
-                }
-            }
-            if (found) {
-                wouldFloat = false;
+        }
+        var found = true;
+        for (var checkY = 0; checkY < y; checkY++) {
+            if (!XHeights.has(checkY)) {
+                found = false;
                 break;
             }
         }
+        if (found) {
+            return false;
+        }
     }
-    if (wouldFloat) {
+    return true;
+}
+function getNewStart(field, x, y, minoPositions) {
+    // get new start with several checks if a piece is hanging or not
+    // also check if maybe need to clear the lines below it
+    if (checkWouldFloatPiece(field, y, minoPositions)) {
         // starting as far down to possibly get this line below to clear
         return { x: 0, y: Math.max(y - 4, 0) };
     }
-    // get right most mino
+    // get top right most mino
     var rightMostPos = minoPositions.reduce(function (maxPos, currentPos) {
-        return currentPos.x > maxPos.x ? currentPos : maxPos;
+        return currentPos.x > maxPos.x || (currentPos.x == maxPos.x && currentPos.y > maxPos.y) ? currentPos : maxPos;
     }, minoPositions[0]); // Initialize with the first pair
-    if (x > 0 && y > 0 && field.at(x - 1, y - 1) == 'J')
-        return { x: x - 1, y: y - 1 }; // if J hanging from left
-    else if (y > 0 && field.at(rightMostPos.x + 1, rightMostPos.y - 1) == 'L')
-        return { x: x + 1, y: y - 1 }; // if L hanging from right
-    else if (x >= 2 && field.at(x - 2, y).match(/[LS]/))
-        return { x: x - 2, y: y }; // if S or L (facing down) hanging from left
-    else if (x >= 1 && field.at(x - 1, y).match(/[TLZ]/))
-        return { x: x - 1, y: y }; // if T, L (facing down), Z hanging from left
+    var testMinoPositions = [];
+    if (x > 0 && y > 0 && field.at(x - 1, y - 1) == 'J' && field.at(x, y + 1) == 'J') {
+        testMinoPositions = getMinoPositions(field, x - 1, y - 1, 'J', pieceMappings['J'][1]);
+        if (testMinoPositions.length == TETROMINO) {
+            return { x: x - 1, y: y - 1 }; // if J hanging from left
+        }
+    }
+    if (y > 0 && field.at(rightMostPos.x + 1, rightMostPos.y - 1) == 'L' && field.at(rightMostPos.x, rightMostPos.y + 1) == 'L') {
+        var testMinoPositions_1 = getMinoPositions(field, rightMostPos.x + 1, rightMostPos.y - 1, 'L', pieceMappings['L'][3]);
+        if (testMinoPositions_1.length == TETROMINO) {
+            return { x: rightMostPos.x + 1, y: rightMostPos.y - 1 }; // if L hanging from right
+        }
+    }
+    if (x >= 2 && field.at(x, y + 1).match(/[LS]/)) {
+        switch (field.at(x - 2, y)) {
+            case 'L':
+                testMinoPositions = getMinoPositions(field, x - 2, y, 'L', pieceMappings['L'][2]);
+                break;
+            case 'S':
+                testMinoPositions = getMinoPositions(field, x - 2, y, 'S', pieceMappings['S'][0]);
+                break;
+        }
+        if (testMinoPositions.length == TETROMINO)
+            return { x: x - 2, y: y }; // if L or S hanging from the left
+    }
+    if (x >= 1 && field.at(x, y + 1).match(/[TLZ]/)) {
+        switch (field.at(x - 1, y)) {
+            case 'L':
+                testMinoPositions = getMinoPositions(field, x - 1, y, 'L', pieceMappings['L'][2]);
+                break;
+            case 'Z':
+                testMinoPositions = getMinoPositions(field, x - 1, y, 'Z', pieceMappings['Z'][1]);
+                break;
+            case 'T':
+                testMinoPositions = getMinoPositions(field, x - 1, y, 'T', pieceMappings['T'][1]);
+                if (testMinoPositions.length != TETROMINO)
+                    testMinoPositions = getMinoPositions(field, x - 1, y, 'T', pieceMappings['T'][2]); // different rotation
+                break;
+        }
+        if (testMinoPositions.length == TETROMINO)
+            return { x: x - 1, y: y }; // if T, L (facing down), Z hanging from left
+    }
     // get the right most mino on current y value
     var rightMostXCurrY = Math.max.apply(Math, minoPositions.filter(function (s) { return s.y == y; }).map(function (s) { return s.x; }));
     // at the end of the line
@@ -342,6 +375,10 @@ function glue(x0, y0, field, piecesArr, allPiecesArr, totalLinesCleared, visuali
             var piece = field.at(x, y);
             if (!piece.match(/[TILJSZO]/))
                 continue;
+            // if highest level and not I
+            if (y == fieldHeight - 1 && piece != 'I') {
+                continue;
+            }
             // checking if one of the rotations works
             var rotationStates = pieceMappings[piece];
             for (var state = 0; state < rotationStates.length; state++) {
@@ -508,7 +545,7 @@ if (require.main == module) {
                     inputs = _a.sent();
                     // Combine raw string argument and stdin and exclude empty strings and undefined
                     input_1 = __spreadArray(__spreadArray([], args, true), inputs, true).filter(Boolean).join('\n').trim().split(/\s+/);
-                    allFumens = glueFumen(input_1, true);
+                    allFumens = glueFumen(input_1);
                     console.log(allFumens.join("\n"));
                     return [2 /*return*/];
             }
