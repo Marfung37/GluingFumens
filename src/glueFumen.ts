@@ -325,6 +325,7 @@ function glue(
     allPiecesArr: encodedOperation[][],
     totalLinesCleared: number[], 
     visualizeArr: Pages, 
+    fast: boolean,
     visualize: boolean): void 
 {
     const fieldHeight = height(field);
@@ -394,11 +395,11 @@ function glue(
                 }
                 newPiecesArr.push(encodeOp(operPiece))
 
-                if (duplicateGlue(newPiecesArr, allPiecesArr, false)) {
+                if (fast && duplicateGlue(newPiecesArr, allPiecesArr, false)) {
                   continue;
                 }
 
-                glue(startPos.x, startPos.y, newField, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, visualize);
+                glue(startPos.x, startPos.y, newField, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, fast, visualize);
 
                 // continue on with possiblity another piece could be placed instead of this one
             }
@@ -411,7 +412,7 @@ function glue(
     }
 }
 
-export default function glueFumen(customInput: string | string[], visualize: boolean = false){
+export default function glueFumen(customInput: string | string[], fast: boolean = false, visualize: boolean = false){
     let inputFumenCodes: string[] = [];
 
     if(!Array.isArray(customInput)){
@@ -439,7 +440,7 @@ export default function glueFumen(customInput: string | string[], visualize: boo
             let allPiecesArr: encodedOperation[][] = [];
 
             // try to glue this field and put into all pieces arr
-            glue(0, 0, field, [], allPiecesArr, [], visualizeArr, visualize);
+            glue(0, 0, field, [], allPiecesArr, [], visualizeArr, fast, visualize);
             
             // couldn't glue
             if(allPiecesArr.length == 0){
@@ -527,7 +528,7 @@ if(require.main == module) {
       input = [...args, ...inputs].filter(Boolean).join('\n').trim().split(/\s+/);
 
       // Run glue
-      let allFumens = glueFumen(input);
+      let allFumens = glueFumen(input, true);
       console.log(allFumens.join("\n"));
     };
 

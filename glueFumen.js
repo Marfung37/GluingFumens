@@ -312,7 +312,7 @@ function duplicateGlue(subArr, arrays, checkLength) {
     }
     return false;
 }
-function glue(x0, y0, field, piecesArr, allPiecesArr, totalLinesCleared, visualizeArr, visualize) {
+function glue(x0, y0, field, piecesArr, allPiecesArr, totalLinesCleared, visualizeArr, fast, visualize) {
     var fieldHeight = height(field);
     // scan through board for any colored minos
     for (var y = y0; y < fieldHeight; y++) {
@@ -369,10 +369,10 @@ function glue(x0, y0, field, piecesArr, allPiecesArr, totalLinesCleared, visuali
                     absY: absY,
                 };
                 newPiecesArr.push(encodeOp(operPiece));
-                if (duplicateGlue(newPiecesArr, allPiecesArr, false)) {
+                if (fast && duplicateGlue(newPiecesArr, allPiecesArr, false)) {
                     continue;
                 }
-                glue(startPos.x, startPos.y, newField, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, visualize);
+                glue(startPos.x, startPos.y, newField, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, fast, visualize);
                 // continue on with possiblity another piece could be placed instead of this one
             }
         }
@@ -382,7 +382,8 @@ function glue(x0, y0, field, piecesArr, allPiecesArr, totalLinesCleared, visuali
         allPiecesArr.push(piecesArr);
     }
 }
-function glueFumen(customInput, visualize) {
+function glueFumen(customInput, fast, visualize) {
+    if (fast === void 0) { fast = false; }
     if (visualize === void 0) { visualize = false; }
     var inputFumenCodes = [];
     if (!Array.isArray(customInput)) {
@@ -408,7 +409,7 @@ function glueFumen(customInput, visualize) {
             var emptyField = makeEmptyField(field);
             var allPiecesArr = [];
             // try to glue this field and put into all pieces arr
-            glue(0, 0, field, [], allPiecesArr, [], visualizeArr, visualize);
+            glue(0, 0, field, [], allPiecesArr, [], visualizeArr, fast, visualize);
             // couldn't glue
             if (allPiecesArr.length == 0) {
                 console.log(code + " couldn't be glued");
@@ -484,7 +485,7 @@ if (require.main == module) {
                     inputs = _a.sent();
                     // Combine raw string argument and stdin and exclude empty strings and undefined
                     input_1 = __spreadArray(__spreadArray([], args, true), inputs, true).filter(Boolean).join('\n').trim().split(/\s+/);
-                    allFumens = glueFumen(input_1);
+                    allFumens = glueFumen(input_1, true);
                     console.log(allFumens.join("\n"));
                     return [2 /*return*/];
             }
