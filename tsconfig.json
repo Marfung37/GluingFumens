@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",         // Or use "ESNext" if using modern modules
+    "esModuleInterop": true,      // Enable interop for CommonJS modules
+    "allowSyntheticDefaultImports": true,  // Allow default imports
+    "strict": true,                // Optional, but enables strict type-checking
+    "outDir": ".",               // Directory where compiled files will be placed
+    "rootDir": "./src",               // Directory containing your TypeScript source files
+    "strict": true                    // Enable strict type-checking (optional)
+  },
+  "include": [
+    "src/**/*.ts"                     // Include all TypeScript files under the "src" folder
+  ],
+  "exclude": [
+    "node_modules"                    // Exclude the "node_modules" folder from being compiled
+  ]
+}

@@ -8,7 +8,6 @@ import {Pos,
         parseRotation, 
         parseRotationName} from './defines';
 
-const HEIGHT = 20;
 const WIDTH = 10;
 const TETROMINO = 4;
 
@@ -45,7 +44,9 @@ const pieceMappings = {
         ],
     "O": [
         [[0, 0], [1, 0], [0, 1], [1, 1]]
-        ]
+        ],
+    "X": [],
+    "_": []
 }
 
 // an Operation with also an absolute y value
@@ -386,6 +387,7 @@ function glue(
     totalLinesCleared: number[], 
     visualizeArr: Pages, 
     fast: boolean,
+    expectedSolutions: number,
     visualize: boolean): void 
 {
     const fieldHeight = height(field);
@@ -464,7 +466,11 @@ function glue(
                   continue;
                 }
 
-                glue(startPos.x, startPos.y, newField, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, fast, visualize);
+                glue(startPos.x, startPos.y, newField, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, fast, expectedSolutions, visualize);
+
+                if(expectedSolutions > 0 && allPiecesArr.length == expectedSolutions){
+                    return;
+                }
 
                 // continue on with possiblity another piece could be placed instead of this one
             }
@@ -477,7 +483,7 @@ function glue(
     }
 }
 
-export default function glueFumen(customInput: string | string[], fast: boolean = false, visualize: boolean = false){
+export default function glueFumen(customInput: string | string[], fast: boolean = false, expectedSolutions: number = -1, visualize: boolean = false){
     let inputFumenCodes: string[] = [];
 
     if(!Array.isArray(customInput)){
@@ -506,7 +512,7 @@ export default function glueFumen(customInput: string | string[], fast: boolean 
 
             // try to glue this field and put into all pieces arr
             if(checkGlueable(field)){
-                glue(0, 0, field, [], allPiecesArr, [], visualizeArr, fast, visualize);
+                glue(0, 0, field, [], allPiecesArr, [], visualizeArr, fast, expectedSolutions, visualize);
             }
             
             // couldn't glue
@@ -557,49 +563,4 @@ export default function glueFumen(customInput: string | string[], fast: boolean 
 
     // output glued fumens
     return allFumens
-}
-
-if(require.main == module) {
-    let input: string[] = [];
-
-    // Read standard input
-    const readStdin = (): Promise<string> => {
-      return new Promise((resolve) => {
-        let stdinData = "";
-        process.stdin.on("data", (chunk: Buffer) => {
-          stdinData += chunk.toString();
-        });
-
-        process.stdin.on("end", () => {
-          resolve(stdinData);
-        });
-
-        process.stdin.resume();
-      });
-    };
-
-    // Main function
-    const main = async () => {
-      const args: string[] = process.argv.slice(2); // Command-line arguments
-      const inputPromises: Promise<string>[] = [];
-
-      if (!process.stdin.isTTY) {
-        // Add stdin data if it's piped or redirected
-        inputPromises.push(readStdin());
-      }
-
-      // Wait for all input sources to resolve and split by newline
-      const inputs = await Promise.all(inputPromises);
-
-      // Combine raw string argument and stdin and exclude empty strings and undefined
-      input = [...args, ...inputs].filter(Boolean).join('\n').trim().split(/\s+/);
-
-      // Run glue
-      let allFumens = glueFumen(input, true);
-      console.log(allFumens.join("\n"));
-    };
-
-    main().catch((err) => {
-      console.error("Error:", err.message);
-    });
 }
