@@ -1,4 +1,27 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -48,13 +71,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var glueFumen_1 = __importDefault(require("./glueFumen"));
+var glueFumen_1 = __importDefault(require("./lib/glueFumen"));
 var yargs_1 = __importDefault(require("yargs"));
 var helpers_1 = require("yargs/helpers");
+var path = __importStar(require("path"));
 if (require.main == module) {
     var yargsInstance_1 = (0, yargs_1.default)((0, helpers_1.hideBin)(process.argv))
         .version(false)
-        .usage("Usage: glueFumen.js [fumens...] [options] [< inputFile]\n\nTurns single page fumens with color coded pieces into multipage fumens with a piece on each page.")
+        .usage("\nUsage: ".concat(path.basename(__filename), " [fumens...] [options] [< inputFile]\n\nTurns single page fumens with color coded pieces into multipage fumens with a piece on each page."))
         .option('fast', {
         alias: 'f',
         type: 'boolean',
@@ -79,7 +103,8 @@ if (require.main == module) {
         description: 'Visualization of what the script is doing to find solutions.',
         default: false
     })
-        .help();
+        .help()
+        .alias('h', 'help');
     var argv_1 = yargsInstance_1.parseSync();
     var input_1 = [];
     // Read standard input
@@ -115,7 +140,6 @@ if (require.main == module) {
                         yargsInstance_1.showHelp(); // show help
                         process.exit(0);
                     }
-                    console.log(argv_1["fast"], argv_1["expected-solutions"], argv_1["visualize"]);
                     allFumens = (0, glueFumen_1.default)(input_1, argv_1.fast, argv_1.expectedSolutions, argv_1.visualize);
                     console.log(allFumens.join("\n"));
                     return [2 /*return*/];

@@ -1,11 +1,12 @@
-import glueFumen from './glueFumen';
+import glueFumen from './lib/glueFumen';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
+import * as path from 'path';
 
 if(require.main == module) {
     const yargsInstance = yargs(hideBin(process.argv))
         .version(false)
-        .usage("Usage: glueFumen.js [fumens...] [options] [< inputFile]\n\nTurns single page fumens with color coded pieces into multipage fumens with a piece on each page.")
+        .usage(`\nUsage: ${path.basename(__filename)} [fumens...] [options] [< inputFile]\n\nTurns single page fumens with color coded pieces into multipage fumens with a piece on each page.`)
         .option('fast', {
             alias: 'f',
             type: 'boolean',
@@ -30,7 +31,8 @@ if(require.main == module) {
             description: 'Visualization of what the script is doing to find solutions.',
             default: false
         })
-        .help();
+        .help()
+        .alias('h', 'help');
 
     const argv = yargsInstance.parseSync();
 
