@@ -79,12 +79,6 @@ if (require.main == module) {
     var yargsInstance_1 = (0, yargs_1.default)((0, helpers_1.hideBin)(process.argv))
         .version(false)
         .usage("\nUsage: ".concat(path.basename(__filename), " [fumens...] [options] [< inputFile]\n\nTurns single page fumens with color coded pieces into multipage fumens with a piece on each page."))
-        .option('fast', {
-        alias: 'f',
-        type: 'boolean',
-        description: 'Runs a faster version but may miss solutions',
-        default: false
-    })
         .option('expected-solutions', {
         alias: 'e',
         type: 'number',
@@ -140,7 +134,7 @@ if (require.main == module) {
                         yargsInstance_1.showHelp(); // show help
                         process.exit(0);
                     }
-                    allFumens = (0, glueFumen_1.default)(input_1, argv_1.fast, argv_1.expectedSolutions, argv_1.visualize);
+                    allFumens = (0, glueFumen_1.default)(input_1, argv_1.expectedSolutions, argv_1.visualize);
                     console.log(allFumens.join("\n"));
                     return [2 /*return*/];
             }

@@ -7,12 +7,6 @@ if(require.main == module) {
     const yargsInstance = yargs(hideBin(process.argv))
         .version(false)
         .usage(`\nUsage: ${path.basename(__filename)} [fumens...] [options] [< inputFile]\n\nTurns single page fumens with color coded pieces into multipage fumens with a piece on each page.`)
-        .option('fast', {
-            alias: 'f',
-            type: 'boolean',
-            description: 'Runs a faster version but may miss solutions',
-            default: false
-        })
         .option('expected-solutions', {
             alias: 'e',
             type: 'number',
@@ -75,7 +69,7 @@ if(require.main == module) {
         }
 
         // Run glue
-        let allFumens = glueFumen(input, argv.fast, argv.expectedSolutions, argv.visualize);
+        let allFumens = glueFumen(input, argv.expectedSolutions, argv.visualize);
         console.log(allFumens.join("\n"));
     };
 

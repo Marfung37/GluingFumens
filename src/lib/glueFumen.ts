@@ -370,7 +370,7 @@ function getMinoPositions(
     return minoPositions;
 }
 
-function duplicateGlue(subArr: encodedOperation[], arrays: encodedOperation[][], checkLength: boolean = true): boolean {
+function duplicateGlue(subArr: encodedOperation[], arrays: encodedOperation[][]): boolean {
     // check if duplicate
 
     // new array without y but keep absolute y
@@ -378,32 +378,14 @@ function duplicateGlue(subArr: encodedOperation[], arrays: encodedOperation[][],
     const arrSet: Set<encodedOperation> = new Set<encodedOperation>(absSubArr);
 
     for(let arr of arrays) {
-        // check if the two arrays are the same length
-        if (checkLength) {
-          if (subArr.length !== arr.length) {
-              continue;
-          }
+        if (subArr.length !== arr.length) {
+            return false;
+        }
 
-          // check if two arrays are permutations
-          let absArr = arr.map((x: number) => x >> 5);
-          if(absArr.every((x) => arrSet.has(x))) {
+        // check if two arrays are permutations
+        let absArr = arr.map((x: number) => x >> 5);
+        if(absArr.every((x) => arrSet.has(x))) {
             return true;
-          }
-
-        } else {
-          let countMatch = 0;
-
-          // check if all elements of sub arr in the arr
-          let absArr = arr.map((x: number) => x >> 5);
-          for(let x of absArr) {
-            if(arrSet.has(x)) {
-              countMatch++;
-            }
-          }
-          if(countMatch == subArr.length) {
-            return true;
-          }
-
         }
     }
 
@@ -419,7 +401,6 @@ function glue(
     allPiecesArr: encodedOperation[][],
     totalLinesCleared: number[], 
     visualizeArr: Pages, 
-    fast: boolean,
     expectedSolutions: number,
     visualize: boolean): void 
 {
@@ -493,11 +474,7 @@ function glue(
                 }
                 newPiecesArr.push(encodeOp(operPiece))
 
-                if (fast && duplicateGlue(newPiecesArr, allPiecesArr, false)) {
-                  continue;
-                }
-
-                glue(startPos.x, startPos.y, newField, height - thisLinesCleared.length, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, fast, expectedSolutions, visualize);
+                glue(startPos.x, startPos.y, newField, height - thisLinesCleared.length, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, expectedSolutions, visualize);
 
                 if(expectedSolutions > 0 && allPiecesArr.length == expectedSolutions){
                     return;
@@ -514,7 +491,7 @@ function glue(
     }
 }
 
-export default function glueFumen(customInput: string | string[], fast: boolean = false, expectedSolutions: number = -1, visualize: boolean = false){
+export default function glueFumen(customInput: string | string[], expectedSolutions: number = -1, visualize: boolean = false){
     let inputFumenCodes: string[] = [];
 
     if(!Array.isArray(customInput)){
@@ -544,7 +521,7 @@ export default function glueFumen(customInput: string | string[], fast: boolean 
 
             // try to glue this field and put into all pieces arr
             if(checkGlueable(field, height)){
-                glue(0, 0, field, height, [], allPiecesArr, [], visualizeArr, fast, expectedSolutions, visualize);
+                glue(0, 0, field, height, [], allPiecesArr, [], visualizeArr, expectedSolutions, visualize);
             }
             
             // couldn't glue
