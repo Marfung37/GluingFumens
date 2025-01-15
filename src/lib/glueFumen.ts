@@ -154,8 +154,8 @@ function anyColoredMinos(field: Field): boolean {
     return false;
 }
 
-function makeEmptyField(field: Field): Field{
-    var emptyField = field.copy();
+function makeEmptyField(field: Field): Field {
+    let emptyField = field.copy();
     const fieldHeight = height(field);
     for(let y = 0; y < fieldHeight; y++){
         for(let x = 0; x < WIDTH; x++){
@@ -168,11 +168,31 @@ function makeEmptyField(field: Field): Field{
     return emptyField;
 }
 
-function checkGlueable(field: Field): boolean{
+function replaceAllExcept(field: Field, pieces: string): Field {
+    // replace all pieces with X except given pieces
+    // clear lines afterwards
+    let fieldCpy = field.copy();
+    let re = new RegExp(String.raw`[^X_${pieces}]`);
+    const fieldHeight = height(field);
+    for(let y = 0; y < fieldHeight; y++){
+        for(let x = 0; x < WIDTH; x++){
+            let piece = fieldCpy.at(x, y);
+            if(piece.match(re)){
+                fieldCpy.set(x, y, "X");
+            }
+        }
+    }
+    let {field: newField} = removeLineClears(fieldCpy);
+
+    return newField;
+}
+
+function countMaxExpectedSoutions(field: Field): number {
     // check if there's enough minos of each color to place pieces
     let fieldStr = field.str();
 
     const frequencyCounter: Record<string, number> = {};
+    let count = 1;
 
     for (const element of fieldStr) {
       /* 
@@ -185,11 +205,25 @@ function checkGlueable(field: Field): boolean{
     for (const char in frequencyCounter){
         if(char.match(/[TILJSZO]/)){
             if(frequencyCounter[char] % TETROMINO != 0){
-                return false;
+                return 0;
+            } else {
+                frequencyCounter[char] /= TETROMINO;
             }
         }
     }
-    return true;
+
+    for (const char in frequencyCounter){
+        if(char.match(/[TILJSZO]/) && frequencyCounter[char] > 1) {
+            let pieceOnlyField = replaceAllExcept(field, char);
+            
+            // try with just these pieces and get the number of solutions
+            let allSolns: encodedOperation[][] = [];
+            glue(0, 0, pieceOnlyField, [], allSolns, [], [], false, -1, false);
+            count *= allSolns.length;
+        }
+    }
+
+    return count;
 }
 
 function checkWouldFloatPiece(field: Field, y: number, minoPositions: Pos[]): boolean {
@@ -483,7 +517,7 @@ function glue(
     }
 }
 
-export default function glueFumen(customInput: string | string[], fast: boolean = false, expectedSolutions: number = -1, visualize: boolean = false){
+export default function glueFumen(customInput: string | string[], fast: boolean = false, expectedSolutions: number = -1, visualize: boolean = false): string[] {
     let inputFumenCodes: string[] = [];
 
     if(!Array.isArray(customInput)){
@@ -511,8 +545,9 @@ export default function glueFumen(customInput: string | string[], fast: boolean 
             let allPiecesArr: encodedOperation[][] = [];
 
             // try to glue this field and put into all pieces arr
-            if(checkGlueable(field)){
-                glue(0, 0, field, [], allPiecesArr, [], visualizeArr, fast, expectedSolutions, visualize);
+            let fieldExpectedSolns = countMaxExpectedSoutions(field);
+            if(fieldExpectedSolns !== 0){
+                glue(0, 0, field, [], allPiecesArr, [], visualizeArr, fast, Math.min(fieldExpectedSolns, expectedSolutions), visualize);
             }
             
             // couldn't glue
