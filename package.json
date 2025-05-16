@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "build": "tsc"
+  },
   "dependencies": {
     "tetris-fumen": "^1.1.3",
     "yargs": "^17.7.2"

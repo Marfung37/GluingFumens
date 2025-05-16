@@ -6,6 +6,7 @@
     "strict": true,                // Optional, but enables strict type-checking
     "outDir": ".",               // Directory where compiled files will be placed
     "rootDir": "./src",               // Directory containing your TypeScript source files
+    "outDir": "./",                // Output the files in root directory
     "strict": true                    // Enable strict type-checking (optional)
   },
   "include": [

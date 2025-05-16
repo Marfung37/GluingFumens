@@ -263,9 +263,9 @@ function getNewStart(field: Field, height: number, x: number, y: number, minoPos
         return {x: 0, y: Math.max(y - 4, 0)}
     }
 
-    // get top right most mino
+    // get right most mino in current y
     const rightMostPos: Pos = minoPositions.reduce((maxPos, currentPos) => {
-        return currentPos.x > maxPos.x || (currentPos.x == maxPos.x && currentPos.y > maxPos.y) ? currentPos : maxPos;
+        return currentPos.x > maxPos.x || (currentPos.x == maxPos.x && y == currentPos.y) ? currentPos : maxPos;
         }, minoPositions[0]); // Initialize with the first pair
 
     let testMinoPositions: Pos[] = [];
@@ -282,7 +282,7 @@ function getNewStart(field: Field, height: number, x: number, y: number, minoPos
             return {x: rightMostPos.x + 1, y: rightMostPos.y - 1}; // if L hanging from right
         }
     }
-    if(x >= 2 && "LS".includes(field.at(x, y + 1))){
+    if(x >= 2 && y > 0 && "LS".includes(field.at(x - 2, y)) && "LS".includes(field.at(x, y + 1))){
         switch(field.at(x - 2, y)){
             case 'L':
                 testMinoPositions = getMinoPositions(field, height, x - 2, y, 'L', pieceMappings['L'][2])
@@ -294,7 +294,7 @@ function getNewStart(field: Field, height: number, x: number, y: number, minoPos
         if(testMinoPositions.length == TETROMINO)
             return {x: x - 2, y: y}; // if L or S hanging from the left
     }
-    if(x >= 1 && "TLZ".includes(field.at(x, y + 1))){
+    if(x >= 1 && y > 0 && "TLZ".includes(field.at(x - 1, y)) && "TLZ".includes(field.at(x, y + 1))){
         switch(field.at(x - 1, y)){
             case 'L':
                 testMinoPositions = getMinoPositions(field, height, x - 1, y, 'L', pieceMappings['L'][2])
@@ -312,15 +312,12 @@ function getNewStart(field: Field, height: number, x: number, y: number, minoPos
             return {x: x - 1, y: y}; // if T, L (facing down), Z hanging from left
     }
 
-    // get the right most mino on current y value
-    const rightMostXCurrY: number = Math.max(...minoPositions.filter(s => s.y == y).map(s => s.x))
-
     // at the end of the line
-    if (rightMostXCurrY == 9) {
+    if (rightMostPos.x == 9) {
         return {x: 0, y: y + 1}
     }
 
-    return {x: rightMostXCurrY + 1, y: y};
+    return {x: rightMostPos.x + 1, y: y};
 }
 
 function getMinoPositions(
