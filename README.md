@@ -13,12 +13,12 @@ npm i --omit=dev
 
 # Command
 ```sh
-node glueFumen.js fumenCode [fumenCode...]
+node glue.js fumenCode [fumenCode...]
 ```  
 
 Example:  
 ```sh
-node glueFumen.js v115@9gA8ywg0glR4RpB8wwklRpD8i0glG8R4glB8JeAgH
+node glue.js v115@9gA8ywg0glR4RpB8wwklRpD8i0glG8R4glB8JeAgH
 ```  
 Would output  
 ```
