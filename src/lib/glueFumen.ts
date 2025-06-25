@@ -265,7 +265,7 @@ function getNewStart(field: Field, height: number, x: number, y: number, minoPos
 
     // get right most mino in current y
     const rightMostPos: Pos = minoPositions.reduce((maxPos, currentPos) => {
-        return currentPos.x > maxPos.x || (currentPos.x == maxPos.x && y == currentPos.y) ? currentPos : maxPos;
+        return currentPos.x > maxPos.x && y == currentPos.y ? currentPos : maxPos;
         }, minoPositions[0]); // Initialize with the first pair
 
     let testMinoPositions: Pos[] = [];
