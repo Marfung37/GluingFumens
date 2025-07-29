@@ -97,6 +97,18 @@ if (require.main == module) {
         description: 'Visualization of what the script is doing to find solutions.',
         default: false
     })
+        .option('order', {
+        alias: 'o',
+        type: 'string',
+        description: 'Given order of pieces to be placed',
+        default: '',
+        coerce: function (arg) {
+            if (!arg.match(/^[TILJSZO]*$/)) {
+                throw new Error('--order (-o) must consist of only TILJSZO pieces');
+            }
+            return arg;
+        },
+    })
         .help()
         .alias('h', 'help');
     var argv_1 = yargsInstance_1.parseSync();
@@ -134,7 +146,7 @@ if (require.main == module) {
                         yargsInstance_1.showHelp(); // show help
                         process.exit(0);
                     }
-                    allFumens = (0, glueFumen_1.default)(input_1, argv_1.expectedSolutions, argv_1.visualize);
+                    allFumens = (0, glueFumen_1.default)(input_1, argv_1.expectedSolutions, argv_1.visualize, argv_1.order ? argv_1.order : null);
                     console.log(allFumens.join("\n"));
                     return [2 /*return*/];
             }
