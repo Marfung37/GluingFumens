@@ -82,8 +82,9 @@ if(require.main == module) {
     }
 
     // Run glue
-    let allFumens = glueFumen(input, argv.expectedSolutions, argv.visualize, argv.order ? argv.order: null);
+    let {allFumens, allCuts} = glueFumen(input, argv.expectedSolutions, argv.visualize, argv.order ? argv.order: null);
     console.log(allFumens.join("\n"));
+    console.log(allCuts);
   };
 
   main().catch((err) => {

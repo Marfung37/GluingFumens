@@ -396,6 +396,8 @@ function glue(
   height: number,
   piecesArr: encodedOperation[], 
   allPiecesArr: encodedOperation[][],
+  cutPiecesArr: boolean[],
+  allCuts: boolean[][],
   totalLinesCleared: number[], 
   visualizeArr: Pages, 
   expectedSolutions: number,
@@ -429,6 +431,13 @@ function glue(
           field, height, x, y, piece, rotationStates[state],(visualize) ? visualizeArr : null
         );
 
+        // copy the mino positions
+        let absMinoPositions: Pos[] = [];
+        for (let pos of minoPositions) {
+          absMinoPositions.push({x: pos.x, y: pos.y});
+        }
+
+
         // if there's less than minos
         if(minoPositions.length < TETROMINO || isFloating(field, minoPositions)){
           continue
@@ -444,10 +453,24 @@ function glue(
         newField = data.field;
         thisLinesCleared = data.linesCleared;
 
-        // determine the absolute position of the piece
-        let absY = centerMino(minoPositions).y;
-        for(let i = 0; i < totalLinesCleared.length && totalLinesCleared[i] <= absY; i++) {
-          absY++;
+        for (let pos of absMinoPositions) {
+          for(let i = 0; i < totalLinesCleared.length && totalLinesCleared[i] <= pos.y; i++) pos.y++;
+        }
+        let absY = centerMino(absMinoPositions).y;
+        
+        // checking if the piece is cut
+        let cutPiece: boolean = false;
+        for (let i = 0; i < TETROMINO; i++) {
+          let offset = rotationStates[state][i];
+          let pos = absMinoPositions[i];
+          let px = x + offset[0];
+          let py = absMinoPositions[1].y + offset[1]; // index 1 is original y shifted
+        
+          // check if this is within the mino positions
+          if (!(pos.x == px && pos.y == py)) {
+            cutPiece = true;
+            break;
+          }
         }
 
         // check if a line clear occurred
@@ -474,9 +497,11 @@ function glue(
           y: centerMino(minoPositions).y,
           absY: absY,
         }
-        newPiecesArr.push(encodeOp(operPiece))
+        newPiecesArr.push(encodeOp(operPiece));
+        let newCutPieceArr = [...cutPiecesArr];
+        newCutPieceArr.push(cutPiece);
 
-        glue(startPos.x, startPos.y, newField, height - thisLinesCleared.length, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, expectedSolutions, visualize, order ? order?.slice(1): null);
+        glue(startPos.x, startPos.y, newField, height - thisLinesCleared.length, newPiecesArr, allPiecesArr, newCutPieceArr, allCuts, newTotalLinesCleared, visualizeArr, expectedSolutions, visualize, order ? order?.slice(1): null);
 
         if(expectedSolutions > 0 && allPiecesArr.length == expectedSolutions){
           return;
@@ -490,10 +515,11 @@ function glue(
   // if the field doesn't have any more pieces it's good
   if(!anyColoredMinos(field, height) && !duplicateGlue(piecesArr, allPiecesArr)){
     allPiecesArr.push(piecesArr);
+    allCuts.push(cutPiecesArr);
   }
 }
 
-export default function glueFumen(customInput: string | string[], expectedSolutions: number = -1, visualize: boolean = false, order: string | null = null){
+export default function glueFumen(customInput: string | string[], expectedSolutions: number = -1, visualize: boolean = false, order: string | null = null) {
   let inputFumenCodes: string[] = [];
 
   if(!Array.isArray(customInput)){
@@ -506,6 +532,7 @@ export default function glueFumen(customInput: string | string[], expectedSoluti
 
   // all "global" variables
   let allFumens: string[] = [];
+  let allCuts: boolean[][] = [];
   let visualizeArr: Pages = [];
   let fumenIssues = 0;
 
@@ -523,7 +550,7 @@ export default function glueFumen(customInput: string | string[], expectedSoluti
 
       // try to glue this field and put into all pieces arr
       if(checkGlueable(field, height)){
-        glue(0, 0, field, height, [], allPiecesArr, [], visualizeArr, expectedSolutions, visualize, order);
+        glue(0, 0, field, height, [], allPiecesArr, [], allCuts, [], visualizeArr, expectedSolutions, visualize, order);
       }
       
       // couldn't glue
@@ -569,9 +596,11 @@ export default function glueFumen(customInput: string | string[], expectedSoluti
   }
 
   // output visualization instead of glued fumens
-  if(visualize)
-    return [encoder.encode(visualizeArr)];
+  if(visualize) {
+    allFumens.push(encoder.encode(visualizeArr))
+    return {allFumens, allCuts};
+  }
 
   // output glued fumens
-  return allFumens
+  return {allFumens, allCuts};
 }

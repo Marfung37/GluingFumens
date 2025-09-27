@@ -128,9 +128,9 @@ if (require.main == module) {
     };
     // Main function
     var main = function () { return __awaiter(void 0, void 0, void 0, function () {
-        var inputPromises, inputs, allFumens;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
+        var inputPromises, inputs, _a, allFumens, allCuts;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
                 case 0:
                     inputPromises = [];
                     if (!process.stdin.isTTY) {
@@ -139,15 +139,16 @@ if (require.main == module) {
                     }
                     return [4 /*yield*/, Promise.all(inputPromises)];
                 case 1:
-                    inputs = _a.sent();
+                    inputs = _b.sent();
                     // Combine raw string argument and stdin and exclude empty strings and undefined
                     input_1 = __spreadArray(__spreadArray([], argv_1._, true), inputs, true).filter(Boolean).join('\n').trim().split(/\s+/).filter(Boolean);
                     if (input_1.length == 0) {
                         yargsInstance_1.showHelp(); // show help
                         process.exit(0);
                     }
-                    allFumens = (0, glueFumen_1.default)(input_1, argv_1.expectedSolutions, argv_1.visualize, argv_1.order ? argv_1.order : null);
+                    _a = (0, glueFumen_1.default)(input_1, argv_1.expectedSolutions, argv_1.visualize, argv_1.order ? argv_1.order : null), allFumens = _a.allFumens, allCuts = _a.allCuts;
                     console.log(allFumens.join("\n"));
+                    console.log(allCuts);
                     return [2 /*return*/];
             }
         });
