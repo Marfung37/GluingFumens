@@ -1,12 +1,16 @@
 import {decoder, encoder, Field, Page, Pages} from 'tetris-fumen';
-import {Pos,
-    Operation,
-    PieceType,
-    parsePiece, 
-    parsePieceName, 
-    Rotation,
-    parseRotation, 
-    parseRotationName} from './defines';
+import {
+  Pos,
+  Operation,
+  Rotation,
+  PieceType,
+  MinoType,
+  RotationType,
+  type encodedOperation,
+  encodeOp,
+  decodeOp,
+  isMinoPiece
+} from './defines';
 
 const HEIGHT = 20;
 const WIDTH = 10;
@@ -51,11 +55,21 @@ const pieceMappings = {
 }
 
 // an Operation with also an absolute y value
-interface absoluteOperation extends Operation {
+export interface absoluteOperation extends Operation {
   absY: number
 }
 
-type encodedOperation = number;
+export function encodeAbsOp(operation: absoluteOperation): encodedOperation {
+  let ct = encodeOp(operation);
+  ct = (ct << 5) + operation.absY;
+  return ct
+}
+
+export function decodeAbsOp(ct: encodedOperation): Operation {
+  ct >>= 5; // remove the absolute Y position
+  return decodeOp(ct);
+}
+
 
 interface removeLineClearsRet {
   field: Field,
@@ -90,9 +104,9 @@ function centerMino(minoPositions: Pos[]): Pos {
   return minoPositions[0];
 }
 
-function placePiece(field: Field, minoPositions: Pos[], piece: PieceType = 'X'): void {
+function placePiece(field: Field, minoPositions: Pos[], mino: MinoType = 'X'): void {
   for (let pos of minoPositions){
-    field.set(pos.x, pos.y, piece)
+    field.set(pos.x, pos.y, mino)
   }
 }
 
@@ -147,36 +161,7 @@ function removeLineClears(field: Field, height: number): removeLineClearsRet {
     linesCleared: linesCleared // relative line clear positions ex: [0, 0] (bottommost two lines)
   };
 }
-// encode operations for faster comparisons
-function encodeOp(operation: absoluteOperation): encodedOperation {
-  // encode into 15 bit
-  // type has 9 possible (4 bits)
-  // rotation has 4 possible (2 bits)
-  // x has WIDTH (10) possible (4 bits)
-  // absY has height (20) possible (5 bits)
-  // y has height (20) possible (5 bits)
-  let ct = parsePiece(operation.type);
-  ct = (ct << 2) + parseRotation(operation.rotation);
-  ct = (ct << 4) + operation.x;
-  ct = (ct << 5) + operation.absY;
-  ct = (ct << 5) + operation.y;
-  return ct
-}
 
-function decodeOp(ct: number): Operation {
-  let y = ct & 0x1F; ct >>= 5;
-  ct >>= 5; // remove the absolute Y position
-  let x = ct & 0xF; ct >>= 4;
-  let rotation = parseRotationName(ct & 0x3); ct >>= 2;
-  let type = parsePieceName(ct)
-
-  return {
-    type: type,
-    rotation: rotation,
-    x: x,
-    y: y
-  } as Operation
-}
 
 function anyColoredMinos(field: Field, height: number): boolean {
   for (let y = 0; y < height; y++) {
@@ -254,6 +239,8 @@ function checkWouldFloatPiece(field: Field, y: number, minoPositions: Pos[]): bo
   return true
 }
 
+
+
 function getNewStart(field: Field, height: number, x: number, y: number, minoPositions: Pos[]): Pos {
   // get new start with several checks if a piece is hanging or not
   // also check if maybe need to clear the lines below it
@@ -326,8 +313,8 @@ function getMinoPositions(
   x: number, 
   y: number, 
   piece: PieceType,
-		rotationState: number[][],
-		visualizeArr: Pages | null = null): Pos[]
+  rotationState: number[][],
+  visualizeArr: Pages | null = null): Pos[]
 {
 		let minoPositions: Pos[] = [];
 
@@ -411,8 +398,8 @@ function glue(
       let piece = field.at(x, y);
 
       // is actually a piece
-      if(!"TILJSZO".includes(piece))
-        continue;
+      if(!isMinoPiece(piece)) continue;
+      piece = piece as PieceType;
 
       // if specify order and the piece isn't the next possible piece in order
       let pieceIndexUsed = -1;
@@ -474,12 +461,12 @@ function glue(
         // a rotation that works
         let operPiece = {
           type: piece,
-          rotation: parseRotationName(state),
+          rotation: Rotation[state] as RotationType,
           x: centerMino(minoPositions).x,
           y: centerMino(minoPositions).y,
           absY: absY,
         }
-        newPiecesArr.push(encodeOp(operPiece))
+        newPiecesArr.push(encodeAbsOp(operPiece))
 
         const newOrder = (order !== null) ? order.slice(0, pieceIndexUsed) + order.slice(pieceIndexUsed + 1): null;
 
@@ -544,11 +531,11 @@ export default function glueFumen(customInput: string | string[], expectedSoluti
         let pages: Pages = [];
         pages.push({
           field: emptyField,
-          operation: decodeOp(piecesArr[0])
+          operation: decodeAbsOp(piecesArr[0])
         } as Page)
         for(let i = 1; i < piecesArr.length; i++){
           pages.push({
-            operation: decodeOp(piecesArr[i])
+            operation: decodeAbsOp(piecesArr[i])
           } as Page)
         }
 
