@@ -6,16 +6,16 @@ import {
   PieceType,
   MinoType,
   RotationType,
+  WIDTH,
+  TETROMINO,
   pieceMappings,
+  getHeight,
+  inBounds,
   type encodedOperation,
   encodeOp,
   decodeOp,
   isMinoPiece
 } from './defines';
-
-const HEIGHT = 20;
-const WIDTH = 10;
-const TETROMINO = 4;
 
 // an Operation with also an absolute y value
 export interface absoluteOperation extends Operation {
@@ -36,22 +36,6 @@ export function decodeAbsOp(ct: encodedOperation): Operation {
 interface removeLineClearsRet {
   field: Field,
   linesCleared: number[],
-}
-
-function getHeight(field: Field): number {
-  // accounting for newlines and no trailing newline and garbage line
-  for (let y = HEIGHT - 1; y >= 0; y--) {
-    for (let x = 0; x < WIDTH; x++) {
-      if (field.at(x, y) !== '_') {
-        return y + 1;
-      }
-    }
-  }
-  return 0;
-}
-
-function isInside(height: number, x: number, y: number): boolean {
-  return (0 <= x && x < WIDTH) && (0 <= y && y < height);
 }
 
 function isFloating(field: Field, minoPositions: Pos[]): boolean {
@@ -217,7 +201,7 @@ function getNewStart(field: Field, height: number, x: number, y: number, minoPos
   // get right most mino in current y
   const rightMostPos: Pos = minoPositions.reduce((maxPos, currentPos) => {
     return (currentPos.x > maxPos.x && y == currentPos.y) ? currentPos : maxPos;
-    }, minoPositions[1]); // Initialize pair with same y
+    }, minoPositions[3]); // Initialize pair with same y
 
   let testMinoPositions: Pos[] = [];
 
@@ -280,7 +264,8 @@ function getMinoPositions(
   rotationState: number[][],
   visualizeArr: Pages | null = null): Pos[]
 {
-		let minoPositions: Pos[] = [];
+  // x, y are bottom left mino of the piece
+  let minoPositions: Pos[] = [];
 
   // empty the field of all colored minos
   let visualizeField: Field | null = null;
@@ -294,7 +279,7 @@ function getMinoPositions(
     let px = x + pos[0];
     let py = y + pos[1];
     
-    if(isInside(height, px, py)) {
+    if(inBounds({x: px, y: py}, height)) {
       // add piece mino to field to visualize what it tried
       if(visualizeField !== null){
         visualizeField.set(px, py, piece);

@@ -1,3 +1,5 @@
+import { Field } from 'tetris-fumen';
+
 export interface Pos {
   x: number
   y: number
@@ -29,39 +31,48 @@ export declare type PieceType = 'T' | 'I' | 'L' | 'J' | 'S' | 'Z' | 'O';
 export declare type MinoType = PieceType | 'X' | '_';
 export declare type RotationType = 'spawn' | 'right' | 'reverse' | 'left';
 
+export const rotations: RotationType[] = ['spawn', 'right', 'reverse', 'left']
+
+export const HEIGHT = 20;
+export const WIDTH = 10;
+export const TETROMINO = 4;
+
+// offset from bottom left most mino
+// center mino is first index except for [SZ]/O which corresponds to rotation // 2 and rotation // 4
+// last mino has same y value as bottom left most mino
 export const pieceMappings: Record<PieceType, [number, number][][]> = {
   "T": [
-    [[1, 0], [0, 0], [1, 1], [2, 0]],
-    [[0, 1], [0, 0], [1, 1], [0, 2]],
-    [[0, 1], [0, 0], [-1, 1], [1, 1]],
-    [[0, 1], [0, 0], [-1, 1], [0, 2]],
+    [[1, 0], [2, 0], [1, 1], [0, 0]],
+    [[0, 1], [0, 2], [1, 1], [0, 0]],
+    [[0, 1], [1, 1], [-1, 1], [0, 0]],
+    [[0, 1], [0, 2], [-1, 1], [0, 0]],
     ],
   "I": [
-    [[1, 0], [0, 0], [2, 0], [3, 0]],
-    [[0, 2], [0, 0], [0, 1], [0, 3]],
+    [[1, 0], [3, 0], [2, 0], [0, 0]],
+    [[0, 2], [0, 3], [0, 1], [0, 0]],
     ],
   "L": [
-    [[1, 0], [0, 0], [2, 0], [2, 1]],
-    [[0, 1], [0, 0], [1, 0], [0, 2]],
-    [[1, 1], [0, 0], [0, 1], [2, 1]],
-    [[0, 1], [0, 0], [0, 2], [-1, 2]],
+    [[1, 0], [2, 1], [2, 0], [0, 0]],
+    [[0, 1], [0, 2], [1, 0], [0, 0]],
+    [[1, 1], [2, 1], [0, 1], [0, 0]],
+    [[0, 1], [-1, 2], [0, 2], [0, 0]],
     ],
   "J": [
-    [[1, 0], [0, 0], [0, 1], [2, 0]],
-    [[0, 1], [0, 0], [0, 2], [1, 2]],
-    [[-1, 1], [0, 0], [-2, 1], [0, 1]],
-    [[1, 1], [0, 0], [1, 0], [1, 2]],
+    [[1, 0], [2, 0], [0, 1], [0, 0]],
+    [[0, 1], [1, 2], [0, 2], [0, 0]],
+    [[-1, 1], [0, 1], [-2, 1], [0, 0]],
+    [[1, 1], [1, 2], [1, 0], [0, 0]],
     ],
   "S": [
-    [[1, 0], [0, 0], [1, 1], [2, 1]],
-    [[-1, 1], [0, 0], [0, 1], [-1, 2]]
+    [[1, 0], [1, 1], [2, 1], [0, 0]],
+    [[-1, 1], [0, 1], [-1, 2], [0, 0]]
     ],
   "Z": [
-    [[0, 0], [1, 0], [-1, 1], [0, 1]],
-    [[0, 1], [0, 0], [1, 1], [1, 2]]
+    [[0, 0], [0, 1], [-1, 1], [1, 0]],
+    [[0, 1], [1, 1], [1, 2], [0, 0]]
     ],
   "O": [
-    [[0, 0], [1, 0], [0, 1], [1, 1]]
+    [[0, 0], [0, 1], [1, 1], [1, 0]]
     ]
 }
 
@@ -96,6 +107,22 @@ export function decodeOp(ct: encodedOperation): Operation {
   } as Operation
 }
 
+export function getY(ct: encodedOperation): number {
+  return ct & 0x1F;
+}
+
+export function getX(ct: encodedOperation): number {
+  return (ct >> 5) & 0xF;
+}
+
+export function getRotation(ct: encodedOperation): number {
+  return (ct >> 9) & 0x3;
+}
+
+export function getType(ct: encodedOperation): number {
+  return ct >> 11;
+}
+
 const VALID_PIECES = new Uint8Array(256);
 VALID_PIECES["T".charCodeAt(0)] = 1;
 VALID_PIECES["I".charCodeAt(0)] = 1;
@@ -107,4 +134,37 @@ VALID_PIECES["O".charCodeAt(0)] = 1;
 
 export function isMinoPiece(piece: MinoType): boolean {
   return VALID_PIECES[piece.charCodeAt(0)] === 1;
+}
+
+export function getHeight(field: Field): number {
+  // accounting for newlines and no trailing newline and garbage line
+  for (let y = HEIGHT - 1; y >= 0; y--) {
+    for (let x = 0; x < WIDTH; x++) {
+      if (field.at(x, y) !== '_') {
+        return y + 1;
+      }
+    }
+  }
+  return 0;
+}
+
+export function inBounds(cell: Pos, height: number): boolean {
+  return (0 <= cell.x && cell.x < WIDTH) && (0 <= cell.y && cell.y < height);
+}
+
+export function getPieceMinos(operation: encodedOperation): Pos[] {
+  let minos: Pos[] = [];
+
+  let rotationStates = pieceMappings[Piece[getType(operation)] as PieceType];
+  let offsets = rotationStates[getRotation(operation) % rotationStates.length];
+
+  // center index in the offsets
+  const centerIndex = Math.floor(getRotation(operation) / rotationStates.length);
+  const [bx, by] = offsets[centerIndex];
+  for (let [dx, dy] of offsets) {
+    let mino = {x: getX(operation) + dx - bx, y: getY(operation) + dy - by};
+    minos.push(mino);
+  }
+
+  return minos;
 }
