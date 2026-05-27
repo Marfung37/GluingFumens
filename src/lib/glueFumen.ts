@@ -96,8 +96,9 @@ function removeLineClears(field: Field, height: number): removeLineClearsRet {
       sourceRow++;
     }
   }
+
   // blank out remaining rows
-  for (let y = currentRow + 1; y < height; y++) {
+  for (let y = height - linesCleared.length; y < height; y++) {
     for (let x = 0; x < WIDTH; x++) {
       newField.set(x, y, "_");
     }
@@ -486,7 +487,7 @@ export default function glueFumen(customInput: string | string[], expectedSoluti
         console.log(code + " couldn't be glued");
         fumenIssues++;
       }
-      
+
       // each sequence of pieces
       for(let piecesArr of allPiecesArr){
         let pages: Pages = [];

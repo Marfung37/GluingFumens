@@ -212,7 +212,7 @@ function getSpawn(height: number): Pos {
   return {x: 4, y: height};
 }
 
-function getNeighbors(field: Field, operation: encodedOperation, neighbors: Int32Array): void {
+function getNeighbors(field: Field, operation: encodedOperation, neighbors: Int32Array, reverse: boolean = false): void {
   // shifts
 
   // left 1
@@ -229,7 +229,10 @@ function getNeighbors(field: Field, operation: encodedOperation, neighbors: Int3
 
   // down 1
   if (getY(operation) > 0)
-    neighbors[2] = operation - 1; // down 1
+    if (reverse)
+      neighbors[2] = operation + 1; // up 1
+    else
+      neighbors[2] = operation - 1; // down 1
   else
     neighbors[2] = -1;
 
@@ -277,7 +280,7 @@ export function checkSRS180(field: Field, operation: Operation) {
   if (targetOp == startOp) return true;
 
   const MAX_NEIGHBORS = 6;
-  let queue: NumberRingQueue = new NumberRingQueue(256);
+  let queue: NumberRingQueue = new NumberRingQueue(36);
   let visited = new Uint8Array(1 << 14);
   let neighbors = new Int32Array(MAX_NEIGHBORS);
 
@@ -287,15 +290,13 @@ export function checkSRS180(field: Field, operation: Operation) {
 
   while (!queue.isEmpty()) {
     let currOp = queue.dequeue();
-
     getNeighbors(field, currOp, neighbors);
+
     for (let i = 0; i < MAX_NEIGHBORS; i++) {
       let neighbor = neighbors[i];
       if (neighbor == -1) continue;
-      if (getType(neighbor) != Piece.S) {
-        return true;
-      }
       if (neighbor == targetOp) return true;
+      if (visited[neighbor] == 2) return true;
 
       if (visited[neighbor] == 0) {
         visited[neighbor] = 1;
