@@ -4,7 +4,6 @@ import {
   Operation,
   Piece,
   Rotation,
-  RotationType,
   getHeight,
   HEIGHT,
   WIDTH,
@@ -19,6 +18,10 @@ import {
   inBounds
 } from './defines';
 import NumberRingQueue from './NumberRingQueue';
+
+const GLOBAL_VISITED = new Int32Array(1024);
+const MAX_NEIGHBORS = 6;
+const NEIGHBORS = new Int16Array(MAX_NEIGHBORS);
 
 const kick_offset_2x3: number[][][] = [
   // Spawn
@@ -212,29 +215,29 @@ function getSpawn(height: number): Pos {
   return {x: 4, y: height};
 }
 
-function getNeighbors(field: Field, operation: encodedOperation, neighbors: Int32Array, reverse: boolean = false): void {
+function getNeighbors(field: Field, operation: encodedOperation, reverse: boolean = false): void {
   // shifts
 
   // left 1
   if (getX(operation) > 0)
-    neighbors[0] = operation - (1 << 5);
+    NEIGHBORS[0] = operation - (1 << 5);
   else
-    neighbors[0] = -1;
+    NEIGHBORS[0] = -1;
 
   // right 1
   if (getX(operation) < WIDTH - 1)
-    neighbors[1] = operation + (1 << 5);
+    NEIGHBORS[1] = operation + (1 << 5);
   else
-    neighbors[1] = -1;
+    NEIGHBORS[1] = -1;
 
   // down 1
   if (getY(operation) > 0)
     if (reverse)
-      neighbors[2] = operation + 1; // up 1
+      NEIGHBORS[2] = operation + 1; // up 1
     else
-      neighbors[2] = operation - 1; // down 1
+      NEIGHBORS[2] = operation - 1; // down 1
   else
-    neighbors[2] = -1;
+    NEIGHBORS[2] = -1;
 
   // rotations
   const currRotation = getRotation(operation);
@@ -244,13 +247,13 @@ function getNeighbors(field: Field, operation: encodedOperation, neighbors: Int3
   const ccwRot = spin_ccw(currRotation);
   const r180 = spin_180(currRotation);
 
-  neighbors[3] = base | (cwRot << 9); // cw
-  neighbors[4] = base | (ccwRot << 9); // ccw
-  neighbors[5] = base | (r180 << 9); // 180
+  NEIGHBORS[3] = base | (cwRot << 9); // cw
+  NEIGHBORS[4] = base | (ccwRot << 9); // ccw
+  NEIGHBORS[5] = base | (r180 << 9); // 180
 
-  neighbors[3] = kick(field, neighbors[3], currRotation, cwRot);
-  neighbors[4] = kick(field, neighbors[4], currRotation, ccwRot);
-  neighbors[5] = kick(field, neighbors[5], currRotation, r180);
+  NEIGHBORS[3] = kick(field, NEIGHBORS[3], currRotation, cwRot);
+  NEIGHBORS[4] = kick(field, NEIGHBORS[4], currRotation, ccwRot);
+  NEIGHBORS[5] = kick(field, NEIGHBORS[5], currRotation, r180);
 }
 
 // for glue fumen collision only with gray minos (ie can go through colored minos)
@@ -274,54 +277,78 @@ function kick(field: Field, operation: encodedOperation, init: Rotation, target:
   return -1;
 }
 
+function getVisited(index: number, forward: boolean): boolean {
+  if (!forward) index |= 1 << 14;
+  const wordIndex = index >> 5; // divide by 32 for number of bits in int
+  const bitIndex = index & 0x1F;
+  const mask = 1 << bitIndex;
+
+  return (GLOBAL_VISITED[wordIndex] & mask) !== 0;
+}
+
+function getSetVisited(index: number, forward: boolean): boolean {
+  if (!forward) index |= 1 << 14;
+  const wordIndex = index >> 5; // divide by 32 for number of bits in int
+  const bitIndex = index & 0x1F;
+  const mask = 1 << bitIndex;
+
+  let value = (GLOBAL_VISITED[wordIndex] & mask) !== 0;
+  GLOBAL_VISITED[wordIndex] |= mask;
+  return value;
+}
+
 export function checkSRS180(field: Field, operation: Operation) {
   let targetOp = encodeOp(operation);
   let startOp = encodeOp({...operation, ...getSpawn(getHeight(field))});
   if (targetOp == startOp) return true;
 
-  const MAX_NEIGHBORS = 6;
-  let forwardQueue: NumberRingQueue = new NumberRingQueue(36);
-  let backwardQueue: NumberRingQueue = new NumberRingQueue(36);
-  let visited = new Uint8Array(1 << 14);
-  let neighbors = new Int32Array(MAX_NEIGHBORS);
+  let forwardQueue: NumberRingQueue = new NumberRingQueue(64);
+  let backwardQueue: NumberRingQueue = new NumberRingQueue(64);
+
+  GLOBAL_VISITED.fill(0);
 
   // implementation of bfs on operations start
   forwardQueue.enqueue(startOp);
   backwardQueue.enqueue(targetOp);
-  visited[startOp] = 1;
+  getSetVisited(startOp, true);
+  getSetVisited(targetOp, false);
 
-  while (!forwardQueue.isEmpty()) {
-    let currOp = forwardQueue.dequeue();
-    getNeighbors(field, currOp, neighbors);
+  while (!forwardQueue.isEmpty() && !backwardQueue.isEmpty()) {
+    // process full levels from each bfs
 
-    for (let i = 0; i < MAX_NEIGHBORS; i++) {
-      let neighbor = neighbors[i];
-      if (neighbor == -1) continue;
-      if (neighbor == targetOp) return true;
-      if (visited[neighbor] == 2) return true;
+    let fSize = forwardQueue.size;
+    for (let l = 0; l < fSize; l++) {
+      let currOp = forwardQueue.dequeue();
+      getNeighbors(field, currOp, false);
 
-      if (visited[neighbor] == 0) {
-        visited[neighbor] = 1;
-        if (i >= 3 || !checkCollision(field, neighbor))
-          forwardQueue.enqueue(neighbor)
+      for (let i = 0; i < MAX_NEIGHBORS; i++) {
+        let neighbor = NEIGHBORS[i];
+        if (neighbor === -1) continue;
+        if (getVisited(neighbor, false)) return true;
+
+        if (!getSetVisited(neighbor, true)) {
+          if (i >= 3 || !checkCollision(field, neighbor)) {
+            forwardQueue.enqueue(neighbor);
+          }
+        }
       }
     }
 
-    if (backwardQueue.isEmpty()) continue;
+    let bSize = backwardQueue.size;
+    for (let l = 0; l < bSize; l++) {
+      let currOp = backwardQueue.dequeue();
+      getNeighbors(field, currOp, true);
 
-    currOp = backwardQueue.dequeue();
-    getNeighbors(field, currOp, neighbors, true);
+      for (let i = 0; i < MAX_NEIGHBORS; i++) {
+        let neighbor = NEIGHBORS[i];
+        if (neighbor === -1) continue;
+        if (getVisited(neighbor, true)) return true;
 
-    for (let i = 0; i < MAX_NEIGHBORS; i++) {
-      let neighbor = neighbors[i];
-      if (neighbor == -1) continue;
-      if (neighbor == targetOp) return true;
-      if (visited[neighbor] == 1) return true;
-
-      if (visited[neighbor] == 0) {
-        visited[neighbor] = 2;
-        if (i >= 3 || !checkCollision(field, neighbor))
-          backwardQueue.enqueue(neighbor)
+        if (!getSetVisited(neighbor, false)) {
+          if (i >= 3 || !checkCollision(field, neighbor)) {
+            backwardQueue.enqueue(neighbor);
+          }
+        }
       }
     }
   }
