@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "tsc"
+    "build": "npx esbuild src/glue.ts --bundle --minify --outfile=dist/glue.js --platform=node"
   },
   "dependencies": {
     "tetris-fumen": "^1.1.3",
@@ -9,6 +9,7 @@
   "devDependencies": {
     "@types/node": "^20.14.10",
     "@types/yargs": "^17.0.33",
+    "esbuild": "^0.28.0",
     "typescript": "^5.5.3"
   }
 }
