@@ -18,7 +18,7 @@ import {
 } from './defines';
 import NumberRingQueue from './NumberRingQueue';
 
-const GLOBAL_VISITED = new Int32Array(1024);
+const GLOBAL_VISITED = new Int32Array(512);
 const MAX_NEIGHBORS = 6;
 const NEIGHBORS = new Int16Array(MAX_NEIGHBORS);
 
@@ -276,17 +276,7 @@ function kick(field: Field, operation: encodedOperation, init: Rotation, target:
   return -1;
 }
 
-function getVisited(index: number, forward: boolean): boolean {
-  if (!forward) index |= 1 << 14;
-  const wordIndex = index >> 5; // divide by 32 for number of bits in int
-  const bitIndex = index & 0x1F;
-  const mask = 1 << bitIndex;
-
-  return (GLOBAL_VISITED[wordIndex] & mask) !== 0;
-}
-
-function getSetVisited(index: number, forward: boolean): boolean {
-  if (!forward) index |= 1 << 14;
+function getSetVisited(index: number): boolean {
   const wordIndex = index >> 5; // divide by 32 for number of bits in int
   const bitIndex = index & 0x1F;
   const mask = 1 << bitIndex;
@@ -301,54 +291,25 @@ export function checkSRS180(field: Field, operation: Operation) {
   let startOp = encodeOp({...operation, ...getSpawn(getHeight(field))});
   if (targetOp == startOp) return true;
 
-  let forwardQueue: NumberRingQueue = new NumberRingQueue(64);
-  let backwardQueue: NumberRingQueue = new NumberRingQueue(64);
+  let queue: NumberRingQueue = new NumberRingQueue(64);
 
   GLOBAL_VISITED.fill(0);
 
   // implementation of bfs on operations start
-  forwardQueue.enqueue(startOp);
-  backwardQueue.enqueue(targetOp);
-  getSetVisited(startOp, true);
-  getSetVisited(targetOp, false);
+  queue.enqueue(startOp);
+  getSetVisited(startOp);
 
-  while (!forwardQueue.isEmpty() && !backwardQueue.isEmpty()) {
-    // process full levels from each bfs
+  while (!queue.isEmpty()) {
+    let currOp = queue.dequeue();
+    getNeighbors(field, currOp, false);
 
-    let fSize = forwardQueue.size;
-    for (let l = 0; l < fSize; l++) {
-      let currOp = forwardQueue.dequeue();
-      getNeighbors(field, currOp, false);
+    for (let i = 0; i < MAX_NEIGHBORS; i++) {
+      let neighbor = NEIGHBORS[i];
+      if (neighbor === -1) continue;
 
-      for (let i = 0; i < MAX_NEIGHBORS; i++) {
-        let neighbor = NEIGHBORS[i];
-        if (neighbor === -1) continue;
-        if (getVisited(neighbor, false)) return true;
-
-        if (!getSetVisited(neighbor, true)) {
-          if (i >= 3 || !checkCollision(field, neighbor)) {
-            forwardQueue.enqueue(neighbor);
-          }
-        }
-      }
-    }
-
-    let bSize = backwardQueue.size;
-    for (let l = 0; l < bSize; l++) {
-      let currOp = backwardQueue.dequeue();
-      getNeighbors(field, currOp, true);
-
-      for (let i = 0; i < MAX_NEIGHBORS; i++) {
-        let neighbor = NEIGHBORS[i];
-        if (neighbor === -1) continue;
-        if (getVisited(neighbor, true)) return true;
-
-        if (!getSetVisited(neighbor, false)) {
-          if (i >= 3 || !checkCollision(field, neighbor)) {
-            backwardQueue.enqueue(neighbor);
-          }
-        }
-      }
+      if (getSetVisited(neighbor)) return true
+      else if (i >= 3 || !checkCollision(field, neighbor))
+        queue.enqueue(neighbor);
     }
   }
 
