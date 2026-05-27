@@ -49,6 +49,12 @@ if(require.main == module) {
         return arg;
       },
     })
+    .option('srs', {
+      alias: 's',
+      type: 'boolean',
+      description: 'Check if pieces are reachable through srs 180 kicktable',
+      default: false
+    })
     .help()
     .alias('h', 'help');
 
@@ -93,7 +99,7 @@ if(require.main == module) {
     }
 
     // Run glue
-    let allFumens = glueFumen(input, argv.expectedSolutions, argv.visualize, argv.order ? argv.order: null, argv.hold);
+    let allFumens = glueFumen(input, argv.expectedSolutions, argv.visualize, argv.order ? argv.order: null, argv.hold, argv.srs);
     console.log(allFumens.join("\n"));
   };
 

@@ -16,6 +16,7 @@ import {
   decodeOp,
   isMinoPiece
 } from './defines';
+import { checkSRS180 } from './srsCheck';
 
 // an Operation with also an absolute y value
 export interface absoluteOperation extends Operation {
@@ -337,7 +338,8 @@ function glue(
   expectedSolutions: number,
   visualize: boolean,
   order: string | null,
-  hold: number
+  hold: number,
+  srs180: boolean
 ): void 
 {
   // scan through board for any colored minos
@@ -370,10 +372,17 @@ function glue(
           field, height, x, y, piece, rotationStates[state],(visualize) ? visualizeArr : null
         );
 
-        // if there's less than minos
-        if(minoPositions.length < TETROMINO || isFloating(field, minoPositions)){
-          continue
+        if (minoPositions.length < TETROMINO) continue;
+        if (isFloating(field, minoPositions)) continue;
+
+        let operPiece = {
+          type: piece,
+          rotation: Rotation[state] as RotationType,
+          x: centerMino(minoPositions).x,
+          y: centerMino(minoPositions).y
         }
+
+        if (srs180 && !checkSRS180(field, operPiece)) continue;
 
         // place piece
         let newField = field.copy()
@@ -408,18 +417,21 @@ function glue(
         }
 
         // a rotation that works
-        let operPiece = {
-          type: piece,
-          rotation: Rotation[state] as RotationType,
-          x: centerMino(minoPositions).x,
-          y: centerMino(minoPositions).y,
-          absY: absY,
+        let absOperPiece = {
+          ...operPiece,
+          absY: absY
         }
-        newPiecesArr.push(encodeAbsOp(operPiece))
+        newPiecesArr.push(encodeAbsOp(absOperPiece))
 
         const newOrder = (order !== null) ? order.slice(0, pieceIndexUsed) + order.slice(pieceIndexUsed + 1): null;
 
-        glue(startPos.x, startPos.y, newField, height - thisLinesCleared.length, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, expectedSolutions, visualize, newOrder, hold);
+        glue(
+          startPos.x, startPos.y, 
+          newField, height - thisLinesCleared.length, 
+          newPiecesArr, allPiecesArr, 
+          newTotalLinesCleared, visualizeArr, 
+          expectedSolutions, visualize, 
+          newOrder, hold, srs180);
 
         if(expectedSolutions > 0 && allPiecesArr.length == expectedSolutions){
           return;
@@ -436,7 +448,7 @@ function glue(
   }
 }
 
-export default function glueFumen(customInput: string | string[], expectedSolutions: number = -1, visualize: boolean = false, order: string | null = null, hold: number = 0){
+export default function glueFumen(customInput: string | string[], expectedSolutions: number = -1, visualize: boolean = false, order: string | null = null, hold: number = 0, srs180: boolean = false){
   let inputFumenCodes: string[] = [];
 
   if(!Array.isArray(customInput)){
@@ -466,7 +478,7 @@ export default function glueFumen(customInput: string | string[], expectedSoluti
 
       // try to glue this field and put into all pieces arr
       if(checkGlueable(field, height)){
-        glue(0, 0, field, height, [], allPiecesArr, [], visualizeArr, expectedSolutions, visualize, order, hold);
+        glue(0, 0, field, height, [], allPiecesArr, [], visualizeArr, expectedSolutions, visualize, order, hold, srs180);
       }
       
       // couldn't glue

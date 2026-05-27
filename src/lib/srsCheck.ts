@@ -250,12 +250,13 @@ function getNeighbors(field: Field, operation: encodedOperation, neighbors: Int3
   neighbors[5] = kick(field, neighbors[5], currRotation, r180);
 }
 
+// for glue fumen collision only with gray minos (ie can go through colored minos)
 function checkCollision(field: Field, operation: encodedOperation): boolean {
   const minos = getPieceMinos(operation);
 
   for (let mino of minos) {
     if (!inBounds(mino, HEIGHT)) return true;
-    if (field.at(mino.x, mino.y) !== '_') return true;
+    if (field.at(mino.x, mino.y) === 'X') return true;
   }
   return false;
 }
@@ -270,10 +271,7 @@ function kick(field: Field, operation: encodedOperation, init: Rotation, target:
   return -1;
 }
 
-// DEBUG
-import { encoder } from 'tetris-fumen';
-
-function checkSRS180Reachable(field: Field, operation: Operation) {
+export function checkSRS180(field: Field, operation: Operation) {
   let targetOp = encodeOp(operation);
   let startOp = encodeOp({...operation, ...getSpawn(getHeight(field))});
   if (targetOp == startOp) return true;
@@ -287,18 +285,8 @@ function checkSRS180Reachable(field: Field, operation: Operation) {
   queue.enqueue(startOp);
   visited[startOp] = 1;
 
-  // DEBUG 
-  let pages = [];
-
   while (!queue.isEmpty()) {
     let currOp = queue.dequeue();
-
-    // DEBUG
-    let a = field.copy();
-    for (let mino of getPieceMinos(currOp)) {
-      a.set(mino.x, mino.y, Piece[getType(currOp)]);
-    }
-    pages.push({field: a});
 
     getNeighbors(field, currOp, neighbors);
     for (let i = 0; i < MAX_NEIGHBORS; i++) {
@@ -319,14 +307,3 @@ function checkSRS180Reachable(field: Field, operation: Operation) {
 
   return false;
 }
-
-// DEBUG
-import { decoder } from 'tetris-fumen';
-
-const page = decoder.decode('v115@LhA8EeD8BeG8BeE8JeXLJ')[0];
-// const buffer = new Int32Array(6);
-
-// getNeighbors(page.field, encodeOp({type: 'S', rotation: 'right', x: 4, y: 2}), buffer);
-// console.log(Array.from(buffer).map(op => decodeOp(op)));
-
-console.log(checkSRS180Reachable(page.field, page.operation));
