@@ -280,16 +280,18 @@ export function checkSRS180(field: Field, operation: Operation) {
   if (targetOp == startOp) return true;
 
   const MAX_NEIGHBORS = 6;
-  let queue: NumberRingQueue = new NumberRingQueue(36);
+  let forwardQueue: NumberRingQueue = new NumberRingQueue(36);
+  let backwardQueue: NumberRingQueue = new NumberRingQueue(36);
   let visited = new Uint8Array(1 << 14);
   let neighbors = new Int32Array(MAX_NEIGHBORS);
 
   // implementation of bfs on operations start
-  queue.enqueue(startOp);
+  forwardQueue.enqueue(startOp);
+  backwardQueue.enqueue(targetOp);
   visited[startOp] = 1;
 
-  while (!queue.isEmpty()) {
-    let currOp = queue.dequeue();
+  while (!forwardQueue.isEmpty()) {
+    let currOp = forwardQueue.dequeue();
     getNeighbors(field, currOp, neighbors);
 
     for (let i = 0; i < MAX_NEIGHBORS; i++) {
@@ -301,7 +303,25 @@ export function checkSRS180(field: Field, operation: Operation) {
       if (visited[neighbor] == 0) {
         visited[neighbor] = 1;
         if (i >= 3 || !checkCollision(field, neighbor))
-          queue.enqueue(neighbor)
+          forwardQueue.enqueue(neighbor)
+      }
+    }
+
+    if (backwardQueue.isEmpty()) continue;
+
+    currOp = backwardQueue.dequeue();
+    getNeighbors(field, currOp, neighbors, true);
+
+    for (let i = 0; i < MAX_NEIGHBORS; i++) {
+      let neighbor = neighbors[i];
+      if (neighbor == -1) continue;
+      if (neighbor == targetOp) return true;
+      if (visited[neighbor] == 1) return true;
+
+      if (visited[neighbor] == 0) {
+        visited[neighbor] = 2;
+        if (i >= 3 || !checkCollision(field, neighbor))
+          backwardQueue.enqueue(neighbor)
       }
     }
   }
