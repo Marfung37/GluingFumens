@@ -6,6 +6,7 @@ import {
   PieceType,
   MinoType,
   RotationType,
+  pieceMappings,
   type encodedOperation,
   encodeOp,
   decodeOp,
@@ -15,44 +16,6 @@ import {
 const HEIGHT = 20;
 const WIDTH = 10;
 const TETROMINO = 4;
-
-const pieceMappings = {
-  "T": [
-    [[1, 0], [0, 0], [1, 1], [2, 0]],
-    [[0, 1], [0, 0], [1, 1], [0, 2]],
-    [[0, 1], [0, 0], [-1, 1], [1, 1]],
-    [[0, 1], [0, 0], [-1, 1], [0, 2]],
-    ],
-  "I": [
-    [[1, 0], [0, 0], [2, 0], [3, 0]],
-    [[0, 2], [0, 0], [0, 1], [0, 3]],
-    ],
-  "L": [
-    [[1, 0], [0, 0], [2, 0], [2, 1]],
-    [[0, 1], [0, 0], [1, 0], [0, 2]],
-    [[1, 1], [0, 0], [0, 1], [2, 1]],
-    [[0, 1], [0, 0], [0, 2], [-1, 2]],
-    ],
-  "J": [
-    [[1, 0], [0, 0], [0, 1], [2, 0]],
-    [[0, 1], [0, 0], [0, 2], [1, 2]],
-    [[-1, 1], [0, 0], [-2, 1], [0, 1]],
-    [[1, 1], [0, 0], [1, 0], [1, 2]],
-    ],
-  "S": [
-    [[1, 0], [0, 0], [1, 1], [2, 1]],
-    [[-1, 1], [0, 0], [0, 1], [-1, 2]]
-    ],
-  "Z": [
-    [[0, 0], [1, 0], [-1, 1], [0, 1]],
-    [[0, 1], [0, 0], [1, 1], [1, 2]]
-    ],
-  "O": [
-    [[0, 0], [1, 0], [0, 1], [1, 1]]
-    ],
-  "X": [],
-  "_": []
-}
 
 // an Operation with also an absolute y value
 export interface absoluteOperation extends Operation {
@@ -70,7 +33,6 @@ export function decodeAbsOp(ct: encodedOperation): Operation {
   return decodeOp(ct);
 }
 
-
 interface removeLineClearsRet {
   field: Field,
   linesCleared: number[],
@@ -80,7 +42,7 @@ function getHeight(field: Field): number {
   // accounting for newlines and no trailing newline and garbage line
   for (let y = HEIGHT - 1; y >= 0; y--) {
     for (let x = 0; x < WIDTH; x++) {
-      if ("TILJSZOX".includes(field.at(x, y))) {
+      if (field.at(x, y) !== '_') {
         return y + 1;
       }
     }
@@ -96,7 +58,7 @@ function isFloating(field: Field, minoPositions: Pos[]): boolean {
   // if there's a 'X' under any of the minos
   return minoPositions.every(pos =>
     // not on floor
-    pos.y != 0 && field.at(pos.x, pos.y - 1) != 'X'
+    pos.y != 0 && field.at(pos.x, pos.y - 1) !== 'X'
   );
 }
 
@@ -166,7 +128,7 @@ function removeLineClears(field: Field, height: number): removeLineClearsRet {
 function anyColoredMinos(field: Field, height: number): boolean {
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < WIDTH; x++) {
-      if ("TILJSZO".includes(field.at(x, y))) {
+      if (isMinoPiece(field.at(x, y))) {
         return true;
       }
     }
@@ -179,7 +141,7 @@ function makeEmptyField(field: Field, height: number): Field{
   for(let y = 0; y < height; y++){
     for (let x = 0; x < WIDTH; x++) {
       let piece = emptyField.at(x, y);
-      if ("TILJSZO".includes(piece)) {
+      if (isMinoPiece(piece)) {
         emptyField.set(x, y, "_");
       }
     }
@@ -187,23 +149,25 @@ function makeEmptyField(field: Field, height: number): Field{
   return emptyField;
 }
 
-function checkGlueable(field: Field, height: number): boolean{
+function checkGlueable(field: Field, height: number): boolean {
   // check if there's enough minos of each color to place pieces
-  const frequencyCounter: Record<string, number> = {};
+  const frequencyCounter: Record<PieceType, number> = {
+    'T': 0, 'I': 0, 'L': 0, 'J': 0, 'S': 0, 'Z': 0, 'O': 0
+  };
 
   for (let y = 0; y < height; y++) {
     for(let x = 0; x < WIDTH; x++) {
-      let char = field.at(x, y)
-      frequencyCounter[char] = (frequencyCounter[char] || 0) + 1;
+      let mino = field.at(x, y);
+      if (isMinoPiece(mino)) {
+        mino = mino as PieceType;
+        frequencyCounter[mino]++;
+      }
     }
   }
 
-  for (const char in frequencyCounter){
-    if("TILJSZO".includes(char)){
-      if(frequencyCounter[char] % TETROMINO != 0){
-        return false;
-      }
-    }
+  for (const piece in frequencyCounter){
+    if(frequencyCounter[piece as PieceType] % TETROMINO != 0)
+      return false;
   }
   return true;
 }
