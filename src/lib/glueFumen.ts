@@ -400,7 +400,9 @@ function glue(
   visualizeArr: Pages, 
   expectedSolutions: number,
   visualize: boolean,
-  order: string | null): void 
+  order: string | null,
+  hold: number
+): void 
 {
   // scan through board for any colored minos
   for(let y = y0; y < height; y++){
@@ -413,8 +415,11 @@ function glue(
         continue;
 
       // if specify order and the piece isn't the next possible piece in order
-      if (order !== null && piece !== order[0])
-        continue;
+      let pieceIndexUsed = -1;
+      if (order !== null) {
+        if (!order.slice(0, hold + 1).includes(piece)) continue;
+        pieceIndexUsed = order.indexOf(piece);
+      }
 
       // if highest level and not I as I only piece could be place at highest level
       if(y == height - 1 && piece !== 'I')
@@ -476,7 +481,9 @@ function glue(
         }
         newPiecesArr.push(encodeOp(operPiece))
 
-        glue(startPos.x, startPos.y, newField, height - thisLinesCleared.length, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, expectedSolutions, visualize, order ? order?.slice(1): null);
+        const newOrder = (order !== null) ? order.slice(0, pieceIndexUsed) + order.slice(pieceIndexUsed + 1): null;
+
+        glue(startPos.x, startPos.y, newField, height - thisLinesCleared.length, newPiecesArr, allPiecesArr, newTotalLinesCleared, visualizeArr, expectedSolutions, visualize, newOrder, hold);
 
         if(expectedSolutions > 0 && allPiecesArr.length == expectedSolutions){
           return;
@@ -493,7 +500,7 @@ function glue(
   }
 }
 
-export default function glueFumen(customInput: string | string[], expectedSolutions: number = -1, visualize: boolean = false, order: string | null = null){
+export default function glueFumen(customInput: string | string[], expectedSolutions: number = -1, visualize: boolean = false, order: string | null = null, hold: number = 0){
   let inputFumenCodes: string[] = [];
 
   if(!Array.isArray(customInput)){
@@ -523,7 +530,7 @@ export default function glueFumen(customInput: string | string[], expectedSoluti
 
       // try to glue this field and put into all pieces arr
       if(checkGlueable(field, height)){
-        glue(0, 0, field, height, [], allPiecesArr, [], visualizeArr, expectedSolutions, visualize, order);
+        glue(0, 0, field, height, [], allPiecesArr, [], visualizeArr, expectedSolutions, visualize, order, hold);
       }
       
       // couldn't glue

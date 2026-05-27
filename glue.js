@@ -109,6 +109,18 @@ if (require.main == module) {
             return arg;
         },
     })
+        .option('hold', {
+        alias: 'd',
+        type: 'number',
+        description: 'Number of hold for handling order. Requires order to apply',
+        default: 0,
+        coerce: function (arg) {
+            if (!Number.isInteger(arg) && arg >= 0) {
+                throw new Error('--hold (-h) must be nonnegative integer');
+            }
+            return arg;
+        },
+    })
         .help()
         .alias('h', 'help');
     var argv_1 = yargsInstance_1.parseSync();
@@ -146,7 +158,7 @@ if (require.main == module) {
                         yargsInstance_1.showHelp(); // show help
                         process.exit(0);
                     }
-                    allFumens = (0, glueFumen_1.default)(input_1, argv_1.expectedSolutions, argv_1.visualize, argv_1.order ? argv_1.order : null);
+                    allFumens = (0, glueFumen_1.default)(input_1, argv_1.expectedSolutions, argv_1.visualize, argv_1.order ? argv_1.order : null, argv_1.hold);
                     console.log(allFumens.join("\n"));
                     return [2 /*return*/];
             }

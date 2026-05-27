@@ -36,7 +36,18 @@ if(require.main == module) {
         }
         return arg;
       },
-
+    })
+    .option('hold', {
+      alias: 'd',
+      type: 'number',
+      description: 'Number of hold for handling order. Requires order to apply',
+      default: 0,
+      coerce: (arg) => {
+        if (!Number.isInteger(arg) && arg >= 0) {
+          throw new Error('--hold (-h) must be nonnegative integer');
+        }
+        return arg;
+      },
     })
     .help()
     .alias('h', 'help');
@@ -82,7 +93,7 @@ if(require.main == module) {
     }
 
     // Run glue
-    let allFumens = glueFumen(input, argv.expectedSolutions, argv.visualize, argv.order ? argv.order: null);
+    let allFumens = glueFumen(input, argv.expectedSolutions, argv.visualize, argv.order ? argv.order: null, argv.hold);
     console.log(allFumens.join("\n"));
   };
 
