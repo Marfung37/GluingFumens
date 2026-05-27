@@ -8,7 +8,6 @@ import {
   HEIGHT,
   WIDTH,
   encodeOp,
-  decodeOp,
   getX,
   getY,
   getRotation,
