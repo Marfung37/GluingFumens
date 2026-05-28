@@ -1,4 +1,5 @@
 import glueFumen from './lib/glueFumen';
+import unglueFumen from './lib/unglueFumen';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import * as path from 'path';
@@ -55,6 +56,12 @@ if(require.main == module) {
       description: 'Check if pieces are reachable through srs 180 kicktable',
       default: false
     })
+    .option('unglue', {
+      alias: 'x',
+      type: 'boolean',
+      description: 'Unglues glued fumens. All other options ignored if this is set',
+      default: false
+    })
     .help()
     .alias('h', 'help');
 
@@ -98,9 +105,13 @@ if(require.main == module) {
       process.exit(0);
     }
 
+    if (argv.unglue) {
+      console.log(input.map(unglueFumen).join('\n'))
+      return;
+    }
     // Run glue
     let allFumens = glueFumen(input, argv.expectedSolutions, argv.visualize, argv.order ? argv.order: null, argv.hold, argv.srs);
-    console.log(allFumens.join("\n"));
+    console.log(allFumens.join('\n'));
   };
 
   main().catch((err) => {

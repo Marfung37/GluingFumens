@@ -1,4 +1,4 @@
-import {decoder, encoder, Field, Page, Pages} from 'tetris-fumen';
+import {encoder, Field, Page, Pages} from 'tetris-fumen';
 import {
   Pos,
   Operation,
@@ -9,6 +9,7 @@ import {
   WIDTH,
   TETROMINO,
   pieceMappings,
+  decodeWrapper,
   getHeight,
   inBounds,
   type encodedOperation,
@@ -449,7 +450,14 @@ function glue(
   }
 }
 
-export default function glueFumen(customInput: string | string[], expectedSolutions: number = -1, visualize: boolean = false, order: string | null = null, hold: number = 0, srs180: boolean = false){
+export default function glueFumen(
+  customInput: string | string[], 
+  expectedSolutions: number = -1, 
+  visualize: boolean = false, 
+  order: string | null = null, 
+  hold: number = 0, 
+  srs180: boolean = false
+){
   let inputFumenCodes: string[] = [];
 
   if(!Array.isArray(customInput)){
@@ -467,7 +475,7 @@ export default function glueFumen(customInput: string | string[], expectedSoluti
 
   // for each fumen
   for(let code of inputFumenCodes){
-    let inputPages: Pages = decoder.decode(code);
+    let inputPages: Pages = decodeWrapper(code);
     let thisGlueFumens: string[] = []; // holds the glue fumens for this fumenCode
 
     // glue each page

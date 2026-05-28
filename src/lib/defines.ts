@@ -1,4 +1,4 @@
-import { Field } from 'tetris-fumen';
+import { decoder, Field, type Page } from 'tetris-fumen';
 
 export interface Pos {
   x: number
@@ -74,6 +74,17 @@ export const pieceMappings: Record<PieceType, [number, number][][]> = {
   "O": [
     [[0, 0], [0, 1], [1, 1], [1, 0]]
     ]
+}
+
+export function decodeWrapper(fumen: string): Page[] {
+  let pages: Page[];
+  try {
+    pages = decoder.decode(fumen);
+  } catch (e) {
+    throw new Error(`Fumen ${fumen} could not be decoded`);
+  }
+
+  return pages;
 }
 
 export type encodedOperation = number;
