@@ -214,7 +214,7 @@ function getSpawn(height: number): Pos {
   return {x: 4, y: height};
 }
 
-function getNeighbors(field: Field, operation: encodedOperation, reverse: boolean = false): void {
+function getNeighbors(field: Field, operation: encodedOperation): void {
   // shifts
 
   // left 1
@@ -231,10 +231,7 @@ function getNeighbors(field: Field, operation: encodedOperation, reverse: boolea
 
   // down 1
   if (getY(operation) > 0)
-    if (reverse)
-      NEIGHBORS[2] = operation + 1; // up 1
-    else
-      NEIGHBORS[2] = operation - 1; // down 1
+    NEIGHBORS[2] = operation - 1; // down 1
   else
     NEIGHBORS[2] = -1;
 
@@ -301,15 +298,17 @@ export function checkSRS180(field: Field, operation: Operation) {
 
   while (!queue.isEmpty()) {
     let currOp = queue.dequeue();
-    getNeighbors(field, currOp, false);
+    getNeighbors(field, currOp);
 
     for (let i = 0; i < MAX_NEIGHBORS; i++) {
       let neighbor = NEIGHBORS[i];
       if (neighbor === -1) continue;
+      if (neighbor === targetOp) return true;
 
-      if (getSetVisited(neighbor)) return true
-      else if (i >= 3 || !checkCollision(field, neighbor))
-        queue.enqueue(neighbor);
+      if (!getSetVisited(neighbor)) {
+        if (i >= 3 || !checkCollision(field, neighbor))
+          queue.enqueue(neighbor);
+      }
     }
   }
 

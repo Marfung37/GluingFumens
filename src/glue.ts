@@ -104,7 +104,7 @@ if(require.main == module) {
   };
 
   main().catch((err) => {
-    console.error("Error:", err.message);
+    console.error("Error:", err);
   });
 }
 

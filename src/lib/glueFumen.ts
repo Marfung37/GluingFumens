@@ -493,7 +493,7 @@ export default function glueFumen(customInput: string | string[], expectedSoluti
         let pages: Pages = [];
         pages.push({
           field: emptyField,
-          operation: decodeAbsOp(piecesArr[0])
+          ...((piecesArr.length > 0) ? {operation: decodeAbsOp(piecesArr[0])}: {})
         } as Page)
         for(let i = 1; i < piecesArr.length; i++){
           pages.push({
