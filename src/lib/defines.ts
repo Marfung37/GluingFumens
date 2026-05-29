@@ -87,10 +87,10 @@ export function decodeWrapper(fumen: string): Page[] {
   return pages;
 }
 
-export type encodedOperation = number;
+export type EncodedOperation = number;
 
 // encode operations for faster comparisons
-export function encodeOp(operation: Operation): encodedOperation {
+export function encodeOp(operation: Operation): EncodedOperation {
   /** encode into 14 bit
     * type has 7 possible (3 bits)
     * rotation has 4 possible (2 bits)
@@ -104,7 +104,7 @@ export function encodeOp(operation: Operation): encodedOperation {
   return ct;
 }
 
-export function decodeOp(ct: encodedOperation): Operation {
+export function decodeOp(ct: EncodedOperation): Operation {
   let y = ct & 0x1F; ct >>= 5;
   let x = ct & 0xF; ct >>= 4;
   let rotation = Rotation[ct & 0x3]; ct >>= 2;
@@ -118,19 +118,19 @@ export function decodeOp(ct: encodedOperation): Operation {
   } as Operation
 }
 
-export function getY(ct: encodedOperation): number {
+export function getY(ct: EncodedOperation): number {
   return ct & 0x1F;
 }
 
-export function getX(ct: encodedOperation): number {
+export function getX(ct: EncodedOperation): number {
   return (ct >> 5) & 0xF;
 }
 
-export function getRotation(ct: encodedOperation): number {
+export function getRotation(ct: EncodedOperation): number {
   return (ct >> 9) & 0x3;
 }
 
-export function getType(ct: encodedOperation): number {
+export function getType(ct: EncodedOperation): number {
   return ct >> 11;
 }
 
@@ -163,7 +163,7 @@ export function inBounds(cell: Pos, height: number): boolean {
   return (0 <= cell.x && cell.x < WIDTH) && (0 <= cell.y && cell.y < height);
 }
 
-export function getPieceMinos(operation: encodedOperation): Pos[] {
+export function getPieceMinos(operation: EncodedOperation): Pos[] {
   let minos: Pos[] = [];
 
   let rotationStates = pieceMappings[Piece[getType(operation)] as PieceType];

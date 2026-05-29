@@ -1,12 +1,12 @@
 // code based on https://github.com/Hsterts/Fumenities/blob/main/Fumen%20Utils_files/fumenutil/modified-unglueFumen.js
 import { encoder, Field } from 'tetris-fumen';
 import {
-  Operation,
   WIDTH,
   encodeOp,
   getPieceMinos,
   decodeWrapper
 } from './defines';
+import type { Operation } from './defines';
 
 // shift y back up due to being shifted down from line clears
 function clearOffset(rowsCleared: number, y: number): number {

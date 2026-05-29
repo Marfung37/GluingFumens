@@ -1,36 +1,31 @@
-import {encoder, Field, Page, Pages} from 'tetris-fumen';
+import {encoder, Field, type Page, type Pages} from 'tetris-fumen';
 import {
-  Pos,
-  Operation,
-  Rotation,
-  PieceType,
-  MinoType,
-  RotationType,
+  Rotation, 
   WIDTH,
   TETROMINO,
   pieceMappings,
   decodeWrapper,
   getHeight,
   inBounds,
-  type encodedOperation,
   encodeOp,
   decodeOp,
   isMinoPiece
 } from './defines';
+import type { Pos, Operation, PieceType, MinoType, RotationType, EncodedOperation } from './defines';
 import { checkSRS180 } from './srsCheck';
 
 // an Operation with also an absolute y value
-export interface absoluteOperation extends Operation {
+export interface AbsoluteOperation extends Operation {
   absY: number
 }
 
-export function encodeAbsOp(operation: absoluteOperation): encodedOperation {
+export function encodeAbsOp(operation: AbsoluteOperation): EncodedOperation {
   let ct = encodeOp(operation);
   ct = (ct << 5) + operation.absY;
   return ct
 }
 
-export function decodeAbsOp(ct: encodedOperation): Operation {
+export function decodeAbsOp(ct: EncodedOperation): Operation {
   ct >>= 5; // remove the absolute Y position
   return decodeOp(ct);
 }
@@ -306,12 +301,12 @@ function getMinoPositions(
   return minoPositions;
 }
 
-function duplicateGlue(subArr: encodedOperation[], arrays: encodedOperation[][]): boolean {
+function duplicateGlue(subArr: EncodedOperation[], arrays: EncodedOperation[][]): boolean {
   // check if duplicate
 
   // new array without y but keep absolute y
   let absSubArr = subArr.map((x: number) => x >> 5);
-  const arrSet: Set<encodedOperation> = new Set<encodedOperation>(absSubArr);
+  const arrSet: Set<EncodedOperation> = new Set<EncodedOperation>(absSubArr);
 
   for(let arr of arrays) {
     if (subArr.length !== arr.length) {
@@ -333,8 +328,8 @@ function glue(
   y0: number, 
   field: Field, 
   height: number,
-  piecesArr: encodedOperation[], 
-  allPiecesArr: encodedOperation[][],
+  piecesArr: EncodedOperation[], 
+  allPiecesArr: EncodedOperation[][],
   totalLinesCleared: number[], 
   visualizeArr: Pages, 
   expectedSolutions: number,
@@ -483,7 +478,7 @@ export default function glueFumen(
       let field: Field = page.field;
       let height: number = getHeight(field);
       let emptyField: Field = makeEmptyField(field, height);
-      let allPiecesArr: encodedOperation[][] = [];
+      let allPiecesArr: EncodedOperation[][] = [];
 
       // try to glue this field and put into all pieces arr
       if(checkGlueable(field, height)){

@@ -1,9 +1,6 @@
-import {Field} from 'tetris-fumen';
+import { Field } from 'tetris-fumen';
+
 import {
-  Pos,
-  Operation,
-  Piece,
-  Rotation,
   getHeight,
   HEIGHT,
   WIDTH,
@@ -12,11 +9,12 @@ import {
   getY,
   getRotation,
   getType,
-  encodedOperation,
   getPieceMinos,
   inBounds
 } from './defines';
 import NumberRingQueue from './NumberRingQueue';
+import type { Pos, Operation, Piece, Rotation, EncodedOperation } from './defines';
+
 
 const GLOBAL_VISITED = new Int32Array(512);
 const MAX_NEIGHBORS = 6;
@@ -214,7 +212,7 @@ function getSpawn(height: number): Pos {
   return {x: 4, y: height};
 }
 
-function getNeighbors(field: Field, operation: encodedOperation): void {
+function getNeighbors(field: Field, operation: EncodedOperation): void {
   // shifts
 
   // left 1
@@ -253,7 +251,7 @@ function getNeighbors(field: Field, operation: encodedOperation): void {
 }
 
 // for glue fumen collision only with gray minos (ie can go through colored minos)
-function checkCollision(field: Field, operation: encodedOperation): boolean {
+function checkCollision(field: Field, operation: EncodedOperation): boolean {
   const minos = getPieceMinos(operation);
 
   for (let mino of minos) {
@@ -264,7 +262,7 @@ function checkCollision(field: Field, operation: encodedOperation): boolean {
 }
 
 // get x, y new position from srs, assume operation has rotation set to target already
-function kick(field: Field, operation: encodedOperation, init: Rotation, target: Rotation): encodedOperation {
+function kick(field: Field, operation: EncodedOperation, init: Rotation, target: Rotation): EncodedOperation {
   for(let [dx, dy] of get_kicks(getType(operation), init, target)) {
     let newOp = operation + (dx << 5) + dy;
 
