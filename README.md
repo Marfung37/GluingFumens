@@ -2,7 +2,7 @@
 Turning single page fumens with color coded pieces into multipage fumens with a piece on each page  
 
 Supports multipage fumens and multiple fumen inputs  
-Note: if there's multiple ways to cover the colored minos then all are outputed  
+Note: if there's multiple ways to cover the colored minos then all are outputted  
 
 # Installation
 ```sh
