@@ -47,7 +47,7 @@ function findLineClears(field: Field, rowsModified: number): number {
 }
 
 // only one output for a glued fumen and assumes field isn't changed from first page
-export default function unglueFumen(gluedFumen: string): string {
+export function unglueFumen(gluedFumen: string): string {
   const pages = decodeWrapper(gluedFumen);
   const field = pages[0].field;
 

@@ -15,17 +15,17 @@ import type { Pos, Operation, PieceType, MinoType, RotationType, EncodedOperatio
 import { checkSRS180 } from './srsCheck';
 
 // an Operation with also an absolute y value
-export interface AbsoluteOperation extends Operation {
+interface AbsoluteOperation extends Operation {
   absY: number
 }
 
-export function encodeAbsOp(operation: AbsoluteOperation): EncodedOperation {
+function encodeAbsOp(operation: AbsoluteOperation): EncodedOperation {
   let ct = encodeOp(operation);
   ct = (ct << 5) + operation.absY;
   return ct
 }
 
-export function decodeAbsOp(ct: EncodedOperation): Operation {
+function decodeAbsOp(ct: EncodedOperation): Operation {
   ct >>= 5; // remove the absolute Y position
   return decodeOp(ct);
 }
@@ -41,10 +41,6 @@ function isFloating(field: Field, minoPositions: Pos[]): boolean {
     // not on floor
     pos.y != 0 && field.at(pos.x, pos.y - 1) !== 'X'
   );
-}
-
-function centerMino(minoPositions: Pos[]): Pos {
-  return minoPositions[0];
 }
 
 function placePiece(field: Field, minoPositions: Pos[], mino: MinoType = 'X'): void {
@@ -445,7 +441,7 @@ function glue(
   }
 }
 
-export default function glueFumen(
+export function glueFumen(
   customInput: string | string[], 
   expectedSolutions: number = -1, 
   visualize: boolean = false, 

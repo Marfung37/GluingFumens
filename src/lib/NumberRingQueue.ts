@@ -1,3 +1,6 @@
+/**
+ * Basic implementation of a ring queue for srsCheck
+ */
 export default class NumberRingQueue {
   private storage: Int32Array;
   private head = 0;

@@ -1,0 +1,96 @@
+import type { Operation, EncodedOperation, Pos } from './types';
+import { Piece, Rotation } from './defines';
+import { getOffsets, centerMino } from './utils';
+
+export abstract class OperationEncoder {
+  // prevent instantiation
+  private constructor() {}
+
+  /**
+   * encode operations for faster comparisons
+   */
+  static encode(operation: Operation): EncodedOperation {
+    /** encode into 14 bit
+      * type has 7 possible (3 bits)
+      * rotation has 4 possible (2 bits)
+      * x has WIDTH (10) possible (4 bits)
+      * y has height (20) possible (5 bits)
+      */
+    let ct = Piece[operation.type];
+    ct = (ct << 2) + Rotation[operation.rotation];
+    ct = (ct << 4) + operation.x;
+    ct = (ct << 5) + operation.y;
+    return ct;
+  }
+
+  /**
+   * decode operations back to objects supported by tetris-fumen
+   */
+  static decode(ct: EncodedOperation): Operation {
+    let y = ct & 0x1F; ct >>= 5;
+    let x = ct & 0xF; ct >>= 4;
+    let rotation = Rotation[ct & 0x3]; ct >>= 2;
+    let type = Piece[ct];
+
+    return {
+      type: type,
+      rotation: rotation,
+      x: x,
+      y: y
+    } as Operation
+  }
+
+  /**
+   * get y value from encoded operation
+   */
+  static getY(ct: EncodedOperation): number {
+    return ct & 0x1F;
+  }
+
+  /**
+   * get x value from encoded operation
+   */
+  static getX(ct: EncodedOperation): number {
+    return (ct >> 5) & 0xF;
+  }
+
+  /**
+   * get rotation from encoded operation
+   */
+  static getRotation(ct: EncodedOperation): Rotation {
+    return (ct >> 9) & 0x3;
+  }
+
+  /**
+   * get piece from encoded operation
+   */
+  static getPiece(ct: EncodedOperation): Piece {
+    return ct >> 11;
+  }
+
+  /**
+   * get positions of piece from encoded operation
+   */
+  static positions(operation: EncodedOperation): Pos[] {
+    const x = this.getX(operation);
+    const y = this.getY(operation);
+    const piece = this.getPiece(operation);
+    const rotation = this.getRotation(operation);
+
+    // get offset and center index
+    const offsets = getOffsets(piece, rotation);
+    const centerIndex = centerMino(piece, rotation);
+
+    // get base x, y offset of center mino
+    const [bx, by] = offsets[centerIndex];
+
+    // get minos centered at given x,y from operation
+    const minos: Pos[] = [];
+    for (let [dx, dy] of offsets) {
+      let mino = {x: x + dx - bx, y: y + dy - by};
+      minos.push(mino);
+    }
+
+    return minos;
+  }
+}

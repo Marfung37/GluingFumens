@@ -1,4 +1,6 @@
 {
+  "name": "gluing-fumens",
+  "type": "module",
   "scripts": {
     "build": "npx esbuild src/glue.ts --bundle --minify --outfile=dist/glue.js --platform=node"
   },
