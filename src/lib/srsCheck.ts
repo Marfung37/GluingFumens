@@ -13,6 +13,7 @@ import {
   inBounds
 } from './defines';
 import NumberRingQueue from './NumberRingQueue';
+import EncodedField from './EncodedField';
 import type { Pos, Operation, Piece, Rotation, EncodedOperation } from './defines';
 
 
@@ -281,7 +282,7 @@ function getSetVisited(index: number): boolean {
   return value;
 }
 
-export function checkSRS180(field: Field, operation: Operation) {
+export function checkSRS180(field: EncodedField, operation: EncodedOperation) {
   let targetOp = encodeOp(operation);
   let startOp = encodeOp({...operation, ...getSpawn(getHeight(field))});
   if (targetOp == startOp) return true;

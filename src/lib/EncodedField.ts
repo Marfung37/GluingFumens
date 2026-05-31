@@ -34,19 +34,20 @@ export default class EncodedField {
   constructor(field: Field, height: number) {
     // height is assumed to given as upper maximum
     this.field = new BigInt64Array(height);
-    this.height = height;
     const rows = field.str({garbage: false, reduced: true}).split('\n')
+    this.height = rows.length;
 
     // convert each cell into 4 bit int to pack into 40 bit int
-    for (let y = 0; y < rows.length; y++) {
-      const row = rows[rows.length - y - 1];
+    for (let y = 0; y < this.height; y++) {
+      // read rows reversed as given where 0 is top left rather than bottom left
+      const row = rows[this.height - y - 1];
       for (const cell of row) {
         this.field[y] <<= CELL_BIT_SHIFT;
         this.field[y] |= BigIntPiece[cell as MinoType];
       }
     }
   }
-  
+
   /**
    * decode the encoded field back to a Field
    */
@@ -87,7 +88,15 @@ export default class EncodedField {
    * set value at position assuming empty there
    */
   set(x: number, y: number, mino: MinoType): void {
+    this.height = Math.max(y, this.height);
     this.field[y] |= BigIntPiece[mino] << SHIFT_LOOKUP[x];
+  }
+
+  /**
+   * get the height, only guranteed to be upper bound
+   */
+  getHeight(): number {
+    return this.height;
   }
 
   /**
@@ -108,6 +117,19 @@ export default class EncodedField {
    */
   lineClear(y: number): void {
     this.field.copyWithin(y, y + 1, this.height);
+    this.height--;
+  }
+
+  /**
+   * gives a copy of the field
+   */
+  copy(): EncodedField {
+    const clone = Object.create(Object.getPrototypeOf(this));
+
+    clone.height = this.height;
+    clone.field = this.field.slice();
+
+    return clone;
   }
 }
 

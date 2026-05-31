@@ -9,8 +9,9 @@ export interface Operation {
   y: number;
 }
 
-export declare type PieceType = 'T' | 'I' | 'L' | 'J' | 'S' | 'Z' | 'O';
-export declare type MinoType = PieceType | 'X' | '_';
-export declare type RotationType = 'spawn' | 'right' | 'reverse' | 'left';
+export type PieceType = 'T' | 'I' | 'L' | 'J' | 'S' | 'Z' | 'O';
+export type MinoType = PieceType | 'X' | '_';
+export type RotationType = 'spawn' | 'right' | 'reverse' | 'left';
 
+export type Fumen = string;
 export type EncodedOperation = number;

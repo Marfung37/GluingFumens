@@ -1,7 +1,21 @@
-import { Piece, Rotation, HEIGHT, WIDTH, pieceMappings } from './defines'; 
-import { decoder, Field, type Page } from 'tetris-fumen';
+import { Piece, Rotation, WIDTH, pieceMappings } from './defines'; 
+import { decoder, type Page } from 'tetris-fumen';
 import type { Pos } from './types';
 import EncodedField from './EncodedField';
+
+/**
+ * implementation of count trailing zeros by 
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/clz32
+ */
+export function ctrz(x: number) {
+  x >>>= 0; // coerce to Uint32
+  if (x === 0) {
+    // skipping this step would make it return -1
+    return 32;
+  }
+  x &= -x; // equivalent to `int = int & (~int + 1)`
+  return 31 - Math.clz32(x);
+}
 
 /**
  * get offsets of a piece, rotation pair
@@ -26,6 +40,17 @@ export function centerMino(piece: Piece, rotation: Rotation): number {
 }
 
 /**
+ * get position of center mino given bottom left mino
+ */
+export function bottomLeftToCenterMino(x: number, y: number, piece: Piece, rotation: Rotation): Pos {
+  const offsets = getOffsets(piece, rotation);
+  const centerIndex = centerMino(piece, rotation);
+
+  const [bx, by] = offsets[centerIndex];
+  return {x: x + bx, y: y + by};
+}
+
+/**
  * get positions of minos of a piece
  */
 export function positions(x: number, y: number, piece: Piece, rotation: Rotation): Pos[] {
@@ -36,7 +61,7 @@ export function positions(x: number, y: number, piece: Piece, rotation: Rotation
   // get base x, y offset of center mino
   const [bx, by] = offsets[centerIndex];
 
-  // get minos centered at given x,y from operation
+  // get minos centered at given x, y
   const minos: Pos[] = [];
   for (let [dx, dy] of offsets) {
     let mino = {x: x + dx - bx, y: y + dy - by};
@@ -57,6 +82,22 @@ export function decodeWrapper(fumen: string): Page[] {
   }
 }
 
+const VALID_PIECES = new Uint8Array(256);
+VALID_PIECES['T'.charCodeAt(0)] = 1;
+VALID_PIECES['I'.charCodeAt(0)] = 1;
+VALID_PIECES['L'.charCodeAt(0)] = 1;
+VALID_PIECES['J'.charCodeAt(0)] = 1;
+VALID_PIECES['S'.charCodeAt(0)] = 1;
+VALID_PIECES['Z'.charCodeAt(0)] = 1;
+VALID_PIECES['O'.charCodeAt(0)] = 1;
+
+/**
+ * fast check if passed first char is a tetris piece
+ */
+export function isValidPieceChar(piece: string): boolean {
+  return VALID_PIECES[piece.charCodeAt(0)] == 1;
+}
+
 /**
  * fast check if piece rather than X or _
  */
@@ -65,25 +106,31 @@ export function isMinoPiece(piece: Piece): boolean {
 }
 
 /**
- * get the height of the field
- */
-export function getHeight(field: Field): number {
-  // accounting for newlines and no trailing newline and garbage line
-  for (let y = HEIGHT - 1; y >= 0; y--) {
-    for (let x = 0; x < WIDTH; x++) {
-      if (field.at(x, y) !== '_') {
-        return y + 1;
-      }
-    }
-  }
-  return 0;
-}
-
-/**
  * checks if given position is within bounds
  */
 export function inBounds(cell: Pos, height: number): boolean {
   return (0 <= cell.x && cell.x < WIDTH) && (0 <= cell.y && cell.y < height);
+}
+
+/**
+ * get shifted y back up due to being shifted down from line clears
+ */
+export function clearOffset(y: number, rowsCleared: number): number {
+  let mask = (1 << (y + 1)) - 1;
+
+  // keep iterating until no more rows cleared below y
+  while ((rowsCleared & mask) > 0) {
+    // counts number of set bits before y
+    while ((rowsCleared & mask) > 0) {
+      rowsCleared &= rowsCleared - 1; 
+      y++;
+    }
+
+    // update mask as could now have more rows under that were cleared
+    mask = (1 << (y + 1)) - 1;
+  }
+
+  return y;
 }
 
 /**
