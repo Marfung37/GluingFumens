@@ -1,7 +1,7 @@
 // code based on https://github.com/Hsterts/Fumenities/blob/main/Fumen%20Utils_files/fumenutil/modified-unglueFumen.js
 import { encoder } from 'tetris-fumen';
 import { Piece, Rotation, HEIGHT } from './defines';
-import { positions, decodeWrapper } from './utils';
+import { positions, decodeWrapper, findLineClears } from './utils';
 import EncodedField from './EncodedField';
 
 /**
@@ -23,24 +23,6 @@ function clearOffset(rowsCleared: number, y: number): number {
   }
 
   return y;
-}
-
-/**
- * get rows that are cleared
- */
-function findLineClears(field: EncodedField, rowsModified: number): number {
-  let rowsCleared = 0;
-  while (rowsModified > 0) {
-    // get a row from bit string
-    const row = 31 - Math.clz32(rowsModified);
-
-    // add to rows cleared if row doesn't contain any empty cells
-    if (field.isLineClear(row)) rowsCleared |= (1 << row);
-
-    // clear this bit
-    rowsModified &= ~(1 << row);
-  }
-  return rowsCleared;
 }
 
 /**
@@ -79,6 +61,3 @@ export function unglueFumen(gluedFumen: string): string {
   
   return encoder.encode([{field: field.toField()}]);
 }
-
-// DEBUG
-console.log(unglueFumen('v115@igG8DeF8DeF8DeF8DeF8BeH8CeG8Je2OJvhEupBJkB?GlBGqBmpB'))

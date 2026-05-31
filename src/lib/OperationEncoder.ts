@@ -4,7 +4,7 @@ import { positions } from './utils';
 
 export default abstract class OperationEncoder {
   // prevent instantiation
-  private constructor() {}
+  protected constructor() {}
 
   /**
    * encode operations for faster comparisons
@@ -30,7 +30,7 @@ export default abstract class OperationEncoder {
     let y = ct & 0x1F; ct >>= 5;
     let x = ct & 0xF; ct >>= 4;
     let rotation = Rotation[ct & 0x3]; ct >>= 2;
-    let type = Piece[ct];
+    let type = Piece[ct & 0x7];
 
     return {
       type: type,
@@ -65,7 +65,7 @@ export default abstract class OperationEncoder {
    * get piece from encoded operation
    */
   static getPiece(ct: EncodedOperation): Piece {
-    return ct >> 11;
+    return (ct >> 11) & 0x7;
   }
 
   /**

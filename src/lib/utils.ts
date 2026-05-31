@@ -1,6 +1,7 @@
 import { Piece, Rotation, HEIGHT, WIDTH, pieceMappings } from './defines'; 
 import { decoder, Field, type Page } from 'tetris-fumen';
-import type { Pos, MinoType } from './types';
+import type { Pos } from './types';
+import EncodedField from './EncodedField';
 
 /**
  * get offsets of a piece, rotation pair
@@ -56,21 +57,11 @@ export function decodeWrapper(fumen: string): Page[] {
   }
 }
 
-// bit map for what characters are tetris pieces
-const VALID_PIECES = new Uint8Array(256);
-VALID_PIECES["T".charCodeAt(0)] = 1;
-VALID_PIECES["I".charCodeAt(0)] = 1;
-VALID_PIECES["L".charCodeAt(0)] = 1;
-VALID_PIECES["J".charCodeAt(0)] = 1;
-VALID_PIECES["S".charCodeAt(0)] = 1;
-VALID_PIECES["Z".charCodeAt(0)] = 1;
-VALID_PIECES["O".charCodeAt(0)] = 1;
-
 /**
  * fast check if piece rather than X or _
  */
-export function isMinoPiece(piece: MinoType): boolean {
-  return VALID_PIECES[piece.charCodeAt(0)] === 1;
+export function isMinoPiece(piece: Piece): boolean {
+  return (piece & 0x7) != 0;
 }
 
 /**
@@ -93,4 +84,38 @@ export function getHeight(field: Field): number {
  */
 export function inBounds(cell: Pos, height: number): boolean {
   return (0 <= cell.x && cell.x < WIDTH) && (0 <= cell.y && cell.y < height);
+}
+
+/**
+ * get rows that are cleared
+ */
+export function findLineClears(field: EncodedField, rowsModified: number): number {
+  let rowsCleared = 0;
+  while (rowsModified > 0) {
+    // get a row from bit string
+    const row = 31 - Math.clz32(rowsModified);
+
+    // add to rows cleared if row doesn't contain any empty cells
+    if (field.isLineClear(row)) rowsCleared |= (1 << row);
+
+    // clear this bit
+    rowsModified &= ~(1 << row);
+  }
+  return rowsCleared;
+}
+
+/**
+ * clears all rows given to be cleared
+ */
+export function clearLines(field: EncodedField, rowsToBeCleared: number): void {
+  while (rowsToBeCleared > 0) {
+    // get a row from bit string
+    const row = 31 - Math.clz32(rowsToBeCleared);
+
+    // clear this line
+    field.lineClear(row)
+
+    // clear this bit
+    rowsToBeCleared &= ~(1 << row);
+  }
 }

@@ -1,154 +1,110 @@
-import {encoder, Field, type Page, type Pages} from 'tetris-fumen';
-import {
-  Rotation, 
-  WIDTH,
-  TETROMINO,
-  pieceMappings,
-  decodeWrapper,
-  getHeight,
-  inBounds,
-  encodeOp,
-  decodeOp,
-  isMinoPiece
-} from './defines';
-import type { Pos, Operation, PieceType, MinoType, RotationType, EncodedOperation } from './defines';
+import type { Pos, Operation, PieceType, MinoType, RotationType, EncodedOperation } from './types';
+import { encoder, Field, type Page, type Pages } from 'tetris-fumen';
+import { Rotation,  } from './defines';
+import { Piece, WIDTH, TETROMINO, NUM_MINOS, pieceMappings } from './defines';
+import { 
+  decodeWrapper, 
+  getHeight, 
+  inBounds, 
+  isMinoPiece, 
+  findLineClears, 
+  clearLines 
+} from './utils';
+import OperationEncoder from './OperationEncoder';
+import EncodedField from './EncodedField';
 import { checkSRS180 } from './srsCheck';
 
-// an Operation with also an absolute y value
 interface AbsoluteOperation extends Operation {
   absY: number
 }
 
-function encodeAbsOp(operation: AbsoluteOperation): EncodedOperation {
-  let ct = encodeOp(operation);
-  ct = (ct << 5) + operation.absY;
-  return ct
+abstract class AbsoluteOperationEncoder extends OperationEncoder {
+  // put abs y before all other bits to be able to reuse functions
+  static encode(operation: AbsoluteOperation): EncodedOperation {
+    let ct = operation.absY << 14;
+    ct |= super.encode(operation);
+    return ct;
+  }
+
+  // decode can just return Operation for these tasks
+
+  static getAbsY(ct: EncodedOperation): number {
+    return ct & 0x1F;
+  }
 }
 
-function decodeAbsOp(ct: EncodedOperation): Operation {
-  ct >>= 5; // remove the absolute Y position
-  return decodeOp(ct);
+/**
+ * For all functions 'X' is treated as the only filled cell in a field 
+ */
+
+// modified EncodedField so only X is treated as filled cell
+// also supports functions used only for glue fumen
+export class EncodedFieldXFill extends EncodedField {
+  /**
+   * checks if row at y value is all filled
+   */
+  isLineClear(y: number): boolean {
+    const row = this.field[y];
+    // X is the only mino which has the high bit set of 4 bits
+    // negate this to only have high bit to be set if zero
+    // check if any high bits are set
+    return (~row & EncodedField.HIGH_BITS_MASK) == 0n;
+  }
+
+  /**
+   * empty board of colored minos
+   */
+  emptyColored(): void {
+    // can use mask for only X or _ to remain
+    for (let y = 0; y < this.height; y++) {
+      this.field[y] &= EncodedField.HIGH_BITS_MASK;
+    }
+  }
+
+  /**
+   * checks if any colored minos are left
+   */
+  checkColored(): boolean {
+    // can use bitwise not of mask to check
+    for (let y = 0; y < this.height; y++) {
+      const check = this.field[y] & EncodedField.NOT_HIGH_BITS_MASK;
+      if (check != 0n) return true;
+    }
+    return false;
+  }
 }
 
-interface removeLineClearsRet {
-  field: Field,
-  linesCleared: number[],
-}
-
-function isFloating(field: Field, minoPositions: Pos[]): boolean {
-  // if there's a 'X' under any of the minos
+function isFloating(field: EncodedField, minoPositions: Pos[]): boolean {
+  // checks if any 'X' under any of the minos
   return minoPositions.every(pos =>
     // not on floor
-    pos.y != 0 && field.at(pos.x, pos.y - 1) !== 'X'
+    pos.y != 0 && field.at(pos.x, pos.y - 1) != Piece.X
   );
 }
 
-function placePiece(field: Field, minoPositions: Pos[], mino: MinoType = 'X'): void {
-  for (let pos of minoPositions){
+function placePiece(field: EncodedField, minoPositions: Pos[], mino: MinoType = 'X'): void {
+  for (const pos of minoPositions)
     field.set(pos.x, pos.y, mino)
-  }
 }
 
-function removeLineClears(field: Field, height: number): removeLineClearsRet {
-  // line clearing is done internally by tetris-fumen in PlayField
-  // but here we want to only clear rows that are all `X`s
-
-  // to avoid serializing the field, we directly alter the field
-  let newField = field.copy();
-  let currentRow = 0;
-  let sourceRow = 0;
-  let linesCleared = [];
-
-  while (sourceRow < height) {
-    let greyRow = true;
-    for (let x = 0; x < WIDTH; x++) {
-      if (field.at(x, sourceRow) !== "X") {
-        greyRow = false;
-        break;
-      }
-    }
-
-    if (greyRow) {
-      // ignore this source row, use the row above as source instead
-
-      // record cleared line, since all rows below are filled, 
-      // currentRow is exactly the relative line number of the cleared row
-      linesCleared.push(currentRow);
-      sourceRow++;
-    } else {
-      // only need to copy from sourceRow when the rows are different
-      if (currentRow != sourceRow) {
-        // copy from source to current
-        for (let x = 0; x < WIDTH; x++) {
-          newField.set(x, currentRow, newField.at(x, sourceRow))
-        }
-      }
-      // move to the next row above
-      currentRow++;
-      sourceRow++;
-    }
-  }
-
-  // blank out remaining rows
-  for (let y = height - linesCleared.length; y < height; y++) {
-    for (let x = 0; x < WIDTH; x++) {
-      newField.set(x, y, "_");
-    }
-  }
-
-  return {
-    field: newField,
-    linesCleared: linesCleared // relative line clear positions ex: [0, 0] (bottommost two lines)
-  };
-}
-
-
-function anyColoredMinos(field: Field, height: number): boolean {
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < WIDTH; x++) {
-      if (isMinoPiece(field.at(x, y))) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-function makeEmptyField(field: Field, height: number): Field{
-  let emptyField = field.copy();
-  for(let y = 0; y < height; y++){
-    for (let x = 0; x < WIDTH; x++) {
-      let piece = emptyField.at(x, y);
-      if (isMinoPiece(piece)) {
-        emptyField.set(x, y, "_");
-      }
-    }
-  }
-  return emptyField;
-}
-
-function checkGlueable(field: Field, height: number): boolean {
+function checkGlueable(field: EncodedField, height: number): boolean {
   // check if there's enough minos of each color to place pieces
-  const frequencyCounter: Record<PieceType, number> = {
-    'T': 0, 'I': 0, 'L': 0, 'J': 0, 'S': 0, 'Z': 0, 'O': 0
-  };
+  const frequencyCounter = new Uint8Array(NUM_MINOS - 1);
 
   for (let y = 0; y < height; y++) {
     for(let x = 0; x < WIDTH; x++) {
       let mino = field.at(x, y);
       if (isMinoPiece(mino)) {
-        mino = mino as PieceType;
         frequencyCounter[mino]++;
+        frequencyCounter[mino] &= 0x7; // mod 4
       }
     }
   }
 
-  for (const piece in frequencyCounter){
-    if(frequencyCounter[piece as PieceType] % TETROMINO != 0)
-      return false;
-  }
-  return true;
-}
+  return frequencyCounter.every(value => value == 0)
+
+
+// TODO: refactor all following functions
 
 function checkWouldFloatPiece(field: Field, y: number, minoPositions: Pos[]): boolean {
   // check if this piece would be floating without the piece under it
@@ -180,8 +136,6 @@ function checkWouldFloatPiece(field: Field, y: number, minoPositions: Pos[]): bo
 
   return true
 }
-
-
 
 function getNewStart(field: Field, height: number, x: number, y: number, minoPositions: Pos[]): Pos {
   // get new start with several checks if a piece is hanging or not
