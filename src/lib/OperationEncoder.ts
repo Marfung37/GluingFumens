@@ -1,8 +1,8 @@
 import type { Operation, EncodedOperation, Pos } from './types';
 import { Piece, Rotation } from './defines';
-import { getOffsets, centerMino } from './utils';
+import { positions } from './utils';
 
-export abstract class OperationEncoder {
+export default abstract class OperationEncoder {
   // prevent instantiation
   private constructor() {}
 
@@ -69,28 +69,13 @@ export abstract class OperationEncoder {
   }
 
   /**
-   * get positions of piece from encoded operation
+   * get positions of minos of a piece from encoded operation
    */
   static positions(operation: EncodedOperation): Pos[] {
     const x = this.getX(operation);
     const y = this.getY(operation);
     const piece = this.getPiece(operation);
     const rotation = this.getRotation(operation);
-
-    // get offset and center index
-    const offsets = getOffsets(piece, rotation);
-    const centerIndex = centerMino(piece, rotation);
-
-    // get base x, y offset of center mino
-    const [bx, by] = offsets[centerIndex];
-
-    // get minos centered at given x,y from operation
-    const minos: Pos[] = [];
-    for (let [dx, dy] of offsets) {
-      let mino = {x: x + dx - bx, y: y + dy - by};
-      minos.push(mino);
-    }
-
-    return minos;
+    return positions(x, y, piece, rotation);
   }
 }

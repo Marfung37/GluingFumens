@@ -25,6 +25,27 @@ export function centerMino(piece: Piece, rotation: Rotation): number {
 }
 
 /**
+ * get positions of minos of a piece
+ */
+export function positions(x: number, y: number, piece: Piece, rotation: Rotation): Pos[] {
+  // get offset and center index
+  const offsets = getOffsets(piece, rotation);
+  const centerIndex = centerMino(piece, rotation);
+
+  // get base x, y offset of center mino
+  const [bx, by] = offsets[centerIndex];
+
+  // get minos centered at given x,y from operation
+  const minos: Pos[] = [];
+  for (let [dx, dy] of offsets) {
+    let mino = {x: x + dx - bx, y: y + dy - by};
+    minos.push(mino);
+  }
+
+  return minos;
+}
+
+/**
  * basic wrapper on decode for better error message
  */
 export function decodeWrapper(fumen: string): Page[] {
