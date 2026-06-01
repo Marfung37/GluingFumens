@@ -1,5 +1,5 @@
-import glueFumen from './lib/glueFumen';
-import unglueFumen from './lib/unglueFumen';
+import { glueFumen } from './lib/glueFumen';
+import { unglueFumen } from './lib/unglueFumen';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import * as path from 'path';
@@ -19,12 +19,6 @@ if(require.main == module) {
         }
         return arg;
       },
-    })
-    .option('visualize', {
-      alias: 'v',
-      type: 'boolean',
-      description: 'Visualization of what the script is doing to find solutions.',
-      default: false
     })
     .option('order', {
       alias: 'o',
@@ -109,9 +103,20 @@ if(require.main == module) {
       console.log(input.map(unglueFumen).join('\n'))
       return;
     }
-    // Run glue
-    let allFumens = glueFumen(input, argv.expectedSolutions, argv.visualize, argv.order ? argv.order: null, argv.hold, argv.srs);
-    console.log(allFumens.join('\n'));
+
+    // run glueFumen with all the input
+    const order = argv.order ? argv.order: null;
+
+    for (const fumen of input) {
+      const gluedFumens = glueFumen(fumen, argv.expectedSolutions, order, argv.hold, argv.srs)
+      if (gluedFumens.length == 0) {
+        console.log(`Warning: ${fumen} couldn't be glued`)
+      }
+      if (gluedFumens.length > 1) {
+        console.log(`Warning: ${fumen} led to ${gluedFumens.length} outputs`)
+      }
+      console.log(gluedFumens.join('\n'));
+    }
   };
 
   main().catch((err) => {

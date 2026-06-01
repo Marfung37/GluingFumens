@@ -517,5 +517,3 @@ export function glueFumen(
   // output glued fumens
   return outputFumens
 }
-
-console.log(glueFumen('v115@9gDtQ4glwhi0wwBtilwhRpg0xwT4whRpglwwR4BtQ4?whilJeAgH', 1, 'TILJSZOLSZ'));

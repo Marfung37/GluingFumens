@@ -2,7 +2,7 @@
   "name": "gluing-fumens",
   "type": "module",
   "scripts": {
-    "build": "npx esbuild src/glue.ts --bundle --minify --outfile=dist/glue.js --platform=node"
+    "build": "npx esbuild src/glue.ts --bundle --minify --format=cjs --outfile=dist/glue.cjs --platform=node"
   },
   "dependencies": {
     "tetris-fumen": "^1.1.3",

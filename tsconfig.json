@@ -10,6 +10,7 @@
     "src/**/*.ts"
   ],
   "exclude": [
+    // DEBUG
     "src/**/srsCheck.ts",
     "node_modules"
   ]
