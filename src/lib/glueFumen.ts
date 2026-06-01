@@ -114,9 +114,6 @@ function isFloating(field: EncodedField, minoPositions: Pos[]): boolean {
 function placePiece(field: EncodedField, minoPositions: Pos[], mino: MinoType = 'X'): number {
   let rowsModified = 0;
   for (const pos of minoPositions) {
-    // DEBUG
-    if (!inBounds(pos, field.getHeight())) continue;
-
     field.unset(pos.x, pos.y);
     field.set(pos.x, pos.y, mino);
     rowsModified |= (1 << pos.y);
@@ -324,13 +321,6 @@ function checkPlaceable(
   const minoPositions = OperationEncoder.positions(operation);
   const piece = OperationEncoder.getPiece(operation);
 
-  // DEBUG
-  const tmpField = field.copy();
-  placePiece(tmpField, minoPositions);
-  console.log(OperationEncoder.decode(operation));
-  console.log(minoPositions);
-  console.log(tmpField.toField().str({garbage: false, reduced: true}), '\n');
-
   if (minoPositions.length < TETROMINO) return null;
   const matching = (pos: Pos) => inBounds(pos, height) && field.at(pos.x, pos.y) == piece;
   if (!minoPositions.every(matching)) return null;
@@ -400,10 +390,6 @@ function glue(
     const { x, y, orderIndex } = coloredPos;
     const piece = field.at(x, y);
 
-    // DEBUG
-    console.log('Found', Piece[piece], 'at', x, y, 'start was', x0, y0);
-    console.log('Adding self with start', (x + 1) % WIDTH, y + ~~((x + 1) / WIDTH));
-
     // push stack current state starting at new x, y
     stack.push({ x0: (x + 1) % WIDTH, y0: y + ~~((x + 1) / WIDTH), field, operations, rowsCleared, order })
 
@@ -454,12 +440,11 @@ function glue(
 
       // pick new x, y
       let [newX, newY] = [0, 0];
-      if (rowsToBeCleared == 0) {
+      if (rowsToBeCleared == 0 && order === null) {
         const start = getNewStart(field, x, y, minoPositions)
         newX = start.x
         newY = start.y
       }
-      console.log('new start', newX, newY);
 
       // new order
       const newOrder = order?.slice() ?? null;
