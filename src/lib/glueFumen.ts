@@ -180,13 +180,12 @@ function XtoInt(mino: Piece): number {
  * utility to check if there exist line clear under the piece such that the piece would be floating at this position
  * due to ignoring placement of pieces that float, an order that clears the lines under would prevent placement of this piece
  * a piece that does this leads to needing to check if those lines under can be cleared after placing it
- * @returns highest y value such that no X found under the piece's bottom most minos
  */
-function checkWouldFloatPiece(field: EncodedFieldXFill, y: number, minoPositions: Pos[]): number {
+function checkWouldFloatPiece(field: EncodedFieldXFill, y: number, minoPositions: Pos[]): boolean {
   // passed in y is the bottom most y value
 
   // y value too low to possible meet requirement
-  if (y <= 1) return -1;
+  if (y <= 1) return false;
 
   // check if supported above the bottom most minos of the piece
   // no matter how line clear occur piece cannot be floating
@@ -194,24 +193,23 @@ function checkWouldFloatPiece(field: EncodedFieldXFill, y: number, minoPositions
     // not bottom most mino and supported
     pos.y != y && field.at(pos.x, pos.y - 1) == Piece.X
   );
-  if (supportedAbove) return -1;
+  if (supportedAbove) return false;
 
   // find the bottom most minos
   const bottomMinoPositions = minoPositions.filter(pos => pos.y == y);
 
   // use a bit map set to store which y values have some x under
   let XHeights: number = 0;
-  const target: number = (1 << y) - 1;
+  const target: number = (1 << y) - (1 << Math.max(0, y - 5));
 
   // get which y values have some X under the bottom most minos
   for (let pos of bottomMinoPositions) {
-    for (let newY = pos.y - 1; newY >= 0; newY--) {
+    for (let newY = Math.max(0, y - 5); newY < y; newY++) {
       XHeights |= (XtoInt(field.at(pos.x, newY)) << newY); 
     } 
-    if (XHeights == target) return -1;
+    if (XHeights == target) return false;
   }
-  // some bit manipulation to get highest y value
-  return 31 - Math.clz32(~(~target | XHeights));
+  return true;
 }
 
 // constants used by following function
@@ -225,10 +223,9 @@ const hangsLeftTLJZ = (1 << Piece.T) | (1 << Piece.L) | (1 << Piece.L) | (1 << P
  */
 function getNewStart(field: EncodedFieldXFill, blx: number, bly: number, minoPositions: Pos[]): Pos {
   // check if need to clear lines below as current placement could've prevented line clears
-  const highestEmptyUnderPiece = checkWouldFloatPiece(field, bly, minoPositions);
-  if (highestEmptyUnderPiece != -1) {
+  if (checkWouldFloatPiece(field, bly, minoPositions)) {
     // starting as far down to possibly get lines below to clear
-    return {x: 0, y: highestEmptyUnderPiece + 1}
+    return {x: 0, y: Math.max(0, bly - 4)};
   }
 
   // get right most mino in current y

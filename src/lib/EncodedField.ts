@@ -58,7 +58,10 @@ export default class EncodedField {
       let encodedRow = this.field[y];
 
       // empty row
-      if (encodedRow == 0n) continue;
+      if (encodedRow == 0n) {
+        fieldStr += "__________";
+        continue;
+      }
 
       let row = "";
       for (let i = 0; i < WIDTH; i++) {
