@@ -47,7 +47,7 @@ abstract class AbsoluteOperationEncoder extends OperationEncoder {
   // decode can just return Operation for these tasks
 
   static getAbsY(ct: AbsoluteEncodedOperation): number {
-    return (ct << 14) & 0x1F;
+    return (ct >> 14) & 0x1F;
   }
 
   static stripY(ct: AbsoluteEncodedOperation): StrippedAbsoluteEncodedOperation {
@@ -333,17 +333,18 @@ function checkPlaceable(
  * updates the rowsCleared using absolute y of the rows cleared for this state
  */
 function getNewRowsCleared(rowsClearedNoOffset: number, rowsCleared: number): number {
+  let newRowsCleared = rowsCleared;
   while (rowsClearedNoOffset > 0) {
     // get a row from bit string
-    const row = ctrz(rowsClearedNoOffset);
+    const row = 31 - Math.clz32(rowsClearedNoOffset);
 
     const newRow = clearOffset(row, rowsCleared);
-    rowsCleared |= (1 << newRow);
+    newRowsCleared |= (1 << newRow);
 
     // clear this bit
     rowsClearedNoOffset &= ~(1 << row);
   }
-  return rowsCleared;
+  return newRowsCleared;
 }
 
 interface glueState {
