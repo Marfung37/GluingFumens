@@ -217,78 +217,65 @@ function checkWouldFloatPiece(field: EncodedFieldXFill, y: number, minoPositions
   return 31 - Math.clz32(~(~target | XHeights));
 }
 
-// TODO: determine how this should be implemented
+// constants used by following function
+const hangsLeftLS = (1 << Piece.L) | (1 << Piece.S);
+const hangsLeftTLJZ = (1 << Piece.T) | (1 << Piece.L) | (1 << Piece.L) | (1 << Piece.Z);
 
 /**
  * utility to find next cell to check after placing a piece
  * certain placements of a piece allow for placement of a piece previously floating or clears below current piece
  * getNewStart determines if it is possible and takes latest position possible to reduce redundant operations
  */
-// function getNewStart(field: EncodedFieldXFill, height: number, x: number, y: number, minoPositions: Pos[]): Pos {
-//   // check if need to clear lines below as current placement could've prevented line clears
-//   const highestEmptyUnderPiece = checkWouldFloatPiece(field, y, minoPositions);
-//   if (highestEmptyUnderPiece != -1) {
-//     // starting as far down to possibly get lines below to clear
-//     return {x: 0, y: highestEmptyUnderPiece + 1}
-//   }
+function getNewStart(field: EncodedFieldXFill, blx: number, bly: number, minoPositions: Pos[]): Pos {
+  // check if need to clear lines below as current placement could've prevented line clears
+  const highestEmptyUnderPiece = checkWouldFloatPiece(field, bly, minoPositions);
+  if (highestEmptyUnderPiece != -1) {
+    // starting as far down to possibly get lines below to clear
+    return {x: 0, y: highestEmptyUnderPiece + 1}
+  }
 
+  // get right most mino in current y
+  const rmPos: Pos = minoPositions.reduce((maxPos, currentPos) => {
+    return (currentPos.x > maxPos.x && bly == currentPos.y) ? currentPos : maxPos;
+    }, minoPositions[3]); // initialize pair with same y
 
-  // // get right most mino in current y
-  // const rightMostPos: Pos = minoPositions.reduce((maxPos, currentPos) => {
-  //   return (currentPos.x > maxPos.x && y == currentPos.y) ? currentPos : maxPos;
-  //   }, minoPositions[3]); // Initialize pair with same y
-  //
-  // let testMinoPositions: Pos[] = [];
-  //
-  // if(x > 0 && y > 0 && field.at(x - 1, y - 1) == 'J' && field.at(x, y + 1) == 'J') {
-  //   testMinoPositions = getMinoPositions(field, height, x - 1, y - 1, 'J', pieceMappings['J'][1])
-  //   if(testMinoPositions.length == TETROMINO){
-  //     return {x: x - 1, y: y - 1}; // if J hanging from left
-  //   }
-  // }
-  // if(y > 0 && field.at(rightMostPos.x + 1, rightMostPos.y - 1) == 'L' && field.at(rightMostPos.x, rightMostPos.y + 1) == 'L'){
-  //   let testMinoPositions = getMinoPositions(field, height, rightMostPos.x + 1, rightMostPos.y - 1, 'L', pieceMappings['L'][3])
-  //   if(testMinoPositions.length == TETROMINO){
-  //     return {x: rightMostPos.x + 1, y: rightMostPos.y - 1}; // if L hanging from right
-  //   }
-  // }
-  // if(x >= 2 && y > 0 && "LS".includes(field.at(x - 2, y)) && "LS".includes(field.at(x, y + 1))){
-  //   switch(field.at(x - 2, y)){
-  //     case 'L':
-  //       testMinoPositions = getMinoPositions(field, height, x - 2, y, 'L', pieceMappings['L'][2])
-  //       break;
-  //     case 'S':
-  //       testMinoPositions = getMinoPositions(field, height, x - 2, y, 'S', pieceMappings['S'][0])
-  //       break;
-  //   }
-  //   if(testMinoPositions.length == TETROMINO)
-  //     return {x: x - 2, y: y}; // if L or S hanging from the left
-  // }
-  // if(x >= 1 && y > 0 && "TLZ".includes(field.at(x - 1, y)) && "TLZ".includes(field.at(x, y + 1))){
-  //   switch(field.at(x - 1, y)){
-  //     case 'L':
-  //       testMinoPositions = getMinoPositions(field, height, x - 1, y, 'L', pieceMappings['L'][2])
-  //       break;
-  //     case 'Z':
-  //       testMinoPositions = getMinoPositions(field, height, x - 1, y, 'Z', pieceMappings['Z'][1])
-  //       break;
-  //     case 'T':
-  //       testMinoPositions = getMinoPositions(field, height, x - 1, y, 'T', pieceMappings['T'][1])
-  //       if(testMinoPositions.length != TETROMINO)
-  //         testMinoPositions = getMinoPositions(field, height, x - 1, y, 'T', pieceMappings['T'][2]) // different rotation
-  //       break;
-  //   }
-  //   if(testMinoPositions.length == TETROMINO)
-  //     return {x: x - 1, y: y}; // if T, L (facing down), Z hanging from left
-  // }
-  //
-  // // at the end of the line
-  // if (rightMostPos.x == 9) {
-  //   return {x: 0, y: y + 1}
-  // }
+  // if on floor no need to check if previous values need to be checked again
+  if (bly == 0 || bly == field.getHeight())
+    return {x: (rmPos.x + 1) % WIDTH, y: bly + ~~((rmPos.x + 1) / WIDTH)};
 
-  // return {x: rightMostPos.x + 1, y: y};
-// }
+  // if J hanging from left
+  // __JJ___
+  // __JX___
+  // __J____
+  if(blx >= 1 && field.at(blx - 1, bly - 1) == Piece.J && field.at(blx, bly + 1) == Piece.J) {
+    return {x: blx - 1, y: bly - 1}; 
+  }
+
+  // if L hanging from right
+  // ___LL__
+  // ___XL__
+  // ____L__
+  if(rmPos.x < WIDTH - 1 && field.at(rmPos.x + 1, rmPos.y - 1) == Piece.L && field.at(rmPos.x, rmPos.y + 1) == Piece.L){
+    return {x: rmPos.x + 1, y: rmPos.y - 1}; 
+  }
+
+  // if L or S hanging from left
+  // _LLL___ or __SS___
+  // _L_X___    _SSX___
+  if(blx >= 2 && (hangsLeftLS & (1 << field.at(blx - 2, bly))) != 0 && (hangsLeftLS & (1 << field.at(blx, bly + 1))) != 0){
+    return {x: blx - 2, y: bly};
+  }
+
+  // if T, L, J, Z hanging from left
+  // __T____ or _______ or ___Z___ or __JJ___
+  // __TT___    __LLL__    __ZZ___    __JX___
+  // __TX___    __LX___    __ZX___    __JX___
+  if(blx >= 1 && (hangsLeftTLJZ & (1 << field.at(blx - 1, bly))) != 0) {
+    return {x: blx - 1, y: bly}; 
+  }
+  
+  return {x: (rmPos.x + 1) % WIDTH, y: bly + ~~((rmPos.x + 1) / WIDTH)};
+}
 
 /**
  * finds next valid colored mino starting at x, y
@@ -466,14 +453,21 @@ function glue(
       const newRowsCleared = getNewRowsCleared(rowsToBeCleared, rowsCleared);
 
       // pick new x, y
+      let [newX, newY] = [0, 0];
+      if (rowsToBeCleared == 0) {
+        const start = getNewStart(field, x, y, minoPositions)
+        newX = start.x
+        newY = start.y
+      }
+      console.log('new start', newX, newY);
 
       // new order
       const newOrder = order?.slice() ?? null;
       if (newOrder !== null)
-        newOrder.splice(orderIndex);
+        newOrder.splice(orderIndex, 1);
 
       stack.push({
-        x0: 0, y0: 0,
+        x0: newX, y0: newY,
         field: newField, 
         operations: [...operations, operation],
         rowsCleared: newRowsCleared,
@@ -539,4 +533,4 @@ export function glueFumen(
   return outputFumens
 }
 
-console.log(glueFumen('v115@9gDtQ4glwhi0wwBtilwhRpg0xwT4whRpglwwR4BtQ4?whilJeAgH'));
+console.log(glueFumen('v115@9gDtQ4glwhi0wwBtilwhRpg0xwT4whRpglwwR4BtQ4?whilJeAgH', 1, 'TILJSZOLSZ'));
