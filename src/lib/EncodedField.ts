@@ -1,4 +1,4 @@
-import { Piece, WIDTH } from './defines';
+import { Mino, WIDTH } from './defines';
 import { MinoType } from './types';
 import { Field } from 'tetris-fumen';
 
@@ -7,8 +7,8 @@ const CELL_MASK: bigint = 0xFn;
 
 // preprocessing
 
-// a big int version of Piece
-const BigIntPiece: Record<MinoType, bigint> = {
+// a big int version of Mino
+const BigIntMino: Record<MinoType, bigint> = {
   _: 0n, T: 1n, I: 2n, L: 3n, J: 4n, S: 5n, Z: 6n, O: 7n, X: 8n
 } as const;
 
@@ -43,7 +43,7 @@ export default class EncodedField {
       const row = rows[this.height - y - 1];
       for (const cell of row) {
         this.field[y] <<= CELL_BIT_SHIFT;
-        this.field[y] |= BigIntPiece[cell as MinoType];
+        this.field[y] |= BigIntMino[cell as MinoType];
       }
     }
   }
@@ -65,7 +65,7 @@ export default class EncodedField {
 
       let row = "";
       for (let i = 0; i < WIDTH; i++) {
-        row = Piece[Number(encodedRow & CELL_MASK)] + row;
+        row = Mino[Number(encodedRow & CELL_MASK)] + row;
         encodedRow >>= CELL_BIT_SHIFT;
       }
       fieldStr += row;
@@ -76,7 +76,7 @@ export default class EncodedField {
   /**
    * get value at position
    */
-  at(x: number, y: number): Piece {
+  at(x: number, y: number): Mino {
     return Number((this.field[y] >> SHIFT_LOOKUP[x]) & CELL_MASK);
   }
 
@@ -92,7 +92,7 @@ export default class EncodedField {
    */
   set(x: number, y: number, mino: MinoType): void {
     this.height = Math.max(y, this.height);
-    this.field[y] |= BigIntPiece[mino] << SHIFT_LOOKUP[x];
+    this.field[y] |= BigIntMino[mino] << SHIFT_LOOKUP[x];
   }
 
   /**

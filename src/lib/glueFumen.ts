@@ -1,8 +1,7 @@
-import type { Fumen, Pos, Operation, PieceType, MinoType, EncodedOperation } from './types';
+import type { Fumen, Pos, Operation, Piece, PieceType, MinoType, EncodedOperation } from './types';
 import { encoder, type Page, type Pages } from 'tetris-fumen';
-import { Piece, Rotation, WIDTH, HEIGHT, TETROMINO, NUM_MINOS, pieceMappings } from './defines';
+import { Mino, Rotation, WIDTH, HEIGHT, TETROMINO, NUM_MINOS, pieceMappings } from './defines';
 import { 
-  ctrz,
   decodeWrapper, 
   isValidPieceChar,
   bottomLeftToCenterMino,
@@ -103,7 +102,7 @@ function isFloating(field: EncodedField, minoPositions: Pos[]): boolean {
   // checks if any 'X' under any of the minos
   return minoPositions.every(pos =>
     // not on floor
-    pos.y != 0 && field.at(pos.x, pos.y - 1) != Piece.X
+    pos.y != 0 && field.at(pos.x, pos.y - 1) != Mino.X
   );
 }
 
@@ -172,7 +171,7 @@ function duplicateGlue(array: AbsoluteEncodedOperation[], arrays: AbsoluteEncode
 /**
  * utility to convert X mino to 1 and all other to 0
  */
-function XtoInt(mino: Piece): number {
+function XtoInt(mino: Mino): number {
   return mino >> 3;
 }
 
@@ -191,7 +190,7 @@ function checkWouldFloatPiece(field: EncodedFieldXFill, y: number, minoPositions
   // no matter how line clear occur piece cannot be floating
   const supportedAbove = minoPositions.every(pos =>
     // not bottom most mino and supported
-    pos.y != y && field.at(pos.x, pos.y - 1) == Piece.X
+    pos.y != y && field.at(pos.x, pos.y - 1) == Mino.X
   );
   if (supportedAbove) return false;
 
@@ -213,8 +212,8 @@ function checkWouldFloatPiece(field: EncodedFieldXFill, y: number, minoPositions
 }
 
 // constants used by following function
-const hangsLeftLS = (1 << Piece.L) | (1 << Piece.S);
-const hangsLeftTLJZ = (1 << Piece.T) | (1 << Piece.L) | (1 << Piece.L) | (1 << Piece.Z);
+const hangsLeftLS = (1 << Mino.L) | (1 << Mino.S);
+const hangsLeftTLJZ = (1 << Mino.T) | (1 << Mino.L) | (1 << Mino.L) | (1 << Mino.Z);
 
 /**
  * utility to find next cell to check after placing a piece
@@ -241,7 +240,7 @@ function getNewStart(field: EncodedFieldXFill, blx: number, bly: number, minoPos
   // __JJ___
   // __JX___
   // __J____
-  if(blx >= 1 && field.at(blx - 1, bly - 1) == Piece.J && field.at(blx, bly + 1) == Piece.J) {
+  if(blx >= 1 && field.at(blx - 1, bly - 1) == Mino.J && field.at(blx, bly + 1) == Mino.J) {
     return {x: blx - 1, y: bly - 1}; 
   }
 
@@ -249,7 +248,7 @@ function getNewStart(field: EncodedFieldXFill, blx: number, bly: number, minoPos
   // ___LL__
   // ___XL__
   // ____L__
-  if(rmPos.x < WIDTH - 1 && field.at(rmPos.x + 1, rmPos.y - 1) == Piece.L && field.at(rmPos.x, rmPos.y + 1) == Piece.L){
+  if(rmPos.x < WIDTH - 1 && field.at(rmPos.x + 1, rmPos.y - 1) == Mino.L && field.at(rmPos.x, rmPos.y + 1) == Mino.L){
     return {x: rmPos.x + 1, y: rmPos.y - 1}; 
   }
 
@@ -285,7 +284,7 @@ function findColoredMino(
       // skip if not colored mino
       if (!isMinoPiece(piece)) continue;
       // only I could be on highest y value so skip if not I
-      if (y == height - 1 && piece != Piece.I) continue;
+      if (y == height - 1 && piece != Mino.I) continue;
 
       // if specified order 
       let orderIndex = -1;
@@ -386,7 +385,7 @@ function glue(
     const coloredPos = findColoredMino(x0, y0, field, order, hold);
     if (coloredPos === null) continue;
     const { x, y, orderIndex } = coloredPos;
-    const piece = field.at(x, y);
+    const piece = field.at(x, y) as Piece;
 
     // push stack current state starting at new x, y
     stack.push({ x0: (x + 1) % WIDTH, y0: y + ~~((x + 1) / WIDTH), field, operations, rowsCleared, order })
@@ -400,7 +399,7 @@ function glue(
       const centerMino = bottomLeftToCenterMino(x, y, piece, rotation);
       let operation = OperationEncoder.encode({
         ...centerMino,
-        type: Piece[piece],
+        type: Mino[piece],
         rotation: Rotation[rotation]
       } as Operation)
 
@@ -479,7 +478,7 @@ export function glueFumen(
     const pieces = Array.from(order);
     if (!pieces.every(isValidPieceChar)) 
       throw new Error(`Given order '${order}' does not consist of only tetris pieces`)
-    initialOrder = pieces.map((piece: string) => Piece[piece as PieceType]);
+    initialOrder = pieces.map((piece: string) => Mino[piece as PieceType]);
   }
 
   // check hold is valid

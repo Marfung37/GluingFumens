@@ -1,24 +1,11 @@
-import { Piece, Rotation, WIDTH, pieceMappings } from './defines'; 
+import { Mino, Rotation, WIDTH, pieceMappings } from './defines'; 
 import { decoder, type Page } from 'tetris-fumen';
-import type { Pos } from './types';
+import type { Pos, Piece } from './types';
 import EncodedField from './EncodedField';
 
 /**
- * implementation of count trailing zeros by 
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/clz32
- */
-export function ctrz(x: number) {
-  x >>>= 0; // coerce to Uint32
-  if (x === 0) {
-    // skipping this step would make it return -1
-    return 32;
-  }
-  x &= -x; // equivalent to `int = int & (~int + 1)`
-  return 31 - Math.clz32(x);
-}
-
-/**
  * get offsets of a piece, rotation pair
+ * @returns empty array if not tetromino otherwise array of offsets for piece from bottom left
  */
 export function getOffsets(piece: Piece, rotation: Rotation): [number, number][] {
   const offsetsPerRotation = pieceMappings[piece];
@@ -31,6 +18,7 @@ export function getOffsets(piece: Piece, rotation: Rotation): [number, number][]
 
 /**
  * get index of the center mino
+ * @returns -1 if piece if not tetromino otherwise index of center mino
  */
 export function centerMino(piece: Piece, rotation: Rotation): number {
   // pieceMappings stores number of rotations up to symmetry
@@ -101,8 +89,8 @@ export function isValidPieceChar(piece: string): boolean {
 /**
  * fast check if piece rather than X or _
  */
-export function isMinoPiece(piece: Piece): boolean {
-  return (piece & 0x7) != 0;
+export function isMinoPiece(mino: Mino): boolean {
+  return (mino & 0x7) != 0;
 }
 
 /**

@@ -1,5 +1,5 @@
-import type { Operation, EncodedOperation, Pos } from './types';
-import { Piece, Rotation } from './defines';
+import type { Operation, EncodedOperation, Pos, Piece } from './types';
+import { Mino, Rotation } from './defines';
 import { positions } from './utils';
 
 export default abstract class OperationEncoder {
@@ -16,7 +16,7 @@ export default abstract class OperationEncoder {
       * x has WIDTH (10) possible (4 bits)
       * y has height (20) possible (5 bits)
       */
-    let ct = Piece[operation.type];
+    let ct = Mino[operation.type];
     ct = (ct << 2) + Rotation[operation.rotation];
     ct = (ct << 4) + operation.x;
     ct = (ct << 5) + operation.y;
@@ -30,7 +30,7 @@ export default abstract class OperationEncoder {
     let y = ct & 0x1F; ct >>= 5;
     let x = ct & 0xF; ct >>= 4;
     let rotation = Rotation[ct & 0x3]; ct >>= 2;
-    let type = Piece[ct & 0x7];
+    let type = Mino[ct & 0x7];
 
     return {
       type: type,

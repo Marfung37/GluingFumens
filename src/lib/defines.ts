@@ -1,6 +1,6 @@
 import type { RotationType } from './types';
 
-export enum Piece { _, T, I, L, J, S, Z, O, X }
+export enum Mino { _, T, I, L, J, S, Z, O, X }
 export enum Rotation { spawn, right, reverse, left }
 export const rotations: RotationType[] = ['spawn', 'right', 'reverse', 'left']
 
@@ -21,8 +21,8 @@ export const pieceMappings: [number, number][][][] = [
     [[0, 1], [0, 2], [-1, 1], [0, 0]],
   ],
   [ // I
-    [[1, 0], [3, 0], [2, 0], [0, 0]],
-    [[0, 2], [0, 3], [0, 1], [0, 0]],
+    [[1, 0], [2, 0], [3, 0], [0, 0]],
+    [[0, 2], [0, 1], [0, 3], [0, 0]],
   ],
   [ // L
     [[1, 0], [2, 1], [2, 0], [0, 0]],

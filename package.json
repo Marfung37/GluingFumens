@@ -2,16 +2,21 @@
   "name": "gluing-fumens",
   "type": "module",
   "scripts": {
-    "build": "npx esbuild src/glue.ts --bundle --minify --format=cjs --outfile=dist/glue.cjs --platform=node"
+    "build": "npx esbuild src/glue.ts --bundle --minify --format=cjs --outfile=dist/glue.cjs --platform=node",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "dependencies": {
     "tetris-fumen": "^1.1.3",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.14.10",
     "@types/yargs": "^17.0.33",
     "esbuild": "^0.28.0",
-    "typescript": "^5.5.3"
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }

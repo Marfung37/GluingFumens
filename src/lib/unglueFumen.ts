@@ -1,7 +1,8 @@
 // code based on https://github.com/Hsterts/Fumenities/blob/main/Fumen%20Utils_files/fumenutil/modified-unglueFumen.js
 import { encoder } from 'tetris-fumen';
-import { Piece, Rotation, HEIGHT } from './defines';
+import { Mino, Rotation, HEIGHT } from './defines';
 import { positions, decodeWrapper, clearOffset, findLineClears } from './utils';
+import { Piece } from './types';
 import EncodedField from './EncodedField';
 
 /**
@@ -23,7 +24,7 @@ export function unglueFumen(gluedFumen: string): string {
     if (operation === undefined) continue;
 
     // get positions of minos of the piece
-    let minos = positions(operation.x, operation.y, Piece[operation.type], Rotation[operation.rotation]);
+    let minos = positions(operation.x, operation.y, Mino[operation.type] as Piece, Rotation[operation.rotation]);
 
     // set the field the corresponding mino and store what rows were modified
     for (let mino of minos) {
