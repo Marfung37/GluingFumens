@@ -119,7 +119,7 @@ export default class EncodedField {
    * clears line at y
    */
   lineClear(y: number): void {
-    this.field.copyWithin(y, y + 1, this.height);
+    this.field.copyWithin(y, y + 1, this.height + 1);
     this.height--;
   }
 

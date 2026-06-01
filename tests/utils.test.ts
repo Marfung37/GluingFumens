@@ -1,6 +1,7 @@
 import {test, expect} from "@jest/globals";
 
 import { decoder } from 'tetris-fumen';
+import EncodedField from '../src/lib/EncodedField';
 import { Mino, Rotation, WIDTH, HEIGHT, pieceMappings } from '../src/lib/defines';
 import {
   getOffsets,
@@ -250,7 +251,47 @@ describe("utilities", () => {
   })
 
   test('findLineClears', () => {
+    const emptyField = new EncodedField(decodeWrapper('v115@vhAAgH')[0].field, HEIGHT);
+    const oneLineClearField = new EncodedField(decodeWrapper('v115@bhJ8JeAgH')[0].field, HEIGHT);
+    const twoLineClearField = new EncodedField(decodeWrapper('v115@HhS8AeJ8JeAgH')[0].field, HEIGHT);
 
+    // expect to find no line clears on empty board with no rows modified
+    expect(findLineClears(emptyField, 0)).toBe(0);
+    // expect to find no line clear on empty board with some rows modified
+    expect(findLineClears(emptyField, 0b101)).toBe(0);
+
+    // find no line clears as no rows modified
+    expect(findLineClears(oneLineClearField, 0)).toBe(0);
+    // finds line clear
+    expect(findLineClears(oneLineClearField, 0b1)).toBe(0b1);
+    // finds only the one line clear
+    expect(findLineClears(oneLineClearField, 0b11)).toBe(0b1);
+
+    // finds one line clear
+    expect(findLineClears(twoLineClearField, 0b1)).toBe(0b1);
+    // finds only the one line clear
+    expect(findLineClears(twoLineClearField, 0b11)).toBe(0b1);
+    // finds both line clears
+    expect(findLineClears(twoLineClearField, 0b111)).toBe(0b101);
   })
 
+  test('clearLines', () => {
+    const oneLineClearField = new EncodedField(decodeWrapper('v115@bhJ8JeAgH')[0].field, HEIGHT);
+
+    // clear line
+    expect(oneLineClearField.at(0, 0)).toBe(Mino.X);
+    clearLines(oneLineClearField, 0b1)
+    expect(oneLineClearField.at(0, 0)).toBe(Mino._);
+
+    const twoLineClearField = new EncodedField(decodeWrapper('v115@HhS8AeJ8JeAgH')[0].field, HEIGHT);
+
+    // clear line that isn't a line clear should shift down the full row above
+    expect(twoLineClearField.at(9, 1)).toBe(Mino._);
+    clearLines(twoLineClearField, 0b10)
+    expect(twoLineClearField.at(9, 1)).toBe(Mino.X);
+
+    // clear rest of lines
+    clearLines(twoLineClearField, 0b11)
+    expect(twoLineClearField.at(0, 0)).toBe(Mino._);
+  })
 });
