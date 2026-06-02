@@ -34,8 +34,8 @@ export default class EncodedField {
   constructor(field: Field, height: number) {
     // height is assumed to given as upper maximum
     this.field = new BigInt64Array(height);
-    const rows = field.str({garbage: false, reduced: true}).split('\n')
-    this.height = rows.length;
+    const rows = field.str({garbage: false, reduced: true}).split('\n').slice(-height);
+    this.height = Math.min(rows.length, height);
 
     // convert each cell into 4 bit int to pack into 40 bit int
     for (let y = 0; y < this.height; y++) {
@@ -91,7 +91,7 @@ export default class EncodedField {
    * set value at position assuming empty there
    */
   set(x: number, y: number, mino: MinoType): void {
-    this.height = Math.max(y, this.height);
+    this.height = Math.max(y + 1, this.height);
     this.field[y] |= BigIntMino[mino] << SHIFT_LOOKUP[x];
   }
 
