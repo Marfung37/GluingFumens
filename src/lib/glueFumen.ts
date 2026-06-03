@@ -269,7 +269,7 @@ function getNewStart(field: EncodedFieldXFill, blx: number, bly: number, minoPos
   // if L or S hanging from left
   // _LLL___ or __SS___
   // _L_X___    _SSX___
-  if(blx >= 2 && field.at(blx - 2, bly) == (1 << field.at(blx, bly + 1)) && (hangsLeftLS & (1 << field.at(blx - 2, bly))) != 0){
+  if(blx >= 2 && field.at(blx - 2, bly) == field.at(blx, bly + 1) && (hangsLeftLS & (1 << field.at(blx - 2, bly))) != 0){
     return {x: blx - 2, y: bly};
   }
 
@@ -413,7 +413,7 @@ function glue(
     const piece = field.at(x, y) as Piece;
 
     // push stack current state starting at new x, y
-    stack.push({ x0: (x + 1) % WIDTH, y0: y + ~~((x + 1) / WIDTH), field, operations, rowsCleared, order })
+    stack.push({ x0: (x + 1) % WIDTH, y0: y + Math.floor((x + 1) / WIDTH), field, operations, rowsCleared, order })
 
     // found colored mino that could fit
 
@@ -462,7 +462,10 @@ function glue(
 
       // pick new x, y
       let [newX, newY] = [0, 0];
-      if (rowsToBeCleared == 0 && order === null) {
+      if (rowsToBeCleared == 0 && order === null && !srs180) {
+        // only smartly pick new start if no additional settings or line clears happened
+        // order could prevent a previous placement that is now placeable
+        // srs180 mainly confusing due to placing current piece can allow kick down
         const start = getNewStart(field, x, y, minoPositions)
         newX = start.x
         newY = start.y
@@ -512,6 +515,11 @@ export function glueFumen(
   // glue each page
   for(let page of inputPages){
     const field = new EncodedFieldXFill(page.field, HEIGHT);
+
+    // optimization due to srs180 with unlimited solutions extremely slow
+    if (srs180 && solutionLimit == -1) {
+      solutionLimit = glue(field, solutionLimit, initialOrder, hold, false).length;
+    }
     const solutions = glue(field, solutionLimit, initialOrder, hold, srs180);
 
     // get field empty of any colored minos
