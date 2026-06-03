@@ -69,6 +69,34 @@ export default abstract class OperationEncoder {
   }
 
   /**
+   * set y value from encoded operation
+   */
+  static setY(ct: EncodedOperation, y: number): EncodedOperation {
+    return (ct & ~0x1F) | y;
+  }
+
+  /**
+   * set x value from encoded operation
+   */
+  static setX(ct: EncodedOperation, x: number): EncodedOperation {
+    return (ct & (~0xF << 5)) | (x << 5);
+  }
+
+  /**
+   * set rotation from encoded operation
+   */
+  static setRotation(ct: EncodedOperation, rotation: Rotation): EncodedOperation {
+    return (ct & (~0x3 << 9)) | (rotation << 9);
+  }
+
+  /**
+   * set piece from encoded operation
+   */
+  static setPiece(ct: EncodedOperation, piece: Piece): EncodedOperation {
+    return (ct & (~0x7 << 11)) | (piece << 9);
+  }
+
+  /**
    * get positions of minos of a piece from encoded operation
    */
   static positions(operation: EncodedOperation): Pos[] {

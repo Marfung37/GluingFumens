@@ -13,9 +13,7 @@ import {
 } from './utils';
 import OperationEncoder from './OperationEncoder';
 import EncodedField from './EncodedField';
-
-// DEBUG
-// import { checkSRS180 } from './srsCheck';
+import { checkSRS180 } from './srsCheck';
 
 /**
  * modified operation with y value without shift down from line clears 
@@ -126,7 +124,6 @@ function isFloating(field: EncodedField, minoPositions: Pos[]): boolean {
 function placePiece(field: EncodedField, minoPositions: Pos[], mino: MinoType = 'X'): number {
   let rowsModified = 0;
   for (const pos of minoPositions) {
-    // DEBUG
     if (!inBounds(pos, field.getHeight())) continue;
 
     field.unset(pos.x, pos.y);
@@ -351,9 +348,7 @@ function checkPlaceable(
   }
 
   if (isFloating(field, minoPositions)) return null;
-
-  // DEBUG
-  // if (srs180 && !checkSRS180(field, operation)) return null;
+  if (srs180 && !checkSRS180(field, operation)) return null;
 
   return minoPositions;
 }

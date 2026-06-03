@@ -90,6 +90,4 @@ group('Method: .copy()', () => {
   })
 })
 
-
-
 await run();
