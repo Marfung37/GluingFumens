@@ -67,9 +67,7 @@ export class EncodedFieldXFill extends EncodedField {
   isLineClear(y: number): boolean {
     const row = this.field[y];
     // X is the only mino which has the high bit set of 4 bits
-    // negate this to only have high bit to be set if zero
-    // check if any high bits are set
-    return (~row & EncodedField.HIGH_BITS_MASK) == 0n;
+    return row === 0x8888888888;
   }
 
   /**
@@ -78,7 +76,16 @@ export class EncodedFieldXFill extends EncodedField {
   emptyColored(): void {
     // can use mask for only X or _ to remain
     for (let y = 0; y < this.height; y++) {
-      this.field[y] &= EncodedField.HIGH_BITS_MASK;
+      const row = this.field[y];
+
+      // separate into 5 cell parts as & by converts to int32
+      let lowPart = row & 0xFFFFF;
+      let highPart = Math.floor(row / 0x100000);
+
+      lowPart &= EncodedField.HIGH_BITS_MASK;
+      highPart &= EncodedField.HIGH_BITS_MASK;
+
+      this.field[y] = (highPart * 0x100000) + (lowPart >>> 0);
     }
   }
 
@@ -88,8 +95,14 @@ export class EncodedFieldXFill extends EncodedField {
   checkColored(): boolean {
     // can use bitwise not of mask to check
     for (let y = 0; y < this.height; y++) {
-      const check = this.field[y] & EncodedField.NOT_HIGH_BITS_MASK;
-      if (check != 0n) return true;
+      const row = this.field[y];
+
+      let lowPart = row & 0xFFFFF;
+      let highPart = Math.floor(row / 0x100000);
+
+      // if any of the low 3 bits of the cells are cell
+      const check = (lowPart | highPart) & EncodedField.NOT_HIGH_BITS_MASK;
+      if (check != 0) return true;
     }
     return false;
   }
@@ -401,13 +414,11 @@ function glue(
   while (stack.length > 0) {
     const { x0, y0, field, operations, rowsCleared, order } = stack.pop()!;
 
-
     // scan for colored minos
     const coloredPos = findColoredMino(x0, y0, field, order, hold);
     if (coloredPos === null) continue;
     const { x, y, orderIndex } = coloredPos;
     const piece = field.at(x, y) as Piece;
-
 
     // push stack current state starting at new x, y
     stack.push({ x0: (x + 1) % WIDTH, y0: y + ~~((x + 1) / WIDTH), field, operations, rowsCleared, order })
@@ -459,11 +470,11 @@ function glue(
 
       // pick new x, y
       let [newX, newY] = [0, 0];
-      // if (rowsToBeCleared == 0 && order === null) {
-      //   const start = getNewStart(field, x, y, minoPositions)
-      //   newX = start.x
-      //   newY = start.y
-      // }
+      if (rowsToBeCleared == 0 && order === null) {
+        const start = getNewStart(field, x, y, minoPositions)
+        newX = start.x
+        newY = start.y
+      }
       // DEBUG
       // count++;
       // console.log(count);
@@ -497,7 +508,7 @@ export function glueFumen(
   const outputFumens: Fumen[] = [];
 
   // DEBUG
-  let startTime = performance.now();
+  // let startTime = performance.now();
   // convert given order to proper form
   let initialOrder: Piece[] | null = null;
   if (order !== null) {
@@ -538,10 +549,11 @@ export function glueFumen(
     }
   }
   // DEBUG
-  sumTime += performance.now() - startTime;
+  // sumTime += performance.now() - startTime;
+
 
   // DEBUG
-  console.log(sumTime);
+  // console.log(sumTime);
 
   // output glued fumens
   return outputFumens

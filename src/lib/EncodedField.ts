@@ -107,8 +107,8 @@ export default class EncodedField {
     const row = this.field[y];
 
     // separate into 5 cell parts as & by converts to int32
-    const lowPart = row & 0xFFFFF;                  
-    const highPart = Math.floor(row / SHIFT_DIVISOR[5]);    
+    const lowPart = row & 0xFFFFF;
+    const highPart = Math.floor(row / 0x100000);
 
     // check if all cells are not empty cells by adding 0b111 in each cell, if not empty then the bit in 0b1000 is set for each cell
     const lowClear = ((lowPart + EncodedField.NOT_HIGH_BITS_MASK) & EncodedField.HIGH_BITS_MASK) === EncodedField.HIGH_BITS_MASK;
