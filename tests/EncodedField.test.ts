@@ -211,6 +211,14 @@ describe('EncodedField implementation', () => {
     expect(twoLineClearField.isLineClear(0)).toBeTruthy();
     expect(twoLineClearField.isLineClear(1)).toBeFalsy();
     expect(twoLineClearField.isLineClear(2)).toBeTruthy();
+
+    const colorfulLineClearField = new EncodedField(decodeWrapper('v115@9gQpC8wwwhglg0Q4AtBeA8wwwhglg0Q4AtQpB8wwwh?glg0Q4AtQpB8wwwhglg0Q4AtQpLeAgH')[0].field, HEIGHT);
+
+    expect(colorfulLineClearField.isLineClear(0)).toBeFalsy();
+    expect(colorfulLineClearField.isLineClear(1)).toBeTruthy();
+    expect(colorfulLineClearField.isLineClear(2)).toBeFalsy();
+    expect(colorfulLineClearField.isLineClear(3)).toBeTruthy();
+
   })
 
   test('lineClear', () => {

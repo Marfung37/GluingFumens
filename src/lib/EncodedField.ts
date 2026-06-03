@@ -5,25 +5,20 @@ import { Field } from 'tetris-fumen';
 const CELL_BIT_SHIFT = 4;
 const CELL_MASK = 0xF;
 
-const IS_HIGH_CELL = [false, false, false, false, false, false, false, false, true, true];
-const SHIFT_LOOKUP = [
-  28, 24, 20, 16, 12, 8, 4, 0, // lowField shift for x
-  4, 0                         // highField shift for x
-];
-
-const LOW_WIDTH = 8;
-const HIGH_WIDTH = 2;
+// value to divide by to shift right or left for x value
+const SHIFT_DIVISOR = new Float64Array(WIDTH).map((_, x) => 
+  Math.pow(2, (WIDTH - x - 1) * CELL_BIT_SHIFT)
+);
 
 /**
  *  for a field 
  */
 export default class EncodedField {
   // masks that detect for any empty cells in a row
-  protected static readonly HIGH_BITS_MASK     = 0x8888888888n; // masking 1000 at each four bits
-  protected static readonly NOT_HIGH_BITS_MASK = 0x7777777777n; // masking 0111 at each four bits
+  protected static readonly HIGH_BITS_MASK     = 0x88888; // masking 1000 at each four bits
+  protected static readonly NOT_HIGH_BITS_MASK = 0x77777; // masking 0111 at each four bits
 
-  protected lowField: Int32Array;
-  protected highField: Int8Array;
+  protected field: Float64Array; // Holds your 40-bit rows as pure JS numbers
   protected height: number;
 
   /**
@@ -31,23 +26,25 @@ export default class EncodedField {
    */
   constructor(field: Field, height: number) {
     // height is assumed to given as upper maximum
-    this.lowField = new Int32Array(height);
-    this.highField = new Int8Array(height);
+    this.field = new Float64Array(height).fill(0);
 
-    const rows = field.str({garbage: false, reduced: true}).split('\n').slice(-height);
+    const rawField = field.str({garbage: false, reduced: true});
+
+    if (!rawField) {
+      this.height = 0;
+      return;
+    }
+
+    const rows = rawField.split('\n').slice(-height);
     this.height = Math.min(rows.length, height);
 
     // convert each cell into 4 bit int 
     for (let y = 0; y < this.height; y++) {
       // read rows reversed as given where 0 is top left rather than bottom left
       const row = rows[this.height - y - 1];
-      for (let i = 0; i < LOW_WIDTH; i++) {
-        this.lowField[y] <<= CELL_BIT_SHIFT;
-        this.lowField[y] |= Mino[row[i] as MinoType];
-      }
-      for (let i = LOW_WIDTH; i < WIDTH; i++) {
-        this.highField[y] <<= CELL_BIT_SHIFT;
-        this.highField[y] |= Mino[row[i] as MinoType];
+      for (let i = 0; i < WIDTH; i++) {
+        this.field[y] *= Math.pow(2, CELL_BIT_SHIFT);
+        this.field[y] += Mino[row[i] as MinoType];
       }
     }
   }
@@ -59,17 +56,12 @@ export default class EncodedField {
     // convert encoded field into a string for Field
     let fieldStr = "";
     for (let y = this.height - 1; y >= 0; y--) {
-      let encodedLowRow = this.lowField[y];
-      let encodedHighRow = this.highField[y];
+      let encodedRow = this.field[y];
 
       let row = "";
-      for (let i = 0; i < LOW_WIDTH; i++) {
-        row = Mino[encodedLowRow & CELL_MASK] + row;
-        encodedLowRow >>= CELL_BIT_SHIFT;
-      }
-      for (let i = LOW_WIDTH; i < WIDTH; i++) {
-        row = Mino[encodedHighRow & CELL_MASK] + row;
-        encodedHighRow >>= CELL_BIT_SHIFT;
+      for (let i = 0; i < WIDTH; i++) {
+        row = Mino[encodedRow & CELL_MASK] + row;
+        encodedRow = Math.floor(encodedRow / Math.pow(2, CELL_BIT_SHIFT));
       }
 
       fieldStr += row;
@@ -81,26 +73,15 @@ export default class EncodedField {
    * get value at position
    */
   at(x: number, y: number): Mino {
-    const shift = SHIFT_LOOKUP[x];
-    
-    if (IS_HIGH_CELL[x]) {
-      return (this.highField[y] >> shift) & CELL_MASK;
-    } else {
-      return (this.lowField[y] >> shift) & CELL_MASK;
-    }
+    return (Math.floor(this.field[y] / SHIFT_DIVISOR[x])) & CELL_MASK;
   }
 
   /**
    * unset value at position
    */
   unset(x: number, y: number): void {
-    const shift = SHIFT_LOOKUP[x];
-
-    if (IS_HIGH_CELL[x]) {
-      this.highField[y] &= ~(0xF << shift);
-    } else {
-      this.lowField[y] &= ~(0xF << shift);
-    }
+    const currentCellVal = (Math.floor(this.field[y] / SHIFT_DIVISOR[x])) & CELL_MASK;
+    this.field[y] -= currentCellVal * SHIFT_DIVISOR[x];
   }
 
   /**
@@ -108,14 +89,7 @@ export default class EncodedField {
    */
   set(x: number, y: number, mino: MinoType): void {
     this.height = Math.max(y + 1, this.height);
-
-    const shift = SHIFT_LOOKUP[x];
-
-    if (IS_HIGH_CELL[x]) {
-      this.highField[y] &= Mino[mino] << shift;
-    } else {
-      this.lowField[y] &= Mino[mino] << shift;
-    }
+    this.field[y] += Mino[mino] * SHIFT_DIVISOR[x];
   }
 
   /**
@@ -129,16 +103,15 @@ export default class EncodedField {
    * checks if row at y value is all filled
    */
   isLineClear(y: number): boolean {
-    const lowRow = this.lowField[y];
-    const highRow = this.highField[y];
+    const row = this.field[y];
 
-    // SWAR check on lower 32 bits (8 cells)
-    const lowNotZero = ~(lowRow + 0x77777777);
-    const lowClear = (lowNotZero & 0x88888888) === 0;
+    // separate into 5 cell parts as & by converts to int32
+    const lowPart = row & 0xFFFFF;                  
+    const highPart = Math.floor(row / SHIFT_DIVISOR[5]);    
 
-    // SWAR check on upper 8 bits (2 cells)
-    const highNotZero = ~(highRow + 0x77);
-    const highClear = (highNotZero & 0x88) === 0;
+    // check if all cells are not empty cells by adding 0b111 in each cell, if not empty then the bit in 0b1000 is set for each cell
+    const lowClear = ((lowPart + EncodedField.NOT_HIGH_BITS_MASK) & EncodedField.HIGH_BITS_MASK) === EncodedField.HIGH_BITS_MASK;
+    const highClear = ((highPart + EncodedField.NOT_HIGH_BITS_MASK) & EncodedField.HIGH_BITS_MASK) === EncodedField.HIGH_BITS_MASK;
 
     return lowClear && highClear;
   }
@@ -147,8 +120,7 @@ export default class EncodedField {
    * clears line at y
    */
   lineClear(y: number): void {
-    this.lowField.copyWithin(y, y + 1, this.height + 1);
-    this.highField.copyWithin(y, y + 1, this.height + 1);
+    this.field.copyWithin(y, y + 1, this.height + 1);
     this.height--;
   }
 
@@ -159,8 +131,7 @@ export default class EncodedField {
     const clone = Object.create(Object.getPrototypeOf(this));
 
     clone.height = this.height;
-    clone.lowField = this.lowField.slice();
-    clone.highField = this.highField.slice();
+    clone.field = this.field.slice();
 
     return clone;
   }
