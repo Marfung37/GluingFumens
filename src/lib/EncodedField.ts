@@ -2,20 +2,17 @@ import { Mino, WIDTH } from './defines';
 import { MinoType } from './types';
 import { Field } from 'tetris-fumen';
 
-const CELL_BIT_SHIFT: bigint = 4n;
-const CELL_MASK: bigint = 0xFn;
+const CELL_BIT_SHIFT = 4;
+const CELL_MASK = 0xF;
 
-// preprocessing
+const IS_HIGH_CELL = [false, false, false, false, false, false, false, false, true, true];
+const SHIFT_LOOKUP = [
+  28, 24, 20, 16, 12, 8, 4, 0, // lowField shift for x
+  4, 0                         // highField shift for x
+];
 
-// a big int version of Mino
-const BigIntMino: Record<MinoType, bigint> = {
-  _: 0n, T: 1n, I: 2n, L: 3n, J: 4n, S: 5n, Z: 6n, O: 7n, X: 8n
-} as const;
-
-// preprocess bit int lookup table for given x value
-const SHIFT_LOOKUP = new Array(WIDTH).fill(0).map((_, x) => 
-  BigInt(WIDTH - x - 1) * CELL_BIT_SHIFT
-)
+const LOW_WIDTH = 8;
+const HIGH_WIDTH = 2;
 
 /**
  *  for a field 
@@ -25,7 +22,8 @@ export default class EncodedField {
   protected static readonly HIGH_BITS_MASK     = 0x8888888888n; // masking 1000 at each four bits
   protected static readonly NOT_HIGH_BITS_MASK = 0x7777777777n; // masking 0111 at each four bits
 
-  protected field: BigInt64Array;
+  protected lowField: Int32Array;
+  protected highField: Int8Array;
   protected height: number;
 
   /**
@@ -33,17 +31,23 @@ export default class EncodedField {
    */
   constructor(field: Field, height: number) {
     // height is assumed to given as upper maximum
-    this.field = new BigInt64Array(height);
+    this.lowField = new Int32Array(height);
+    this.highField = new Int8Array(height);
+
     const rows = field.str({garbage: false, reduced: true}).split('\n').slice(-height);
     this.height = Math.min(rows.length, height);
 
-    // convert each cell into 4 bit int to pack into 40 bit int
+    // convert each cell into 4 bit int 
     for (let y = 0; y < this.height; y++) {
       // read rows reversed as given where 0 is top left rather than bottom left
       const row = rows[this.height - y - 1];
-      for (const cell of row) {
-        this.field[y] <<= CELL_BIT_SHIFT;
-        this.field[y] |= BigIntMino[cell as MinoType];
+      for (let i = 0; i < LOW_WIDTH; i++) {
+        this.lowField[y] <<= CELL_BIT_SHIFT;
+        this.lowField[y] |= Mino[row[i] as MinoType];
+      }
+      for (let i = LOW_WIDTH; i < WIDTH; i++) {
+        this.highField[y] <<= CELL_BIT_SHIFT;
+        this.highField[y] |= Mino[row[i] as MinoType];
       }
     }
   }
@@ -55,19 +59,19 @@ export default class EncodedField {
     // convert encoded field into a string for Field
     let fieldStr = "";
     for (let y = this.height - 1; y >= 0; y--) {
-      let encodedRow = this.field[y];
-
-      // empty row
-      if (encodedRow == 0n) {
-        fieldStr += "__________";
-        continue;
-      }
+      let encodedLowRow = this.lowField[y];
+      let encodedHighRow = this.highField[y];
 
       let row = "";
-      for (let i = 0; i < WIDTH; i++) {
-        row = Mino[Number(encodedRow & CELL_MASK)] + row;
-        encodedRow >>= CELL_BIT_SHIFT;
+      for (let i = 0; i < LOW_WIDTH; i++) {
+        row = Mino[encodedLowRow & CELL_MASK] + row;
+        encodedLowRow >>= CELL_BIT_SHIFT;
       }
+      for (let i = LOW_WIDTH; i < WIDTH; i++) {
+        row = Mino[encodedHighRow & CELL_MASK] + row;
+        encodedHighRow >>= CELL_BIT_SHIFT;
+      }
+
       fieldStr += row;
     }
     return Field.create(fieldStr);
@@ -77,14 +81,26 @@ export default class EncodedField {
    * get value at position
    */
   at(x: number, y: number): Mino {
-    return Number((this.field[y] >> SHIFT_LOOKUP[x]) & CELL_MASK);
+    const shift = SHIFT_LOOKUP[x];
+    
+    if (IS_HIGH_CELL[x]) {
+      return (this.highField[y] >> shift) & CELL_MASK;
+    } else {
+      return (this.lowField[y] >> shift) & CELL_MASK;
+    }
   }
 
   /**
    * unset value at position
    */
   unset(x: number, y: number): void {
-    this.field[y] &= ~(0xFn << SHIFT_LOOKUP[x]);
+    const shift = SHIFT_LOOKUP[x];
+
+    if (IS_HIGH_CELL[x]) {
+      this.highField[y] &= ~(0xF << shift);
+    } else {
+      this.lowField[y] &= ~(0xF << shift);
+    }
   }
 
   /**
@@ -92,7 +108,14 @@ export default class EncodedField {
    */
   set(x: number, y: number, mino: MinoType): void {
     this.height = Math.max(y + 1, this.height);
-    this.field[y] |= BigIntMino[mino] << SHIFT_LOOKUP[x];
+
+    const shift = SHIFT_LOOKUP[x];
+
+    if (IS_HIGH_CELL[x]) {
+      this.highField[y] &= Mino[mino] << shift;
+    } else {
+      this.lowField[y] &= Mino[mino] << shift;
+    }
   }
 
   /**
@@ -106,20 +129,26 @@ export default class EncodedField {
    * checks if row at y value is all filled
    */
   isLineClear(y: number): boolean {
-    const row = this.field[y];
-    // row + NOT_HIGH_BITS_MASK will set the high bit 
-    // if the four bits are nonzero otherwise high bit is set
-    // negate this to only have high bit to be set if zero
-    // check if any high bits are set
-    const notZero = ~(row + EncodedField.NOT_HIGH_BITS_MASK);
-    return (notZero & EncodedField.HIGH_BITS_MASK) == 0n;
+    const lowRow = this.lowField[y];
+    const highRow = this.highField[y];
+
+    // SWAR check on lower 32 bits (8 cells)
+    const lowNotZero = ~(lowRow + 0x77777777);
+    const lowClear = (lowNotZero & 0x88888888) === 0;
+
+    // SWAR check on upper 8 bits (2 cells)
+    const highNotZero = ~(highRow + 0x77);
+    const highClear = (highNotZero & 0x88) === 0;
+
+    return lowClear && highClear;
   }
 
   /**
    * clears line at y
    */
   lineClear(y: number): void {
-    this.field.copyWithin(y, y + 1, this.height + 1);
+    this.lowField.copyWithin(y, y + 1, this.height + 1);
+    this.highField.copyWithin(y, y + 1, this.height + 1);
     this.height--;
   }
 
@@ -130,7 +159,8 @@ export default class EncodedField {
     const clone = Object.create(Object.getPrototypeOf(this));
 
     clone.height = this.height;
-    clone.field = this.field.slice();
+    clone.lowField = this.lowField.slice();
+    clone.highField = this.highField.slice();
 
     return clone;
   }
