@@ -3,6 +3,7 @@ import { MinoType } from './types';
 import { Field } from 'tetris-fumen';
 
 const CELL_BIT_SHIFT = 4;
+const CELL_DIVISOR = 16;
 const CELL_MASK = 0xF;
 
 // value to divide by to shift right or left for x value
@@ -43,7 +44,7 @@ export default class EncodedField {
       // read rows reversed as given where 0 is top left rather than bottom left
       const row = rows[this.height - y - 1];
       for (let i = 0; i < WIDTH; i++) {
-        this.field[y] *= Math.pow(2, CELL_BIT_SHIFT);
+        this.field[y] *= CELL_DIVISOR;
         this.field[y] += Mino[row[i] as MinoType];
       }
     }
@@ -61,7 +62,7 @@ export default class EncodedField {
       let row = "";
       for (let i = 0; i < WIDTH; i++) {
         row = Mino[encodedRow & CELL_MASK] + row;
-        encodedRow = Math.floor(encodedRow / Math.pow(2, CELL_BIT_SHIFT));
+        encodedRow = Math.floor(encodedRow / CELL_DIVISOR);
       }
 
       fieldStr += row;
@@ -73,14 +74,14 @@ export default class EncodedField {
    * get value at position
    */
   at(x: number, y: number): Mino {
-    return (Math.floor(this.field[y] / SHIFT_DIVISOR[x])) & CELL_MASK;
+    return ~~(this.field[y] / SHIFT_DIVISOR[x]) & CELL_MASK;
   }
 
   /**
    * unset value at position
    */
   unset(x: number, y: number): void {
-    const currentCellVal = (Math.floor(this.field[y] / SHIFT_DIVISOR[x])) & CELL_MASK;
+    const currentCellVal = ~~(this.field[y] / SHIFT_DIVISOR[x]) & CELL_MASK;
     this.field[y] -= currentCellVal * SHIFT_DIVISOR[x];
   }
 
