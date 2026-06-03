@@ -338,15 +338,7 @@ function checkPlaceable(
   const minoPositions = OperationEncoder.positions(operation);
   const piece = OperationEncoder.getPiece(operation);
 
-  if (minoPositions.length < TETROMINO) return null;
-  for (let i = 0; i < minoPositions.length; i++) {
-    const pos = minoPositions[i];
-
-    if (!inBounds(pos, height) || field.at(pos.x, pos.y) !== piece) {
-      return null;
-    }
-  }
-
+  if (minoPositions.some(pos => !inBounds(pos, height) || field.at(pos.x, pos.y) !== piece)) return null;
   if (isFloating(field, minoPositions)) return null;
   if (srs180 && !checkSRS180(field, operation)) return null;
 
