@@ -7,7 +7,7 @@ const CELL_DIVISOR = 16;
 const CELL_MASK = 0xF;
 
 // value to divide by to shift right or left for x value
-const SHIFT_DIVISOR = new Float64Array(WIDTH).map((_, x) => 
+const SHIFT_DIVISOR = new Float32Array(WIDTH).map((_, x) => 
   Math.pow(2, (WIDTH - x - 1) * CELL_BIT_SHIFT)
 );
 
@@ -19,7 +19,7 @@ export default class EncodedField {
   protected static readonly HIGH_BITS_MASK     = 0x88888; // masking 1000 at each four bits
   protected static readonly NOT_HIGH_BITS_MASK = 0x77777; // masking 0111 at each four bits
 
-  protected field: Float64Array; // Holds your 40-bit rows as pure JS numbers
+  protected field: number[];
   protected height: number;
 
   /**
@@ -27,7 +27,7 @@ export default class EncodedField {
    */
   constructor(field: Field, height: number) {
     // height is assumed to given as upper maximum
-    this.field = new Float64Array(height).fill(0);
+    this.field = new Array(height).fill(0);
 
     const rawField = field.str({garbage: false, reduced: true});
 
