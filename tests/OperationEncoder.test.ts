@@ -46,6 +46,17 @@ describe('OperationEncoder', () => {
     expect(OperationEncoder.getPiece(op)).toBe(Mino.L);
   });
 
+  test('setters', () => {
+    let op = OperationEncoder.encode({x: 5, y: 3, type: 'L', rotation: 'left'} as Operation);
+
+    expect(OperationEncoder.setY(op, 5)).toBe(OperationEncoder.encode({x: 5, y: 5, type: 'L', rotation: 'left'} as Operation));
+    expect(OperationEncoder.setX(op, 3)).toBe(OperationEncoder.encode({x: 3, y: 3, type: 'L', rotation: 'left'} as Operation));
+    expect(OperationEncoder.setRotation(op, Rotation.reverse)).toBe(OperationEncoder.encode({x: 5, y: 3, type: 'L', rotation: 'reverse'} as Operation));
+    expect(OperationEncoder.setPiece(op, Mino.S)).toBe(OperationEncoder.encode({x: 5, y: 3, type: 'S', rotation: 'left'} as Operation));
+  });
+
+
+
   test('positions', () => {
     // pick some random ones from all
     expect(OperationEncoder.positions(OperationEncoder.encode({x: 5, y: 5, type: 'T', rotation: 'spawn'} as Operation))).toEqual([{x: 5, y: 5}, {x: 6, y: 5}, {x: 5, y: 6}, {x: 4, y: 5}])
