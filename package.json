@@ -15,6 +15,7 @@
     "@types/yargs": "^17.0.33",
     "esbuild": "^0.28.0",
     "jest": "^30.4.2",
+    "mitata": "^1.0.34",
     "ts-jest": "^29.4.11",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"

@@ -113,6 +113,9 @@ function isFloating(field: EncodedField, minoPositions: Pos[]): boolean {
 function placePiece(field: EncodedField, minoPositions: Pos[], mino: MinoType = 'X'): number {
   let rowsModified = 0;
   for (const pos of minoPositions) {
+    // DEBUG
+    if (!inBounds(pos, field.getHeight())) continue;
+
     field.unset(pos.x, pos.y);
     field.set(pos.x, pos.y, mino);
     rowsModified |= (1 << pos.y);
@@ -148,10 +151,12 @@ function countPieces(field: EncodedField): number {
 /**
  * checks if array is already in the arrays ignoring order
  */
+var count = 0;
 function duplicateGlue(array: AbsoluteEncodedOperation[], arrays: AbsoluteEncodedOperation[][]): boolean {
   // new array without y but keep absolute y
   let strippedArray = array.map(AbsoluteOperationEncoder.stripY);
   const arraySet = new Set<StrippedAbsoluteEncodedOperation>(strippedArray);
+
 
   for(let arr of arrays) {
     if (array.length !== arr.length) {
@@ -263,10 +268,12 @@ function getNewStart(field: EncodedFieldXFill, blx: number, bly: number, minoPos
   // __T____ or _______ or ___Z___ or __JJ___
   // __TT___    __LLL__    __ZZ___    __JX___
   // __TX___    __LX___    __ZX___    __JX___
-  if(blx >= 1 && (hangsLeftTLJZ & (1 << field.at(blx - 1, bly))) != 0) {
+  // DEBUG
+  if(blx >= 1 && (hangsLeftTLJZ & (1 << field.at(blx - 1, bly))) != 0 && (hangsLeftTLJZ & (1 << field.at(blx, bly + 1))) != 0) {
     return {x: blx - 1, y: bly}; 
   }
-  
+
+ 
   return {x: (rmPos.x + 1) % WIDTH, y: bly + ~~((rmPos.x + 1) / WIDTH)};
 }
 
@@ -318,9 +325,20 @@ function checkPlaceable(
   const piece = OperationEncoder.getPiece(operation);
 
   if (minoPositions.length < TETROMINO) return null;
-  const matching = (pos: Pos) => inBounds(pos, height) && field.at(pos.x, pos.y) == piece;
-  if (!minoPositions.every(matching)) return null;
+  for (let i = 0; i < minoPositions.length; i++) {
+    const pos = minoPositions[i];
+
+    if (!inBounds(pos, height) || field.at(pos.x, pos.y) !== piece) {
+      return null;
+    }
+  }
+
   if (isFloating(field, minoPositions)) return null;
+
+  // DEBUG
+  // const tmpField = field.copy()
+  // placePiece(tmpField, minoPositions);
+  // console.log(tmpField.toField().str({garbage: false}) + '\n');
 
   // DEBUG
   // if (srs180 && !checkSRS180(field, operation)) return null;
@@ -354,6 +372,8 @@ interface glueState {
   order: Piece[] | null
 }
 
+// DEBUG
+let sumTime = 0;
 function glue(
   initialField: EncodedFieldXFill, 
   solutionLimit: number, 
@@ -381,11 +401,13 @@ function glue(
   while (stack.length > 0) {
     const { x0, y0, field, operations, rowsCleared, order } = stack.pop()!;
 
+
     // scan for colored minos
     const coloredPos = findColoredMino(x0, y0, field, order, hold);
     if (coloredPos === null) continue;
     const { x, y, orderIndex } = coloredPos;
     const piece = field.at(x, y) as Piece;
+
 
     // push stack current state starting at new x, y
     stack.push({ x0: (x + 1) % WIDTH, y0: y + ~~((x + 1) / WIDTH), field, operations, rowsCleared, order })
@@ -428,7 +450,7 @@ function glue(
         }
 
         // terminate early if found solution limit
-        if (solutions.length == solutionLimit) break;
+        if (solutions.length == solutionLimit) return solutions;
         continue;
       }
       
@@ -437,11 +459,14 @@ function glue(
 
       // pick new x, y
       let [newX, newY] = [0, 0];
-      if (rowsToBeCleared == 0 && order === null) {
-        const start = getNewStart(field, x, y, minoPositions)
-        newX = start.x
-        newY = start.y
-      }
+      // if (rowsToBeCleared == 0 && order === null) {
+      //   const start = getNewStart(field, x, y, minoPositions)
+      //   newX = start.x
+      //   newY = start.y
+      // }
+      // DEBUG
+      // count++;
+      // console.log(count);
 
       // new order
       const newOrder = order?.slice() ?? null;
@@ -471,6 +496,8 @@ export function glueFumen(
   const inputPages: Pages = decodeWrapper(fumen);
   const outputFumens: Fumen[] = [];
 
+  // DEBUG
+  let startTime = performance.now();
   // convert given order to proper form
   let initialOrder: Piece[] | null = null;
   if (order !== null) {
@@ -510,6 +537,11 @@ export function glueFumen(
       outputFumens.push(encoder.encode(pages));
     }
   }
+  // DEBUG
+  sumTime += performance.now() - startTime;
+
+  // DEBUG
+  console.log(sumTime);
 
   // output glued fumens
   return outputFumens

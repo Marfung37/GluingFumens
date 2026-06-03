@@ -135,5 +135,3 @@ export default class EncodedField {
     return clone;
   }
 }
-
-
