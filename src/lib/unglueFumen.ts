@@ -1,4 +1,4 @@
-// code based on https://github.com/Hsterts/Fumenities/blob/main/Fumen%20Utils_files/fumenutil/modified-unglueFumen.js
+// code very loosely based on https://github.com/Hsterts/Fumenities/blob/main/Fumen%20Utils_files/fumenutil/modified-unglueFumen.js
 import { encoder } from 'tetris-fumen';
 import { Mino, Rotation, HEIGHT } from './defines';
 import { decodeWrapper, clearOffset, findLineClears } from './utils';

@@ -29,7 +29,7 @@ function randint(limit: number) {
 }
 
 const inputs: {x: number, y: number, piece: Piece, rotation: Rotation}[] = []
-for (let _ = 0; _ < 1_000; _++) {
+for (let _ = 0; _ < 10_000; _++) {
   inputs.push({x: randint(WIDTH), y: randint(HEIGHT), piece: (randint(7) + 1) as Piece, rotation: randint(4)})
 }
 

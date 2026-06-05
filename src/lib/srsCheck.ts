@@ -194,7 +194,7 @@ export function spin_ccw(rotation: Rotation): Rotation {
 }
 
 export function get_kicks(piece: Piece, init_rot: Rotation, target_rot: Rotation): number[][] {
-  return kick_map[piece - 1]![init_rot][target_rot];
+  return kick_map[piece - 1][init_rot][target_rot];
 }
 
 function getSpawn(operation: EncodedOperation, height: number): EncodedOperation {

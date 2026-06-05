@@ -5,7 +5,6 @@ import EncodedField from './EncodedField';
 
 /**
  * get offsets of a piece, rotation pair
- * @returns empty array if not tetromino otherwise array of offsets for piece from bottom left
  */
 export function getOffsets(piece: Piece, rotation: Rotation): [number, number][] {
   const offsetsPerRotation = pieceMappings[piece];
@@ -18,7 +17,6 @@ export function getOffsets(piece: Piece, rotation: Rotation): [number, number][]
 
 /**
  * get index of the center mino
- * @returns -1 if piece if not tetromino otherwise index of center mino
  */
 export function centerMino(piece: Piece, rotation: Rotation): number {
   // pieceMappings stores number of rotations up to symmetry
