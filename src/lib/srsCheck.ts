@@ -4,6 +4,7 @@ import EncodedField from './EncodedField';
 import OperationEncoder from './OperationEncoder';
 import { inBounds } from './utils';
 import type { Piece, EncodedOperation } from './types';
+import PiecePositionEncoder from './PiecePositionEncoder';
 
 const GLOBAL_VISITED = new Int32Array(512);
 const MAX_NEIGHBORS = 6;
@@ -243,11 +244,13 @@ function getNeighbors(field: EncodedField, operation: EncodedOperation): void {
 
 // for glue fumen collision only with gray minos (ie can go through colored minos)
 function checkCollision(field: EncodedField, operation: EncodedOperation): boolean {
-  const minos = OperationEncoder.positions(operation);
+  let monominos = OperationEncoder.positions(operation);
+  if (monominos == -1) return true;
 
-  for (let mino of minos) {
-    if (!inBounds(mino, HEIGHT)) return true;
-    if (field.at(mino.x, mino.y) === Mino.X) return true;
+  while (monominos > 0) {
+    const pos = PiecePositionEncoder.getMonomino(monominos);
+    if (field.at(pos.x, pos.y) === Mino.X) return true;
+    monominos = PiecePositionEncoder.nextMonomino(monominos);
   }
   return false;
 }

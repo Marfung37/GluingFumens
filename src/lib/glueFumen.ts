@@ -1,11 +1,10 @@
-import type { Fumen, Pos, Operation, Piece, PieceType, MinoType, EncodedOperation } from './types';
+import type { Fumen, Pos, Operation, Piece, PieceType, MinoType, EncodedOperation, EncodedPiecePosition } from './types';
 import { encoder, type Page, type Pages } from 'tetris-fumen';
 import { Mino, Rotation, WIDTH, HEIGHT, TETROMINO, NUM_MINOS, pieceMappings } from './defines';
 import { 
   decodeWrapper, 
   isValidPieceChar,
   bottomLeftToCenterMino,
-  inBounds, 
   isMinoPiece, 
   clearOffset,
   findLineClears, 
@@ -13,6 +12,7 @@ import {
 } from './utils';
 import OperationEncoder from './OperationEncoder';
 import EncodedField from './EncodedField';
+import PiecePositionEncoder from './PiecePositionEncoder';
 import { checkSRS180 } from './srsCheck';
 
 /**
@@ -107,28 +107,19 @@ export class EncodedFieldXFill extends EncodedField {
 }
 
 /**
- * utility to check if the given positions for the piece would be floating
- */
-function isFloating(field: EncodedField, minoPositions: Pos[]): boolean {
-  // checks if any 'X' under any of the minos
-  return minoPositions.every(pos =>
-    // not on floor
-    pos.y != 0 && field.at(pos.x, pos.y - 1) != Mino.X
-  );
-}
-
-/**
  * utility to place piece onto field
  * @returns rows modified as bit map
  */
-function placePiece(field: EncodedField, minoPositions: Pos[], mino: MinoType = 'X'): number {
+function placePiece(field: EncodedField, monominos: EncodedPiecePosition, mino: MinoType = 'X'): number {
   let rowsModified = 0;
-  for (const pos of minoPositions) {
-    if (!inBounds(pos, field.getHeight())) continue;
+  for (let _ = 0; _ < TETROMINO; _++) {
+    const pos = PiecePositionEncoder.getMonomino(monominos);
 
     field.unset(pos.x, pos.y);
     field.set(pos.x, pos.y, mino);
     rowsModified |= (1 << pos.y);
+
+    monominos = PiecePositionEncoder.nextMonomino(monominos);
   }
   return rowsModified;
 }
@@ -194,7 +185,7 @@ function XtoInt(mino: Mino): number {
  * due to ignoring placement of pieces that float, an order that clears the lines under would prevent placement of this piece
  * a piece that does this leads to needing to check if those lines under can be cleared after placing it
  */
-function checkWouldFloatPiece(field: EncodedFieldXFill, y: number, minoPositions: Pos[]): boolean {
+function checkWouldFloatPiece(field: EncodedFieldXFill, y: number, monominos: EncodedPiecePosition): boolean {
   // passed in y is the bottom most y value
 
   // y value too low to possible meet requirement
@@ -202,14 +193,18 @@ function checkWouldFloatPiece(field: EncodedFieldXFill, y: number, minoPositions
 
   // check if supported above the bottom most minos of the piece
   // no matter how line clear occur piece cannot be floating
-  const supportedAbove = minoPositions.every(pos =>
-    // not bottom most mino and supported
-    pos.y != y && field.at(pos.x, pos.y - 1) == Mino.X
-  );
-  if (supportedAbove) return false;
+  let supportedAbove = true;
+  const bottomMinoPositions: Pos[] = [];
+  for (let _ = 0; _ < TETROMINO; _++) {
+    const pos = PiecePositionEncoder.getMonomino(monominos);
+    supportedAbove &&= pos.y != y && field.at(pos.x, pos.y - 1) == Mino.X
 
-  // find the bottom most minos
-  const bottomMinoPositions = minoPositions.filter(pos => pos.y == y);
+    // find the bottom most minos
+    if (pos.y == y) bottomMinoPositions.push({...pos});
+
+    monominos = PiecePositionEncoder.nextMonomino(monominos);
+  }
+  if (supportedAbove) return false;
 
   // use a bit map set to store which y values have some x under
   let XHeights: number = 0;
@@ -234,17 +229,24 @@ const hangsLeftTLJZ = (1 << Mino.T) | (1 << Mino.L) | (1 << Mino.L) | (1 << Mino
  * certain placements of a piece allow for placement of a piece previously floating or clears below current piece
  * getNewStart determines if it is possible and takes latest position possible to reduce redundant operations
  */
-function getNewStart(field: EncodedFieldXFill, blx: number, bly: number, minoPositions: Pos[]): Pos {
+function getNewStart(field: EncodedFieldXFill, blx: number, bly: number, monominos: EncodedPiecePosition): Pos {
   // check if need to clear lines below as current placement could've prevented line clears
-  if (checkWouldFloatPiece(field, bly, minoPositions)) {
+  if (checkWouldFloatPiece(field, bly, monominos)) {
     // starting as far down to possibly get lines below to clear
     return {x: 0, y: Math.max(0, bly - 4)};
   }
 
   // get right most mino in current y
-  const rmPos: Pos = minoPositions.reduce((maxPos, currentPos) => {
-    return (currentPos.x > maxPos.x && bly == currentPos.y) ? currentPos : maxPos;
-    }, minoPositions[3]); // initialize pair with same y
+  // the first monomino is necessarily same y as bly
+  let rmPos = {...PiecePositionEncoder.getMonomino(monominos)};
+  monominos = PiecePositionEncoder.nextMonomino(monominos);
+  while (monominos > 0) {
+    const pos = PiecePositionEncoder.getMonomino(monominos);
+    if (pos.x > rmPos.x && bly == pos.y)
+      rmPos = {...pos};
+
+    monominos = PiecePositionEncoder.nextMonomino(monominos);
+  }
 
   // if on floor no need to check if previous values need to be checked again
   if (bly == 0 || bly == field.getHeight())
@@ -282,12 +284,12 @@ function getNewStart(field: EncodedFieldXFill, blx: number, bly: number, minoPos
     if (field.at(blx - 1, bly) == Mino.J) {
       if ((field.at(blx, bly + 1) == Mino.X) && (field.at(blx, bly + 2) == Mino.J))
         return {x: blx - 1, y: bly}; 
+
     // if TLZ just need to check above is corresponding TLZ
     } else if (field.at(blx - 1, bly) == field.at(blx, bly + 1))
       return {x: blx - 1, y: bly}; 
   }
 
- 
   return {x: (rmPos.x + 1) % WIDTH, y: bly + ~~((rmPos.x + 1) / WIDTH)};
 }
 
@@ -331,18 +333,30 @@ function findColoredMino(
 function checkPlaceable(
   operation: EncodedOperation, field: EncodedField,
   srs180: boolean
-): Pos[] | null {
+): EncodedPiecePosition {
   const height = field.getHeight();
 
   // get positions of the minos
-  const minoPositions = OperationEncoder.positions(operation);
+  const monominos = OperationEncoder.positions(operation);
+  if (monominos == -1) return -1;
+
   const piece = OperationEncoder.getPiece(operation);
 
-  if (minoPositions.some(pos => !inBounds(pos, height) || field.at(pos.x, pos.y) !== piece)) return null;
-  if (isFloating(field, minoPositions)) return null;
-  if (srs180 && !checkSRS180(field, operation)) return null;
+  let floating = true;
+  let tmpMonominos = monominos;
+  for (let _ = 0; _ < TETROMINO; _++) {
+    const pos = PiecePositionEncoder.getMonomino(tmpMonominos);
 
-  return minoPositions;
+    if (pos.y >= height || field.at(pos.x, pos.y) !== piece) 
+      return -1;
+
+    floating &&= pos.y != 0 && field.at(pos.x, pos.y - 1) != Mino.X;
+    tmpMonominos = PiecePositionEncoder.nextMonomino(tmpMonominos);
+  }
+  if (floating) return -1;
+  if (srs180 && !checkSRS180(field, operation)) return -1;
+
+  return monominos;
 }
 
 /**
@@ -421,12 +435,12 @@ function glue(
       } as Operation)
 
       // check placeable
-      const minoPositions = checkPlaceable(operation, field, srs180);
-      if (minoPositions === null) continue;
+      const monominos = checkPlaceable(operation, field, srs180);
+      if (monominos == -1) continue;
 
       // place piece
       const newField = field.copy() as EncodedFieldXFill;
-      const rowsModified = placePiece(newField, minoPositions)
+      const rowsModified = placePiece(newField, monominos);
 
       // clear lines
       let rowsToBeCleared = findLineClears(newField, rowsModified);
@@ -458,7 +472,7 @@ function glue(
         // only smartly pick new start if no additional settings or line clears happened
         // order could prevent a previous placement that is now placeable
         // srs180 mainly confusing due to placing current piece can allow kick down
-        const start = getNewStart(field, x, y, minoPositions)
+        const start = getNewStart(field, x, y, monominos);
         newX = start.x
         newY = start.y
       }
@@ -467,7 +481,7 @@ function glue(
       const newOrder = order?.slice() ?? null;
       if (newOrder !== null)
         newOrder.splice(orderIndex, 1);
-
+      
       stack.push({
         x0: newX, y0: newY,
         field: newField, 

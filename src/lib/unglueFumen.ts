@@ -1,9 +1,10 @@
 // code based on https://github.com/Hsterts/Fumenities/blob/main/Fumen%20Utils_files/fumenutil/modified-unglueFumen.js
 import { encoder } from 'tetris-fumen';
 import { Mino, Rotation, HEIGHT } from './defines';
-import { positions, decodeWrapper, clearOffset, findLineClears } from './utils';
+import { decodeWrapper, clearOffset, findLineClears } from './utils';
 import { Piece } from './types';
 import EncodedField from './EncodedField';
+import PiecePositionEncoder from './PiecePositionEncoder';
 
 /**
  * inverse of glueFumen the takes one fumen with operations and returns fumen with pieces placed
@@ -23,15 +24,19 @@ export function unglueFumen(gluedFumen: string): string {
     // ignore pages with no operation
     if (operation === undefined) continue;
 
-    // get positions of minos of the piece
-    let minos = positions(operation.x, operation.y, Mino[operation.type] as Piece, Rotation[operation.rotation]);
+    // get positions of monominos of the piece
+    let monominos = PiecePositionEncoder.positions(operation.x, operation.y, Mino[operation.type] as Piece, Rotation[operation.rotation]);
+    if (monominos == -1) throw new Error('One of the pieces goes off the board')
 
     // set the field the corresponding mino and store what rows were modified
-    for (let mino of minos) {
-      mino.y = clearOffset(mino.y, rowsCleared);
+    while (monominos > 0) {
+      const pos = PiecePositionEncoder.getMonomino(monominos);
 
-      field.set(mino.x, mino.y, operation.type);
-      rowsModified |= (1 << mino.y);
+      pos.y = clearOffset(pos.y, rowsCleared);
+
+      field.set(pos.x, pos.y, operation.type);
+      rowsModified |= (1 << pos.y);
+      monominos = PiecePositionEncoder.nextMonomino(monominos);
     }
 
     // check if modified lines had line clears if so store them

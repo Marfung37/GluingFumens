@@ -1,4 +1,4 @@
-import { Mino, Rotation, WIDTH, pieceMappings } from './defines'; 
+import { Mino, Rotation, WIDTH, HEIGHT, pieceMappings } from './defines'; 
 import { decoder, type Page } from 'tetris-fumen';
 import type { Pos, Piece } from './types';
 import EncodedField from './EncodedField';
@@ -39,27 +39,6 @@ export function bottomLeftToCenterMino(x: number, y: number, piece: Piece, rotat
 }
 
 /**
- * get positions of minos of a piece
- */
-export function positions(x: number, y: number, piece: Piece, rotation: Rotation): Pos[] {
-  // get offset and center index
-  const offsets = getOffsets(piece, rotation);
-  const centerIndex = centerMino(piece, rotation);
-
-  // get base x, y offset of center mino
-  const [bx, by] = offsets[centerIndex];
-
-  // get minos centered at given x, y
-  const minos: Pos[] = [];
-  for (let [dx, dy] of offsets) {
-    let mino = {x: x + dx - bx, y: y + dy - by};
-    minos.push(mino);
-  }
-
-  return minos;
-}
-
-/**
  * basic wrapper on decode for better error message
  */
 export function decodeWrapper(fumen: string): Page[] {
@@ -96,8 +75,8 @@ export function isMinoPiece(mino: Mino): boolean {
 /**
  * checks if given position is within bounds
  */
-export function inBounds(cell: Pos, height: number): boolean {
-  return (0 <= cell.x && cell.x < WIDTH) && (0 <= cell.y && cell.y < height);
+export function inBounds(x: number, y: number): boolean {
+  return (0 <= x && x < WIDTH) && (0 <= y && y < HEIGHT);
 }
 
 /**
