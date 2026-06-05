@@ -1,4 +1,4 @@
-import { Pos, Piece, EncodedPiecePosition } from './types';
+import { Pos, Piece, MinosPosition } from './types';
 import { getOffsets, centerMino, inBounds } from './utils';
 import { Rotation, WIDTH, HEIGHT } from './defines';
 
@@ -16,7 +16,7 @@ export default abstract class MinosEncoder {
   /**
    * get positions of minos of a piece
    */
-  static positions(x: number, y: number, piece: Piece, rotation: Rotation): EncodedPiecePosition {
+  static positions(x: number, y: number, piece: Piece, rotation: Rotation): MinosPosition {
     const key = x * 560 + y * 28 + piece * 4 + rotation;
 
     if (key >= MEMO_SIZE) return -1;
@@ -51,7 +51,7 @@ export default abstract class MinosEncoder {
   /**
    * get x, y from right most mino from encoded piece position
    */
-  static getMino(minos: EncodedPiecePosition): Pos {
+  static getMino(minos: MinosPosition): Pos {
     pos.y = minos & 0x1F;
     pos.x = (minos >> 5) & 0xF;
     return pos;
@@ -60,7 +60,7 @@ export default abstract class MinosEncoder {
   /**
    * get next mino from encoded piece position
    */
-  static nextMino(minos: EncodedPiecePosition) {
+  static nextMino(minos: MinosPosition) {
     return Math.floor(minos / POS_SHIFT);
   }
 }
