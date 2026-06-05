@@ -2,7 +2,6 @@ import { Mino, Rotation, HEIGHT, WIDTH } from './defines';
 import NumberRingQueue from './NumberRingQueue';
 import EncodedField from './EncodedField';
 import OperationEncoder from './OperationEncoder';
-import { inBounds } from './utils';
 import type { Piece, EncodedOperation } from './types';
 import PiecePositionEncoder from './PiecePositionEncoder';
 

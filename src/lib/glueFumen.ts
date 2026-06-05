@@ -242,8 +242,10 @@ function getNewStart(field: EncodedFieldXFill, blx: number, bly: number, monomin
   monominos = PiecePositionEncoder.nextMonomino(monominos);
   while (monominos > 0) {
     const pos = PiecePositionEncoder.getMonomino(monominos);
-    if (pos.x > rmPos.x && bly == pos.y)
-      rmPos = {...pos};
+    if (pos.x > rmPos.x && bly == pos.y) {
+      rmPos.x = pos.x;
+      rmPos.y = pos.y;
+    }
 
     monominos = PiecePositionEncoder.nextMonomino(monominos);
   }
