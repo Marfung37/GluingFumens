@@ -340,6 +340,7 @@ function checkPlaceable(
 
   // get positions of the minos
   const monominos = OperationEncoder.positions(operation);
+
   if (monominos == -1) return -1;
 
   const piece = OperationEncoder.getPiece(operation);
