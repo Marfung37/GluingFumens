@@ -1,4 +1,4 @@
-import type { Fumen, Pos, Operation, Piece, PieceType, MinoType, EncodedOperation, EncodedPiecePosition } from './types';
+import type { Fumen, Pos, Operation, Piece, PieceType, MinoType, EncodedOperation, EncodedMinos } from './types';
 import { encoder, type Page, type Pages } from 'tetris-fumen';
 import { Mino, Rotation, WIDTH, HEIGHT, TETROMINO, NUM_MINOS, pieceMappings } from './defines';
 import { 
@@ -12,7 +12,7 @@ import {
 } from './utils';
 import OperationEncoder from './OperationEncoder';
 import EncodedField from './EncodedField';
-import PiecePositionEncoder from './PiecePositionEncoder';
+import MinosEncoder from './MinosEncoder';
 import { checkSRS180 } from './srsCheck';
 
 /**
@@ -110,16 +110,16 @@ export class EncodedFieldXFill extends EncodedField {
  * utility to place piece onto field
  * @returns rows modified as bit map
  */
-function placePiece(field: EncodedField, monominos: EncodedPiecePosition, mino: MinoType = 'X'): number {
+function placePiece(field: EncodedField, minos: EncodedMinos, mino: MinoType = 'X'): number {
   let rowsModified = 0;
   for (let _ = 0; _ < TETROMINO; _++) {
-    const pos = PiecePositionEncoder.getMonomino(monominos);
+    const pos = MinosEncoder.getMino(minos);
 
     field.unset(pos.x, pos.y);
     field.set(pos.x, pos.y, mino);
     rowsModified |= (1 << pos.y);
 
-    monominos = PiecePositionEncoder.nextMonomino(monominos);
+    minos = MinosEncoder.nextMino(minos);
   }
   return rowsModified;
 }
@@ -185,7 +185,7 @@ function XtoInt(mino: Mino): number {
  * due to ignoring placement of pieces that float, an order that clears the lines under would prevent placement of this piece
  * a piece that does this leads to needing to check if those lines under can be cleared after placing it
  */
-function checkWouldFloatPiece(field: EncodedFieldXFill, y: number, monominos: EncodedPiecePosition): boolean {
+function checkWouldFloatPiece(field: EncodedFieldXFill, y: number, minos: EncodedMinos): boolean {
   // passed in y is the bottom most y value
 
   // y value too low to possible meet requirement
@@ -196,13 +196,13 @@ function checkWouldFloatPiece(field: EncodedFieldXFill, y: number, monominos: En
   let supportedAbove = true;
   const bottomMinoPositions: Pos[] = [];
   for (let _ = 0; _ < TETROMINO; _++) {
-    const pos = PiecePositionEncoder.getMonomino(monominos);
+    const pos = MinosEncoder.getMino(minos);
     supportedAbove &&= pos.y != y && field.at(pos.x, pos.y - 1) == Mino.X
 
     // find the bottom most minos
     if (pos.y == y) bottomMinoPositions.push({...pos});
 
-    monominos = PiecePositionEncoder.nextMonomino(monominos);
+    minos = MinosEncoder.nextMino(minos);
   }
   if (supportedAbove) return false;
 
@@ -229,25 +229,25 @@ const hangsLeftTLJZ = (1 << Mino.T) | (1 << Mino.L) | (1 << Mino.L) | (1 << Mino
  * certain placements of a piece allow for placement of a piece previously floating or clears below current piece
  * getNewStart determines if it is possible and takes latest position possible to reduce redundant operations
  */
-function getNewStart(field: EncodedFieldXFill, blx: number, bly: number, monominos: EncodedPiecePosition): Pos {
+function getNewStart(field: EncodedFieldXFill, blx: number, bly: number, minos: EncodedMinos): Pos {
   // check if need to clear lines below as current placement could've prevented line clears
-  if (checkWouldFloatPiece(field, bly, monominos)) {
+  if (checkWouldFloatPiece(field, bly, minos)) {
     // starting as far down to possibly get lines below to clear
     return {x: 0, y: Math.max(0, bly - 4)};
   }
 
   // get right most mino in current y
   // the first monomino is necessarily same y as bly
-  let rmPos = {...PiecePositionEncoder.getMonomino(monominos)};
-  monominos = PiecePositionEncoder.nextMonomino(monominos);
-  while (monominos > 0) {
-    const pos = PiecePositionEncoder.getMonomino(monominos);
+  let rmPos = {...MinosEncoder.getMino(minos)};
+  minos = MinosEncoder.nextMino(minos);
+  while (minos > 0) {
+    const pos = MinosEncoder.getMino(minos);
     if (pos.x > rmPos.x && bly == pos.y) {
       rmPos.x = pos.x;
       rmPos.y = pos.y;
     }
 
-    monominos = PiecePositionEncoder.nextMonomino(monominos);
+    minos = MinosEncoder.nextMino(minos);
   }
 
   // if on floor no need to check if previous values need to be checked again
@@ -335,31 +335,31 @@ function findColoredMino(
 function checkPlaceable(
   operation: EncodedOperation, field: EncodedField,
   srs180: boolean
-): EncodedPiecePosition {
+): EncodedMinos {
   const height = field.getHeight();
 
   // get positions of the minos
-  const monominos = OperationEncoder.positions(operation);
+  const minos = OperationEncoder.positions(operation);
 
-  if (monominos == -1) return -1;
+  if (minos == -1) return -1;
 
   const piece = OperationEncoder.getPiece(operation);
 
   let floating = true;
-  let tmpMonominos = monominos;
+  let tmpMinos = minos;
   for (let _ = 0; _ < TETROMINO; _++) {
-    const pos = PiecePositionEncoder.getMonomino(tmpMonominos);
+    const pos = MinosEncoder.getMino(tmpMinos);
 
     if (pos.y >= height || field.at(pos.x, pos.y) !== piece) 
       return -1;
 
     floating &&= pos.y != 0 && field.at(pos.x, pos.y - 1) != Mino.X;
-    tmpMonominos = PiecePositionEncoder.nextMonomino(tmpMonominos);
+    tmpMinos = MinosEncoder.nextMino(tmpMinos);
   }
   if (floating) return -1;
   if (srs180 && !checkSRS180(field, operation)) return -1;
 
-  return monominos;
+  return minos;
 }
 
 /**
@@ -438,12 +438,12 @@ function glue(
       } as Operation)
 
       // check placeable
-      const monominos = checkPlaceable(operation, field, srs180);
-      if (monominos == -1) continue;
+      const minos = checkPlaceable(operation, field, srs180);
+      if (minos == -1) continue;
 
       // place piece
       const newField = field.copy() as EncodedFieldXFill;
-      const rowsModified = placePiece(newField, monominos);
+      const rowsModified = placePiece(newField, minos);
 
       // clear lines
       let rowsToBeCleared = findLineClears(newField, rowsModified);
@@ -475,7 +475,7 @@ function glue(
         // only smartly pick new start if no additional settings or line clears happened
         // order could prevent a previous placement that is now placeable
         // srs180 mainly confusing due to placing current piece can allow kick down
-        const start = getNewStart(field, x, y, monominos);
+        const start = getNewStart(field, x, y, minos);
         newX = start.x
         newY = start.y
       }

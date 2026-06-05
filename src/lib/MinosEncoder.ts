@@ -7,14 +7,14 @@ const POS_SHIFT = Math.pow(2, 9);
 const MEMO_SIZE = WIDTH * HEIGHT * 7 * 4
 let memo = new Float64Array(MEMO_SIZE).fill(NaN);
 
-// output for position of a monomino to avoid initialization of objects
+// output for position of a mino to avoid initialization of objects
 const pos = {x: 0, y: 0};
 
-export default abstract class PiecePositionEncoder {
+export default abstract class MinosEncoder {
   private constructor() {};
 
   /**
-   * get positions of monominos of a piece
+   * get positions of minos of a piece
    */
   static positions(x: number, y: number, piece: Piece, rotation: Rotation): EncodedPiecePosition {
     const key = x * 560 + y * 28 + piece * 4 + rotation;
@@ -30,31 +30,37 @@ export default abstract class PiecePositionEncoder {
     const [bx, by] = offsets[centerIndex];
 
     // get cells centered at given x, y
-    let monominos = 0;
+    let minos = 0;
     for (let [dx, dy] of offsets) {
       const newX = x + dx - bx;
       const newY = y + dy - by;
       if (!inBounds(newX, newY)) {
-        monominos = -1;
+        minos = -1;
         break;
       }
 
       let monomino = (newX << 5) + newY;
-      monominos *= POS_SHIFT;
-      monominos += monomino;
+      minos *= POS_SHIFT;
+      minos += monomino;
     }
 
-    memo[key] = monominos;
-    return monominos;
+    memo[key] = minos;
+    return minos;
   }
 
-  static getMonomino(monominos: EncodedPiecePosition): Pos {
-    pos.y = monominos & 0x1F;
-    pos.x = (monominos >> 5) & 0xF;
+  /**
+   * get x, y from right most mino from encoded piece position
+   */
+  static getMino(minos: EncodedPiecePosition): Pos {
+    pos.y = minos & 0x1F;
+    pos.x = (minos >> 5) & 0xF;
     return pos;
   }
 
-  static nextMonomino(monominos: EncodedPiecePosition) {
-    return Math.floor(monominos / POS_SHIFT);
+  /**
+   * get next mino from encoded piece position
+   */
+  static nextMino(minos: EncodedPiecePosition) {
+    return Math.floor(minos / POS_SHIFT);
   }
 }

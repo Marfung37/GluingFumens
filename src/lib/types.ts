@@ -19,4 +19,4 @@ export type RotationType = 'spawn' | 'right' | 'reverse' | 'left';
 
 export type Fumen = string;
 export type EncodedOperation = number;
-export type EncodedPiecePosition = number;
+export type EncodedMinos = number;

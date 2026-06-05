@@ -3,7 +3,7 @@ import { bench, run, group } from 'mitata';
 import { Rotation, WIDTH, HEIGHT } from '../src/lib/defines';
 import { Piece, Pos } from '../src/lib/types';
 import { getOffsets, centerMino, inBounds } from '../src/lib/utils';
-import PiecePositionEncoder from '../src/lib/PiecePositionEncoder';
+import MinosEncoder from '../src/lib/MinosEncoder';
 
 function positions(x: number, y: number, piece: Piece, rotation: Rotation): Pos[] {
   // get offset and center index
@@ -41,7 +41,7 @@ group('Method: .positions()', () => {
   })
   bench('Encoded positions', () => {
     for (let input of inputs) {
-      PiecePositionEncoder.positions(input.x, input.y, input.piece, input.rotation);
+      MinosEncoder.positions(input.x, input.y, input.piece, input.rotation);
     }
   })
 })

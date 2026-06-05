@@ -2,9 +2,10 @@ import {test, expect} from "@jest/globals";
 
 import OperationEncoder from '../src/lib/OperationEncoder';
 import { Mino, Rotation } from '../src/lib/defines';
-import { Operation } from '../src/lib/types';
+import { Pos, Operation } from '../src/lib/types';
 
 const SHIFT = Math.pow(2, 9);
+
 function pack(minos: Pos[]) {
   let value = 0;
   for (let {x, y} of minos) {

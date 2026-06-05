@@ -1,6 +1,6 @@
-import type { Operation, EncodedOperation, Piece, EncodedPiecePosition } from './types';
+import type { Operation, EncodedOperation, Piece, EncodedMinos } from './types';
 import { Mino, Rotation } from './defines';
-import PiecePositionEncoder from './PiecePositionEncoder';
+import MinosEncoder from './MinosEncoder';
 
 export default abstract class OperationEncoder {
   // prevent instantiation
@@ -99,11 +99,11 @@ export default abstract class OperationEncoder {
   /**
    * get positions of minos of a piece from encoded operation
    */
-  static positions(operation: EncodedOperation): EncodedPiecePosition {
+  static positions(operation: EncodedOperation): EncodedMinos {
     const x = this.getX(operation);
     const y = this.getY(operation);
     const piece = this.getPiece(operation);
     const rotation = this.getRotation(operation);
-    return PiecePositionEncoder.positions(x, y, piece, rotation);
+    return MinosEncoder.positions(x, y, piece, rotation);
   }
 }

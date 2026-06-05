@@ -2,10 +2,10 @@ import { test, expect } from "@jest/globals";
 
 import { Pos } from '../src/lib/types';
 import { Mino, Rotation } from '../src/lib/defines';
-import PiecePositionEncoder from '../src/lib/PiecePositionEncoder';
+import MinosEncoder from '../src/lib/MinosEncoder';
 
 const SHIFT = Math.pow(2, 9);
-const positions = PiecePositionEncoder.positions;
+const positions = MinosEncoder.positions;
 
 function pack(minos: Pos[]) {
   let value = 0;
@@ -16,7 +16,7 @@ function pack(minos: Pos[]) {
   return value;
 }
 
-describe('PiecePositionEncoder', () => {
+describe('MinosEncoder', () => {
   test('positions', () => {
     // check that positions depend on given x, y
     expect(positions(1, 0, Mino.T, Rotation.spawn)).toEqual(pack([{x: 1, y: 0}, {x: 2, y: 0}, {x: 1, y: 1}, {x: 0, y: 0}]))
@@ -59,5 +59,23 @@ describe('PiecePositionEncoder', () => {
     expect(positions(5, 5, Mino.O, Rotation.right)).toEqual(pack([{x: 5, y: 4}, {x: 5, y: 5}, {x: 6, y: 5}, {x: 6, y: 4}]))
     expect(positions(5, 5, Mino.O, Rotation.reverse)).toEqual(pack([{x: 4, y: 4}, {x: 4, y: 5}, {x: 5, y: 5}, {x: 5, y: 4}]))
     expect(positions(5, 5, Mino.O, Rotation.left)).toEqual(pack([{x: 4, y: 5}, {x: 4, y: 6}, {x: 5, y: 6}, {x: 5, y: 5}]))
+  })
+
+  test('getMonomino and nextMonomino', () => {
+    let minos = positions(1, 0, Mino.T, Rotation.spawn);
+    const target = [{x: 1, y: 0}, {x: 2, y: 0}, {x: 1, y: 1}, {x: 0, y: 0}];
+
+    for (let i = target.length - 1; i >= 0; i--) {
+      expect(MinosEncoder.getMino(minos)).toEqual(target[i]);
+      minos = MinosEncoder.nextMino(minos);
+    }
+
+    minos = positions(5, 5, Mino.J, Rotation.reverse);
+    const target2 = [{x: 5, y: 5}, {x: 6, y: 5}, {x: 4, y: 5}, {x: 6, y: 4}];
+
+    for (let i = target2.length - 1; i >= 0; i--) {
+      expect(MinosEncoder.getMino(minos)).toEqual(target2[i]);
+      minos = MinosEncoder.nextMino(minos);
+    }
   })
 })
