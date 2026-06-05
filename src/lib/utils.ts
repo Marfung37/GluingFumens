@@ -75,8 +75,8 @@ export function isMinoPiece(mino: Mino): boolean {
 /**
  * checks if given position is within bounds
  */
-export function inBounds(x: number, y: number): boolean {
-  return (0 <= x && x < WIDTH) && (0 <= y && y < HEIGHT);
+export function inBounds(x: number, y: number, height: number = HEIGHT): boolean {
+  return (0 <= x && x < WIDTH) && (0 <= y && y < height);
 }
 
 /**

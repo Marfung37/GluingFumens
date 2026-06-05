@@ -4,6 +4,16 @@ import OperationEncoder from '../src/lib/OperationEncoder';
 import { Mino, Rotation } from '../src/lib/defines';
 import { Operation } from '../src/lib/types';
 
+const SHIFT = Math.pow(2, 9);
+function pack(minos: Pos[]) {
+  let value = 0;
+  for (let {x, y} of minos) {
+    value *= SHIFT;
+    value += (x << 5) + y;
+  }
+  return value;
+}
+
 describe('OperationEncoder', () => {
   test('encode', () => {
     let op1 = {x: 1, y: 0, type: 'T', rotation: 'spawn'} as Operation;
@@ -55,14 +65,12 @@ describe('OperationEncoder', () => {
     expect(OperationEncoder.setPiece(op, Mino.S)).toBe(OperationEncoder.encode({x: 5, y: 3, type: 'S', rotation: 'left'} as Operation));
   });
 
-
-
   test('positions', () => {
     // pick some random ones from all
-    expect(OperationEncoder.positions(OperationEncoder.encode({x: 5, y: 5, type: 'T', rotation: 'spawn'} as Operation))).toEqual([{x: 5, y: 5}, {x: 6, y: 5}, {x: 5, y: 6}, {x: 4, y: 5}])
+    expect(OperationEncoder.positions(OperationEncoder.encode({x: 5, y: 5, type: 'T', rotation: 'spawn'} as Operation))).toEqual(pack([{x: 5, y: 5}, {x: 6, y: 5}, {x: 5, y: 6}, {x: 4, y: 5}]));
 
-    expect(OperationEncoder.positions(OperationEncoder.encode({x: 5, y: 5, type: 'L', rotation: 'left'} as Operation))).toEqual([{x: 5, y: 5}, {x: 4, y: 6}, {x: 5, y: 6}, {x: 5, y: 4}])
+    expect(OperationEncoder.positions(OperationEncoder.encode({x: 5, y: 5, type: 'L', rotation: 'left'} as Operation))).toEqual(pack([{x: 5, y: 5}, {x: 4, y: 6}, {x: 5, y: 6}, {x: 5, y: 4}]));
 
-    expect(OperationEncoder.positions(OperationEncoder.encode({x: 5, y: 5, type: 'Z', rotation: 'right'} as Operation))).toEqual([{x: 5, y: 5}, {x: 6, y: 5}, {x: 6, y: 6}, {x: 5, y: 4}])
+    expect(OperationEncoder.positions(OperationEncoder.encode({x: 5, y: 5, type: 'Z', rotation: 'right'} as Operation))).toEqual(pack([{x: 5, y: 5}, {x: 6, y: 5}, {x: 6, y: 6}, {x: 5, y: 4}]));
   })
 })

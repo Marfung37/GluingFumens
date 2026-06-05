@@ -1,4 +1,4 @@
-import {test, expect} from "@jest/globals";
+import { test, expect } from "@jest/globals";
 
 import { decoder } from 'tetris-fumen';
 import EncodedField from '../src/lib/EncodedField';
@@ -7,7 +7,6 @@ import {
   getOffsets,
   centerMino,
   bottomLeftToCenterMino,
-  positions,
   decodeWrapper,
   isValidPieceChar,
   isMinoPiece,
@@ -155,50 +154,6 @@ describe("utilities", () => {
     expect(bottomLeftToCenterMino(5, 5, Mino.O, Rotation.left)).toEqual({x: 6, y: 5});
   })
 
-  test('positions', () => {
-    // check that positions depend on given x, y
-    expect(positions(1, 0, Mino.T, Rotation.spawn)).toEqual([{x: 1, y: 0}, {x: 2, y: 0}, {x: 1, y: 1}, {x: 0, y: 0}])
-    expect(positions(2, 0, Mino.T, Rotation.spawn)).toEqual([{x: 2, y: 0}, {x: 3, y: 0}, {x: 2, y: 1}, {x: 1, y: 0}])
-    expect(positions(1, 1, Mino.T, Rotation.spawn)).toEqual([{x: 1, y: 1}, {x: 2, y: 1}, {x: 1, y: 2}, {x: 0, y: 1}])
-    expect(positions(2, 1, Mino.T, Rotation.spawn)).toEqual([{x: 2, y: 1}, {x: 3, y: 1}, {x: 2, y: 2}, {x: 1, y: 1}])
-
-    // check all pieces are getting right positions
-    expect(positions(5, 5, Mino.T, Rotation.spawn)).toEqual([{x: 5, y: 5}, {x: 6, y: 5}, {x: 5, y: 6}, {x: 4, y: 5}])
-    expect(positions(5, 5, Mino.T, Rotation.right)).toEqual([{x: 5, y: 5}, {x: 5, y: 6}, {x: 6, y: 5}, {x: 5, y: 4}])
-    expect(positions(5, 5, Mino.T, Rotation.reverse)).toEqual([{x: 5, y: 5}, {x: 6, y: 5}, {x: 4, y: 5}, {x: 5, y: 4}])
-    expect(positions(5, 5, Mino.T, Rotation.left)).toEqual([{x: 5, y: 5}, {x: 5, y: 6}, {x: 4, y: 5}, {x: 5, y: 4}])
-
-    expect(positions(5, 5, Mino.I, Rotation.spawn)).toEqual([{x: 5, y: 5}, {x: 6, y: 5}, {x: 7, y: 5}, {x: 4, y: 5}])
-    expect(positions(5, 5, Mino.I, Rotation.right)).toEqual([{x: 5, y: 5}, {x: 5, y: 4}, {x: 5, y: 6}, {x: 5, y: 3}])
-    expect(positions(5, 5, Mino.I, Rotation.reverse)).toEqual([{x: 4, y: 5}, {x: 5, y: 5}, {x: 6, y: 5}, {x: 3, y: 5}])
-    expect(positions(5, 5, Mino.I, Rotation.left)).toEqual([{x: 5, y: 6}, {x: 5, y: 5}, {x: 5, y: 7}, {x: 5, y: 4}])
-
-    expect(positions(5, 5, Mino.L, Rotation.spawn)).toEqual([{x: 5, y: 5}, {x: 6, y: 6}, {x: 6, y: 5}, {x: 4, y: 5}])
-    expect(positions(5, 5, Mino.L, Rotation.right)).toEqual([{x: 5, y: 5}, {x: 5, y: 6}, {x: 6, y: 4}, {x: 5, y: 4}])
-    expect(positions(5, 5, Mino.L, Rotation.reverse)).toEqual([{x: 5, y: 5}, {x: 6, y: 5}, {x: 4, y: 5}, {x: 4, y: 4}])
-    expect(positions(5, 5, Mino.L, Rotation.left)).toEqual([{x: 5, y: 5}, {x: 4, y: 6}, {x: 5, y: 6}, {x: 5, y: 4}])
-
-    expect(positions(5, 5, Mino.J, Rotation.spawn)).toEqual([{x: 5, y: 5}, {x: 6, y: 5}, {x: 4, y: 6}, {x: 4, y: 5}])
-    expect(positions(5, 5, Mino.J, Rotation.right)).toEqual([{x: 5, y: 5}, {x: 6, y: 6}, {x: 5, y: 6}, {x: 5, y: 4}])
-    expect(positions(5, 5, Mino.J, Rotation.reverse)).toEqual([{x: 5, y: 5}, {x: 6, y: 5}, {x: 4, y: 5}, {x: 6, y: 4}])
-    expect(positions(5, 5, Mino.J, Rotation.left)).toEqual([{x: 5, y: 5}, {x: 5, y: 6}, {x: 5, y: 4}, {x: 4, y: 4}])
-
-    expect(positions(5, 5, Mino.S, Rotation.spawn)).toEqual([{x: 5, y: 5}, {x: 5, y: 6}, {x: 6, y: 6}, {x: 4, y: 5}])
-    expect(positions(5, 5, Mino.S, Rotation.right)).toEqual([{x: 5, y: 5}, {x: 6, y: 5}, {x: 5, y: 6}, {x: 6, y: 4}])
-    expect(positions(5, 5, Mino.S, Rotation.reverse)).toEqual([{x: 5, y: 4}, {x: 5, y: 5}, {x: 6, y: 5}, {x: 4, y: 4}])
-    expect(positions(5, 5, Mino.S, Rotation.left)).toEqual([{x: 4, y: 5}, {x: 5, y: 5}, {x: 4, y: 6}, {x: 5, y: 4}])
-
-    expect(positions(5, 5, Mino.Z, Rotation.spawn)).toEqual([{x: 5, y: 5}, {x: 5, y: 6}, {x: 4, y: 6}, {x: 6, y: 5}])
-    expect(positions(5, 5, Mino.Z, Rotation.right)).toEqual([{x: 5, y: 5}, {x: 6, y: 5}, {x: 6, y: 6}, {x: 5, y: 4}])
-    expect(positions(5, 5, Mino.Z, Rotation.reverse)).toEqual([{x: 5, y: 4}, {x: 5, y: 5}, {x: 4, y: 5}, {x: 6, y: 4}])
-    expect(positions(5, 5, Mino.Z, Rotation.left)).toEqual([{x: 4, y: 5}, {x: 5, y: 5}, {x: 5, y: 6}, {x: 4, y: 4}])
-
-    expect(positions(5, 5, Mino.O, Rotation.spawn)).toEqual([{x: 5, y: 5}, {x: 5, y: 6}, {x: 6, y: 6}, {x: 6, y: 5}])
-    expect(positions(5, 5, Mino.O, Rotation.right)).toEqual([{x: 5, y: 4}, {x: 5, y: 5}, {x: 6, y: 5}, {x: 6, y: 4}])
-    expect(positions(5, 5, Mino.O, Rotation.reverse)).toEqual([{x: 4, y: 4}, {x: 4, y: 5}, {x: 5, y: 5}, {x: 5, y: 4}])
-    expect(positions(5, 5, Mino.O, Rotation.left)).toEqual([{x: 4, y: 5}, {x: 4, y: 6}, {x: 5, y: 6}, {x: 5, y: 5}])
-  })
-
   test('decodeWrapper', () => {
     expect(decodeWrapper('v115@vhAAgH')).toEqual(decoder.decode('v115@vhAAgH'))
     expect(decodeWrapper('v115@tgA8HeB8HeB8GeA8AeA8BeB8BeA8BeA8AeC8BeA8Be?B8BeA8KeAgH')).toEqual(decoder.decode('v115@tgA8HeB8HeB8GeA8AeA8BeB8BeA8BeA8AeC8BeA8Be?B8BeA8KeAgH'))
@@ -238,16 +193,16 @@ describe("utilities", () => {
   })
 
   test('inBounds', () => {
-    expect(inBounds({x: 0, y: 0}, 4)).toBeTruthy();
-    expect(inBounds({x: 0, y: 0}, 1)).toBeTruthy();
-    expect(inBounds({x: 5, y: 6}, 7)).toBeTruthy();
-    expect(inBounds({x: 3, y: 2}, 3)).toBeTruthy();
-    expect(inBounds({x: 0, y: 0}, 0)).toBeFalsy();
-    expect(inBounds({x: -1, y: 0}, 4)).toBeFalsy();
-    expect(inBounds({x: WIDTH, y: 0}, 4)).toBeFalsy();
-    expect(inBounds({x: 0, y: -1}, 4)).toBeFalsy();
-    expect(inBounds({x: 0, y: 5}, 4)).toBeFalsy();
-    expect(inBounds({x: 0, y: HEIGHT}, 4)).toBeFalsy();
+    expect(inBounds(0, 0, 4)).toBeTruthy();
+    expect(inBounds(0, 0, 1)).toBeTruthy();
+    expect(inBounds(5, 6, 7)).toBeTruthy();
+    expect(inBounds(3, 2, 3)).toBeTruthy();
+    expect(inBounds(0, 0, 0)).toBeFalsy();
+    expect(inBounds(-1, 0, 4)).toBeFalsy();
+    expect(inBounds(WIDTH, 0, 4)).toBeFalsy();
+    expect(inBounds(0, -1, 4)).toBeFalsy();
+    expect(inBounds(0, 5, 4)).toBeFalsy();
+    expect(inBounds(0, HEIGHT, 4)).toBeFalsy();
   })
 
   test('findLineClears', () => {
