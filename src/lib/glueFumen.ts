@@ -1,14 +1,23 @@
-import type { Fumen, Pos, Operation, Piece, PieceType, MinoType, EncodedOperation, EncodedMinos } from './types';
+import type {
+  Fumen,
+  Pos,
+  Operation,
+  Piece,
+  PieceType,
+  MinoType,
+  EncodedOperation,
+  EncodedMinos
+} from './types';
 import { encoder, type Page, type Pages } from 'tetris-fumen';
 import { Mino, Rotation, WIDTH, HEIGHT, TETROMINO, NUM_MINOS, pieceMappings } from './defines';
-import { 
-  decodeWrapper, 
+import {
+  decodeWrapper,
   isValidPieceChar,
   bottomLeftToCenterMino,
-  isMinoPiece, 
+  isMinoPiece,
   clearOffset,
-  findLineClears, 
-  clearLines 
+  findLineClears,
+  clearLines
 } from './utils';
 import OperationEncoder from './OperationEncoder';
 import EncodedField from './EncodedField';
@@ -16,11 +25,11 @@ import MinosEncoder from './MinosEncoder';
 import { checkSRS180 } from './srsCheck';
 
 /**
- * modified operation with y value without shift down from line clears 
+ * modified operation with y value without shift down from line clears
  * to uniquely identify sequence of operations
  */
 interface AbsoluteOperation extends Operation {
-  absY: number
+  absY: number;
 }
 
 type AbsoluteEncodedOperation = number;
@@ -44,7 +53,7 @@ abstract class AbsoluteOperationEncoder extends OperationEncoder {
   // decode can just return Operation for these tasks
 
   static getAbsY(ct: AbsoluteEncodedOperation): number {
-    return (ct >> 14) & 0x1F;
+    return (ct >> 14) & 0x1f;
   }
 
   static stripY(ct: AbsoluteEncodedOperation): StrippedAbsoluteEncodedOperation {
@@ -53,7 +62,7 @@ abstract class AbsoluteOperationEncoder extends OperationEncoder {
 }
 
 /**
- * For all functions 'X' is treated as the only filled cell in a field 
+ * For all functions 'X' is treated as the only filled cell in a field
  */
 
 // modified EncodedField so only X is treated as filled cell
@@ -77,13 +86,13 @@ export class EncodedFieldXFill extends EncodedField {
       const row = this.field[y];
 
       // separate into 5 cell parts as & by converts to int32
-      let lowPart = row & 0xFFFFF;
+      let lowPart = row & 0xfffff;
       let highPart = Math.floor(row / 0x100000);
 
       lowPart &= EncodedField.HIGH_BITS_MASK;
       highPart &= EncodedField.HIGH_BITS_MASK;
 
-      this.field[y] = (highPart * 0x100000) + (lowPart >>> 0);
+      this.field[y] = highPart * 0x100000 + (lowPart >>> 0);
     }
   }
 
@@ -95,8 +104,8 @@ export class EncodedFieldXFill extends EncodedField {
     for (let y = 0; y < this.height; y++) {
       const row = this.field[y];
 
-      let lowPart = row & 0xFFFFF;
-      let highPart = Math.floor(row / 0x100000);
+      const lowPart = row & 0xfffff;
+      const highPart = Math.floor(row / 0x100000);
 
       // if any of the low 3 bits of the cells are cell
       const check = (lowPart | highPart) & EncodedField.NOT_HIGH_BITS_MASK;
@@ -117,7 +126,7 @@ function placePiece(field: EncodedField, minos: EncodedMinos, mino: MinoType = '
 
     field.unset(pos.x, pos.y);
     field.set(pos.x, pos.y, mino);
-    rowsModified |= (1 << pos.y);
+    rowsModified |= 1 << pos.y;
 
     minos = MinosEncoder.nextMino(minos);
   }
@@ -134,38 +143,39 @@ function countPieces(field: EncodedField): number {
   let count = 0;
 
   for (let y = 0; y < height; y++) {
-    for(let x = 0; x < WIDTH; x++) {
-      let mino = field.at(x, y);
+    for (let x = 0; x < WIDTH; x++) {
+      const mino = field.at(x, y);
       if (isMinoPiece(mino)) {
         frequencyCounter[mino]++;
         count += Math.floor(frequencyCounter[mino] / TETROMINO);
-        frequencyCounter[mino] %= TETROMINO; 
+        frequencyCounter[mino] %= TETROMINO;
       }
     }
   }
 
-  if (frequencyCounter.every(value => value == 0))
-    return count;
+  if (frequencyCounter.every((value) => value == 0)) return count;
   return -1;
 }
 
 /**
  * checks if array is already in the arrays ignoring order
  */
-function duplicateGlue(array: AbsoluteEncodedOperation[], arrays: AbsoluteEncodedOperation[][]): boolean {
+function duplicateGlue(
+  array: AbsoluteEncodedOperation[],
+  arrays: AbsoluteEncodedOperation[][]
+): boolean {
   // new array without y but keep absolute y
-  let strippedArray = array.map(AbsoluteOperationEncoder.stripY);
+  const strippedArray = array.map(AbsoluteOperationEncoder.stripY);
   const arraySet = new Set<StrippedAbsoluteEncodedOperation>(strippedArray);
 
-
-  for(let arr of arrays) {
+  for (const arr of arrays) {
     if (array.length !== arr.length) {
       return false;
     }
 
     // check if two arrays are permutations
-    let absArr = arr.map(AbsoluteOperationEncoder.stripY);
-    if(absArr.every((op) => arraySet.has(op))) {
+    const absArr = arr.map(AbsoluteOperationEncoder.stripY);
+    if (absArr.every((op) => arraySet.has(op))) {
       return true;
     }
   }
@@ -197,10 +207,10 @@ function checkWouldFloatPiece(field: EncodedFieldXFill, y: number, minos: Encode
   const bottomMinoPositions: Pos[] = [];
   for (let _ = 0; _ < TETROMINO; _++) {
     const pos = MinosEncoder.getMino(minos);
-    supportedAbove &&= pos.y != y && field.at(pos.x, pos.y - 1) == Mino.X
+    supportedAbove &&= pos.y != y && field.at(pos.x, pos.y - 1) == Mino.X;
 
     // find the bottom most minos
-    if (pos.y == y) bottomMinoPositions.push({...pos});
+    if (pos.y == y) bottomMinoPositions.push({ ...pos });
 
     minos = MinosEncoder.nextMino(minos);
   }
@@ -211,10 +221,10 @@ function checkWouldFloatPiece(field: EncodedFieldXFill, y: number, minos: Encode
   const target: number = (1 << y) - (1 << Math.max(0, y - 5));
 
   // get which y values have some X under the bottom most minos
-  for (let pos of bottomMinoPositions) {
+  for (const pos of bottomMinoPositions) {
     for (let newY = Math.max(0, y - 5); newY < y; newY++) {
-      XHeights |= (XtoInt(field.at(pos.x, newY)) << newY); 
-    } 
+      XHeights |= XtoInt(field.at(pos.x, newY)) << newY;
+    }
     if (XHeights == target) return false;
   }
   return true;
@@ -233,12 +243,12 @@ function getNewStart(field: EncodedFieldXFill, blx: number, bly: number, minos: 
   // check if need to clear lines below as current placement could've prevented line clears
   if (checkWouldFloatPiece(field, bly, minos)) {
     // starting as far down to possibly get lines below to clear
-    return {x: 0, y: Math.max(0, bly - 4)};
+    return { x: 0, y: Math.max(0, bly - 4) };
   }
 
   // get right most mino in current y
   // the first monomino is necessarily same y as bly
-  let rmPos = {...MinosEncoder.getMino(minos)};
+  const rmPos = { ...MinosEncoder.getMino(minos) };
   minos = MinosEncoder.nextMino(minos);
   while (minos > 0) {
     const pos = MinosEncoder.getMino(minos);
@@ -252,55 +262,66 @@ function getNewStart(field: EncodedFieldXFill, blx: number, bly: number, minos: 
 
   // if on floor no need to check if previous values need to be checked again
   if (bly == 0 || bly == field.getHeight())
-    return {x: (rmPos.x + 1) % WIDTH, y: bly + ~~((rmPos.x + 1) / WIDTH)};
+    return { x: (rmPos.x + 1) % WIDTH, y: bly + ~~((rmPos.x + 1) / WIDTH) };
 
   // if J hanging from left
   // __JJ___
   // __JX___
   // __J____
-  if(blx >= 1 && field.at(blx - 1, bly - 1) == Mino.J && field.at(blx, bly + 1) == Mino.J) {
-    return {x: blx - 1, y: bly - 1}; 
+  if (blx >= 1 && field.at(blx - 1, bly - 1) == Mino.J && field.at(blx, bly + 1) == Mino.J) {
+    return { x: blx - 1, y: bly - 1 };
   }
 
   // if L hanging from right
   // ___LL__
   // ___XL__
   // ____L__
-  if(rmPos.x < WIDTH - 1 && field.at(rmPos.x + 1, rmPos.y - 1) == Mino.L && field.at(rmPos.x, rmPos.y + 1) == Mino.L){
-    return {x: rmPos.x + 1, y: rmPos.y - 1}; 
+  if (
+    rmPos.x < WIDTH - 1 &&
+    field.at(rmPos.x + 1, rmPos.y - 1) == Mino.L &&
+    field.at(rmPos.x, rmPos.y + 1) == Mino.L
+  ) {
+    return { x: rmPos.x + 1, y: rmPos.y - 1 };
   }
 
   // if L or S hanging from left
   // _LLL___ or __SS___
   // _L_X___    _SSX___
-  if(blx >= 2 && field.at(blx - 2, bly) == field.at(blx, bly + 1) && (hangsLeftLS & (1 << field.at(blx - 2, bly))) != 0){
-    return {x: blx - 2, y: bly};
+  if (
+    blx >= 2 &&
+    field.at(blx - 2, bly) == field.at(blx, bly + 1) &&
+    (hangsLeftLS & (1 << field.at(blx - 2, bly))) != 0
+  ) {
+    return { x: blx - 2, y: bly };
   }
 
   // if T, L, J, Z hanging from left
   // __T____ or _______ or ___Z___ or __JJ___
   // __TT___    __LLL__    __ZZ___    __JX___
   // __TX___    __LX___    __ZX___    __JX___
-  if(blx >= 1 && (hangsLeftTLJZ & (1 << field.at(blx - 1, bly))) != 0) {
+  if (blx >= 1 && (hangsLeftTLJZ & (1 << field.at(blx - 1, bly))) != 0) {
     // if J need also the X above then J
     if (field.at(blx - 1, bly) == Mino.J) {
-      if ((field.at(blx, bly + 1) == Mino.X) && (field.at(blx, bly + 2) == Mino.J))
-        return {x: blx - 1, y: bly}; 
+      if (field.at(blx, bly + 1) == Mino.X && field.at(blx, bly + 2) == Mino.J)
+        return { x: blx - 1, y: bly };
 
-    // if TLZ just need to check above is corresponding TLZ
-    } else if (field.at(blx - 1, bly) == field.at(blx, bly + 1))
-      return {x: blx - 1, y: bly}; 
+      // if TLZ just need to check above is corresponding TLZ
+    } else if (field.at(blx - 1, bly) == field.at(blx, bly + 1)) return { x: blx - 1, y: bly };
   }
 
-  return {x: (rmPos.x + 1) % WIDTH, y: bly + ~~((rmPos.x + 1) / WIDTH)};
+  return { x: (rmPos.x + 1) % WIDTH, y: bly + ~~((rmPos.x + 1) / WIDTH) };
 }
 
 /**
  * finds next valid colored mino starting at x, y
  */
 function findColoredMino(
-  x: number, y: number, field: EncodedField, order: Piece[] | null, hold: number
-): Pos & {orderIndex: number} | null {
+  x: number,
+  y: number,
+  field: EncodedField,
+  order: Piece[] | null,
+  hold: number
+): (Pos & { orderIndex: number }) | null {
   const height = field.getHeight();
   for (; y < height; y++) {
     for (; x < WIDTH; x++) {
@@ -311,7 +332,7 @@ function findColoredMino(
       // only I could be on highest y value so skip if not I
       if (y == height - 1 && piece != Mino.I) continue;
 
-      // if specified order 
+      // if specified order
       let orderIndex = -1;
       if (order !== null) {
         for (let i = 0; i < hold + 1; i++) {
@@ -321,7 +342,7 @@ function findColoredMino(
         if (orderIndex == -1) continue;
       }
 
-      return {x, y, orderIndex}
+      return { x, y, orderIndex };
     }
     // start on new row
     x = 0;
@@ -333,7 +354,8 @@ function findColoredMino(
  * checks if given operation is actually placeable
  */
 function checkPlaceable(
-  operation: EncodedOperation, field: EncodedField,
+  operation: EncodedOperation,
+  field: EncodedField,
   srs180: boolean
 ): EncodedMinos {
   const height = field.getHeight();
@@ -350,8 +372,7 @@ function checkPlaceable(
   for (let _ = 0; _ < TETROMINO; _++) {
     const pos = MinosEncoder.getMino(tmpMinos);
 
-    if (pos.y >= height || field.at(pos.x, pos.y) !== piece) 
-      return -1;
+    if (pos.y >= height || field.at(pos.x, pos.y) !== piece) return -1;
 
     floating &&= pos.y != 0 && field.at(pos.x, pos.y - 1) != Mino.X;
     tmpMinos = MinosEncoder.nextMino(tmpMinos);
@@ -372,7 +393,7 @@ function getNewRowsCleared(rowsClearedNoOffset: number, rowsCleared: number): nu
     const row = 31 - Math.clz32(rowsClearedNoOffset);
 
     const newRow = clearOffset(row, rowsCleared);
-    newRowsCleared |= (1 << newRow);
+    newRowsCleared |= 1 << newRow;
 
     // clear this bit
     rowsClearedNoOffset &= ~(1 << row);
@@ -381,21 +402,22 @@ function getNewRowsCleared(rowsClearedNoOffset: number, rowsCleared: number): nu
 }
 
 interface glueState {
-  x0: number, y0: number,
-  field: EncodedFieldXFill
-  operations: AbsoluteEncodedOperation[],
-  rowsCleared: number, // bit map of which rows were cleared
-  order: Piece[] | null
+  x0: number;
+  y0: number;
+  field: EncodedFieldXFill;
+  operations: AbsoluteEncodedOperation[];
+  rowsCleared: number; // bit map of which rows were cleared
+  order: Piece[] | null;
 }
 
 function glue(
-  initialField: EncodedFieldXFill, 
-  solutionLimit: number, 
-  initialOrder: Piece[] | null, 
+  initialField: EncodedFieldXFill,
+  solutionLimit: number,
+  initialOrder: Piece[] | null,
   hold: number,
   srs180: boolean
 ): AbsoluteEncodedOperation[][] {
-  // check if possible to glue in first place 
+  // check if possible to glue in first place
   const numPieces = countPieces(initialField);
   if (numPieces == -1) return [];
   if (numPieces == 0) return [[]]; // found solution of doing nothing
@@ -405,9 +427,10 @@ function glue(
 
   // push the initial state
   stack.push({
-    x0: 0, y0: 0, 
+    x0: 0,
+    y0: 0,
     field: initialField,
-    operations: [], 
+    operations: [],
     rowsCleared: 0,
     order: initialOrder
   });
@@ -422,12 +445,19 @@ function glue(
     const piece = field.at(x, y) as Piece;
 
     // push stack current state starting at new x, y
-    stack.push({ x0: (x + 1) % WIDTH, y0: y + Math.floor((x + 1) / WIDTH), field, operations, rowsCleared, order })
+    stack.push({
+      x0: (x + 1) % WIDTH,
+      y0: y + Math.floor((x + 1) / WIDTH),
+      field,
+      operations,
+      rowsCleared,
+      order
+    });
 
     // found colored mino that could fit
 
     // go through rotations
-    let numRotations = pieceMappings[piece].length;
+    const numRotations = pieceMappings[piece].length;
     for (let rotation: Rotation = 0; rotation < numRotations; rotation++) {
       // construct operation
       const centerMino = bottomLeftToCenterMino(x, y, piece, rotation);
@@ -435,7 +465,7 @@ function glue(
         ...centerMino,
         type: Mino[piece],
         rotation: Rotation[rotation]
-      } as Operation)
+      } as Operation);
 
       // check placeable
       const minos = checkPlaceable(operation, field, srs180);
@@ -446,7 +476,7 @@ function glue(
       const rowsModified = placePiece(newField, minos);
 
       // clear lines
-      let rowsToBeCleared = findLineClears(newField, rowsModified);
+      const rowsToBeCleared = findLineClears(newField, rowsModified);
       clearLines(newField, rowsToBeCleared);
 
       // get absolute y of piece
@@ -465,7 +495,7 @@ function glue(
         if (solutions.length == solutionLimit) return solutions;
         continue;
       }
-      
+
       // update rows cleared with absolute y positions
       const newRowsCleared = getNewRowsCleared(rowsToBeCleared, rowsCleared);
 
@@ -476,22 +506,22 @@ function glue(
         // order could prevent a previous placement that is now placeable
         // srs180 mainly confusing due to placing current piece can allow kick down
         const start = getNewStart(field, x, y, minos);
-        newX = start.x
-        newY = start.y
+        newX = start.x;
+        newY = start.y;
       }
 
       // new order
       const newOrder = order?.slice() ?? null;
-      if (newOrder !== null)
-        newOrder.splice(orderIndex, 1);
-      
+      if (newOrder !== null) newOrder.splice(orderIndex, 1);
+
       stack.push({
-        x0: newX, y0: newY,
-        field: newField, 
+        x0: newX,
+        y0: newY,
+        field: newField,
         operations: [...operations, operation],
         rowsCleared: newRowsCleared,
         order: newOrder
-      } as glueState)
+      } as glueState);
     }
   }
 
@@ -499,10 +529,10 @@ function glue(
 }
 
 export function glueFumen(
-  fumen: Fumen, 
-  solutionLimit: number = -1, 
-  order: string | null = null, 
-  hold: number = 0, 
+  fumen: Fumen,
+  solutionLimit: number = -1,
+  order: string | null = null,
+  hold: number = 0,
   srs180: boolean = false
 ): Fumen[] {
   const inputPages: Pages = decodeWrapper(fumen);
@@ -513,16 +543,16 @@ export function glueFumen(
   if (order !== null) {
     // check if order contain only tetris pieces
     const pieces = Array.from(order);
-    if (!pieces.every(isValidPieceChar)) 
-      throw new Error(`Given order '${order}' does not consist of only tetris pieces`)
+    if (!pieces.every(isValidPieceChar))
+      throw new Error(`Given order '${order}' does not consist of only tetris pieces`);
     initialOrder = pieces.map((piece: string) => Mino[piece as PieceType]);
   }
 
   // check hold is valid
-  if (hold < 0) throw new Error(`Given hold expected to be nonnegative but ${hold} gotten`)
+  if (hold < 0) throw new Error(`Given hold expected to be nonnegative but ${hold} gotten`);
 
   // glue each page
-  for(let page of inputPages){
+  for (const page of inputPages) {
     const field = new EncodedFieldXFill(page.field, HEIGHT);
 
     // optimization due to srs180 with unlimited solutions extremely slow
@@ -535,15 +565,15 @@ export function glueFumen(
     field.emptyColored();
     const emptyField = field.toField();
 
-    for (let solution of solutions) {
+    for (const solution of solutions) {
       // convert operations into pages
       const pages = solution.map((op: AbsoluteEncodedOperation) => {
-        return {operation: AbsoluteOperationEncoder.decode(op)} as Page
-      })
+        return { operation: AbsoluteOperationEncoder.decode(op) } as Page;
+      });
 
       // set the field
       if (solution.length == 0) {
-        pages.push({field: emptyField} as Page);
+        pages.push({ field: emptyField } as Page);
         continue;
       } else {
         pages[0].field = emptyField;
@@ -554,5 +584,5 @@ export function glueFumen(
   }
 
   // output glued fumens
-  return outputFumens
+  return outputFumens;
 }

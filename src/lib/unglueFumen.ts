@@ -19,14 +19,19 @@ export function unglueFumen(gluedFumen: string): string {
   // bit string of which rows are cleared
   let rowsCleared: number = 0;
 
-  for (let page of pages) {
+  for (const page of pages) {
     const operation = page.operation;
     // ignore pages with no operation
     if (operation === undefined) continue;
 
     // get positions of minos of the piece
-    let minos = MinosEncoder.positions(operation.x, operation.y, Mino[operation.type] as Piece, Rotation[operation.rotation]);
-    if (minos == -1) throw new Error('One of the pieces goes off the board')
+    let minos = MinosEncoder.positions(
+      operation.x,
+      operation.y,
+      Mino[operation.type] as Piece,
+      Rotation[operation.rotation]
+    );
+    if (minos == -1) throw new Error('One of the pieces goes off the board');
 
     // set the field the corresponding mino and store what rows were modified
     while (minos > 0) {
@@ -35,7 +40,7 @@ export function unglueFumen(gluedFumen: string): string {
       pos.y = clearOffset(pos.y, rowsCleared);
 
       field.set(pos.x, pos.y, operation.type);
-      rowsModified |= (1 << pos.y);
+      rowsModified |= 1 << pos.y;
       minos = MinosEncoder.nextMino(minos);
     }
 
@@ -43,6 +48,6 @@ export function unglueFumen(gluedFumen: string): string {
     rowsCleared |= findLineClears(field, rowsModified);
     rowsModified = 0;
   }
-  
-  return encoder.encode([{field: field.toField()}]);
+
+  return encoder.encode([{ field: field.toField() }]);
 }

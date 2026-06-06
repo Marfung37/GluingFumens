@@ -4,21 +4,24 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import * as path from 'path';
 
-if(require.main == module) {
+if (require.main == module) {
   const yargsInstance = yargs(hideBin(process.argv))
     .version(false)
-    .usage(`\nUsage: ${path.basename(__filename)} [fumens...] [options] [< inputFile]\n\nTurns single page fumens with color coded pieces into multipage fumens with a piece on each page.`)
+    .usage(
+      `\nUsage: ${path.basename(__filename)} [fumens...] [options] [< inputFile]\n\nTurns single page fumens with color coded pieces into multipage fumens with a piece on each page.`
+    )
     .option('expected-solutions', {
       alias: 'e',
       type: 'number',
-      description: 'Number of expected solutions for each of the fumens. Stops once the number of expected solutions is found.',
+      description:
+        'Number of expected solutions for each of the fumens. Stops once the number of expected solutions is found.',
       default: -1,
       coerce: (arg) => {
         if (!Number.isInteger(arg)) {
           throw new Error('--expected-solutions (-e) must be an integer');
         }
         return arg;
-      },
+      }
     })
     .option('order', {
       alias: 'o',
@@ -30,7 +33,7 @@ if(require.main == module) {
           throw new Error('--order (-o) must consist of only TILJSZO pieces');
         }
         return arg;
-      },
+      }
     })
     .option('hold', {
       alias: 'd',
@@ -42,7 +45,7 @@ if(require.main == module) {
           throw new Error('--hold (-h) must be nonnegative integer');
         }
         return arg;
-      },
+      }
     })
     .option('srs', {
       alias: 's',
@@ -66,16 +69,16 @@ if(require.main == module) {
   // Read standard input
   const readStdin = (): Promise<string> => {
     return new Promise((resolve) => {
-    let stdinData = "";
-    process.stdin.on("data", (chunk: Buffer) => {
-      stdinData += chunk.toString();
-    });
+      let stdinData = '';
+      process.stdin.on('data', (chunk: Buffer) => {
+        stdinData += chunk.toString();
+      });
 
-    process.stdin.on("end", () => {
-      resolve(stdinData);
-    });
+      process.stdin.on('end', () => {
+        resolve(stdinData);
+      });
 
-    process.stdin.resume();
+      process.stdin.resume();
     });
   };
 
@@ -84,8 +87,8 @@ if(require.main == module) {
     const inputPromises: Promise<string>[] = [];
 
     if (!process.stdin.isTTY) {
-    // Add stdin data if it's piped or redirected
-    inputPromises.push(readStdin());
+      // Add stdin data if it's piped or redirected
+      inputPromises.push(readStdin());
     }
 
     // Wait for all input sources to resolve and split by newline
@@ -94,33 +97,32 @@ if(require.main == module) {
     // Combine raw string argument and stdin and exclude empty strings and undefined
     input = [...argv._, ...inputs].filter(Boolean).join('\n').trim().split(/\s+/).filter(Boolean);
 
-    if(input.length == 0) {
+    if (input.length == 0) {
       yargsInstance.showHelp(); // show help
       process.exit(0);
     }
 
     if (argv.unglue) {
-      console.log(input.map(unglueFumen).join('\n'))
+      console.log(input.map(unglueFumen).join('\n'));
       return;
     }
 
     // run glueFumen with all the input
-    const order = argv.order ? argv.order: null;
+    const order = argv.order ? argv.order : null;
 
     for (const fumen of input) {
-      const gluedFumens = glueFumen(fumen, argv.expectedSolutions, order, argv.hold, argv.srs)
+      const gluedFumens = glueFumen(fumen, argv.expectedSolutions, order, argv.hold, argv.srs);
       if (gluedFumens.length == 0) {
-        console.log(`Warning: ${fumen} couldn't be glued`)
+        console.log(`Warning: ${fumen} couldn't be glued`);
       }
       if (gluedFumens.length > 1) {
-        console.log(`Warning: ${fumen} led to ${gluedFumens.length} outputs`)
+        console.log(`Warning: ${fumen} led to ${gluedFumens.length} outputs`);
       }
       console.log(gluedFumens.join('\n'));
     }
   };
 
   main().catch((err) => {
-    console.error("Error:", err);
+    console.error('Error:', err);
   });
 }
-

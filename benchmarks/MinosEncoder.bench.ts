@@ -15,8 +15,8 @@ function positions(x: number, y: number, piece: Piece, rotation: Rotation): Pos[
 
   // get minos centered at given x, y
   const minos: Pos[] = [];
-  for (let [dx, dy] of offsets) {
-    let mino = {x: x + dx - bx, y: y + dy - by};
+  for (const [dx, dy] of offsets) {
+    const mino = { x: x + dx - bx, y: y + dy - by };
     if (!inBounds(mino.x, mino.y)) return [];
     minos.push(mino);
   }
@@ -25,25 +25,30 @@ function positions(x: number, y: number, piece: Piece, rotation: Rotation): Pos[
 }
 
 function randint(limit: number) {
-  return Math.floor(Math.random() * limit)
+  return Math.floor(Math.random() * limit);
 }
 
-const inputs: {x: number, y: number, piece: Piece, rotation: Rotation}[] = []
+const inputs: { x: number; y: number; piece: Piece; rotation: Rotation }[] = [];
 for (let _ = 0; _ < 10_000; _++) {
-  inputs.push({x: randint(WIDTH), y: randint(HEIGHT), piece: (randint(7) + 1) as Piece, rotation: randint(4)})
+  inputs.push({
+    x: randint(WIDTH),
+    y: randint(HEIGHT),
+    piece: (randint(7) + 1) as Piece,
+    rotation: randint(4)
+  });
 }
 
 group('Method: .positions()', () => {
   bench('Original positions', () => {
-    for (let input of inputs) {
+    for (const input of inputs) {
       positions(input.x, input.y, input.piece, input.rotation);
     }
-  })
+  });
   bench('Encoded positions', () => {
-    for (let input of inputs) {
+    for (const input of inputs) {
       MinosEncoder.positions(input.x, input.y, input.piece, input.rotation);
     }
-  })
-})
+  });
+});
 
 await run();

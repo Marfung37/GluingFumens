@@ -4,15 +4,9 @@
     "module": "ES2022",
     "esModuleInterop": true,
     "moduleResolution": "node",
-    "strict": true,    
+    "strict": true,
     "noEmit": true
   },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    // DEBUG
-    "src/**/srsCheck.ts",
-    "node_modules"
-  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
 }

@@ -4,14 +4,14 @@ import { Rotation, WIDTH, HEIGHT } from './defines';
 
 const POS_SHIFT = Math.pow(2, 9);
 
-const MEMO_SIZE = WIDTH * HEIGHT * 7 * 4
-let memo = new Float64Array(MEMO_SIZE).fill(NaN);
+const MEMO_SIZE = WIDTH * HEIGHT * 7 * 4;
+const memo = new Float64Array(MEMO_SIZE).fill(NaN);
 
 // output for position of a mino to avoid initialization of objects
-const pos = {x: 0, y: 0};
+const pos = { x: 0, y: 0 };
 
 export default abstract class MinosEncoder {
-  private constructor() {};
+  private constructor() {}
 
   /**
    * get positions of minos of a piece
@@ -31,7 +31,7 @@ export default abstract class MinosEncoder {
 
     // get cells centered at given x, y
     let minos = 0;
-    for (let [dx, dy] of offsets) {
+    for (const [dx, dy] of offsets) {
       const newX = x + dx - bx;
       const newY = y + dy - by;
       if (!inBounds(newX, newY)) {
@@ -39,7 +39,7 @@ export default abstract class MinosEncoder {
         break;
       }
 
-      let monomino = (newX << 5) + newY;
+      const monomino = (newX << 5) + newY;
       minos *= POS_SHIFT;
       minos += monomino;
     }
@@ -52,8 +52,8 @@ export default abstract class MinosEncoder {
    * get x, y from right most mino from encoded piece position
    */
   static getMino(minos: MinosPosition): Pos {
-    pos.y = minos & 0x1F;
-    pos.x = (minos >> 5) & 0xF;
+    pos.y = minos & 0x1f;
+    pos.x = (minos >> 5) & 0xf;
     return pos;
   }
 

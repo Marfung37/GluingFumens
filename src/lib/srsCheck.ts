@@ -148,7 +148,7 @@ const kick_offset_180_2x2: number[][][] = [
 ];
 
 function gen_kick_table(offsets: number[][][], offsets_180: number[][][]) {
-  let table = new Array(4);
+  const table = new Array(4);
   for (let a = 0; a < 4; a++) {
     table[a] = new Array(4);
     // None
@@ -207,22 +207,17 @@ function getNeighbors(field: EncodedField, operation: EncodedOperation): void {
   // shifts
 
   // left 1
-  if (OperationEncoder.getX(operation) > 0)
-    NEIGHBORS[0] = operation - (1 << 5);
-  else
-    NEIGHBORS[0] = -1;
+  if (OperationEncoder.getX(operation) > 0) NEIGHBORS[0] = operation - (1 << 5);
+  else NEIGHBORS[0] = -1;
 
   // right 1
-  if (OperationEncoder.getX(operation) < WIDTH - 1)
-    NEIGHBORS[1] = operation + (1 << 5);
-  else
-    NEIGHBORS[1] = -1;
+  if (OperationEncoder.getX(operation) < WIDTH - 1) NEIGHBORS[1] = operation + (1 << 5);
+  else NEIGHBORS[1] = -1;
 
   // down 1
   if (OperationEncoder.getY(operation) > 0)
     NEIGHBORS[2] = operation - 1; // down 1
-  else
-    NEIGHBORS[2] = -1;
+  else NEIGHBORS[2] = -1;
 
   // rotations
   const currRotation = OperationEncoder.getRotation(operation);
@@ -255,9 +250,14 @@ function checkCollision(field: EncodedField, operation: EncodedOperation): boole
 }
 
 // get x, y new position from srs, assume operation has rotation set to target already
-function kick(field: EncodedField, operation: EncodedOperation, init: Rotation, target: Rotation): EncodedOperation {
-  for(let [dx, dy] of get_kicks(OperationEncoder.getPiece(operation), init, target)) {
-    let newOp = operation + (dx << 5) + dy;
+function kick(
+  field: EncodedField,
+  operation: EncodedOperation,
+  init: Rotation,
+  target: Rotation
+): EncodedOperation {
+  for (const [dx, dy] of get_kicks(OperationEncoder.getPiece(operation), init, target)) {
+    const newOp = operation + (dx << 5) + dy;
 
     if (!checkCollision(field, newOp)) return newOp;
   }
@@ -266,19 +266,19 @@ function kick(field: EncodedField, operation: EncodedOperation, init: Rotation, 
 
 function getSetVisited(index: number): boolean {
   const wordIndex = index >> 5; // divide by 32 for number of bits in int
-  const bitIndex = index & 0x1F;
+  const bitIndex = index & 0x1f;
   const mask = 1 << bitIndex;
 
-  let value = (GLOBAL_VISITED[wordIndex] & mask) !== 0;
+  const value = (GLOBAL_VISITED[wordIndex] & mask) !== 0;
   GLOBAL_VISITED[wordIndex] |= mask;
   return value;
 }
 
 export function checkSRS180(field: EncodedField, operation: EncodedOperation) {
-  let startOp = getSpawn(operation, field.getHeight());
+  const startOp = getSpawn(operation, field.getHeight());
   if (operation == startOp) return true;
 
-  let queue: NumberRingQueue = new NumberRingQueue(64);
+  const queue: NumberRingQueue = new NumberRingQueue(64);
 
   GLOBAL_VISITED.fill(0);
 
@@ -287,17 +287,16 @@ export function checkSRS180(field: EncodedField, operation: EncodedOperation) {
   getSetVisited(startOp);
 
   while (!queue.isEmpty()) {
-    let currOp = queue.dequeue();
+    const currOp = queue.dequeue();
     getNeighbors(field, currOp);
 
     for (let i = 0; i < MAX_NEIGHBORS; i++) {
-      let neighbor = NEIGHBORS[i];
+      const neighbor = NEIGHBORS[i];
       if (neighbor === -1) continue;
       if (neighbor === operation) return true;
 
       if (!getSetVisited(neighbor)) {
-        if (i >= 3 || !checkCollision(field, neighbor))
-          queue.enqueue(neighbor);
+        if (i >= 3 || !checkCollision(field, neighbor)) queue.enqueue(neighbor);
       }
     }
   }

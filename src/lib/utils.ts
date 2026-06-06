@@ -1,4 +1,4 @@
-import { Mino, Rotation, WIDTH, HEIGHT, pieceMappings } from './defines'; 
+import { Mino, Rotation, WIDTH, HEIGHT, pieceMappings } from './defines';
 import { decoder, type Page } from 'tetris-fumen';
 import type { Pos, Piece } from './types';
 import EncodedField from './EncodedField';
@@ -11,7 +11,7 @@ export function getOffsets(piece: Piece, rotation: Rotation): [number, number][]
   const rotationsUpToSymmetry = offsetsPerRotation.length;
 
   // mod out symmetry
-  rotation %= rotationsUpToSymmetry
+  rotation %= rotationsUpToSymmetry;
   return offsetsPerRotation[rotation];
 }
 
@@ -28,12 +28,17 @@ export function centerMino(piece: Piece, rotation: Rotation): number {
 /**
  * get position of center mino given bottom left mino
  */
-export function bottomLeftToCenterMino(x: number, y: number, piece: Piece, rotation: Rotation): Pos {
+export function bottomLeftToCenterMino(
+  x: number,
+  y: number,
+  piece: Piece,
+  rotation: Rotation
+): Pos {
   const offsets = getOffsets(piece, rotation);
   const centerIndex = centerMino(piece, rotation);
 
   const [bx, by] = offsets[centerIndex];
-  return {x: x + bx, y: y + by};
+  return { x: x + bx, y: y + by };
 }
 
 /**
@@ -43,7 +48,7 @@ export function decodeWrapper(fumen: string): Page[] {
   try {
     return decoder.decode(fumen);
   } catch (e) {
-    throw new Error(`Fumen ${fumen} could not be decoded`);
+    throw new Error(`Fumen ${fumen} could not be decoded`, { cause: e });
   }
 }
 
@@ -74,7 +79,7 @@ export function isMinoPiece(mino: Mino): boolean {
  * checks if given position is within bounds
  */
 export function inBounds(x: number, y: number, height: number = HEIGHT): boolean {
-  return (0 <= x && x < WIDTH) && (0 <= y && y < height);
+  return 0 <= x && x < WIDTH && 0 <= y && y < height;
 }
 
 /**
@@ -87,7 +92,7 @@ export function clearOffset(y: number, rowsCleared: number): number {
   while ((rowsCleared & mask) > 0) {
     // counts number of set bits before y
     while ((rowsCleared & mask) > 0) {
-      rowsCleared &= rowsCleared - 1; 
+      rowsCleared &= rowsCleared - 1;
       y++;
     }
 
@@ -108,7 +113,7 @@ export function findLineClears(field: EncodedField, rowsModified: number): numbe
     const row = 31 - Math.clz32(rowsModified);
 
     // add to rows cleared if row doesn't contain any empty cells
-    if (field.isLineClear(row)) rowsCleared |= (1 << row);
+    if (field.isLineClear(row)) rowsCleared |= 1 << row;
 
     // clear this bit
     rowsModified &= ~(1 << row);
@@ -125,7 +130,7 @@ export function clearLines(field: EncodedField, rowsToBeCleared: number): void {
     const row = 31 - Math.clz32(rowsToBeCleared);
 
     // clear this line
-    field.lineClear(row)
+    field.lineClear(row);
 
     // clear this bit
     rowsToBeCleared &= ~(1 << row);
