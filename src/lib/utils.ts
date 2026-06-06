@@ -48,7 +48,7 @@ export function decodeWrapper(fumen: string): Page[] {
   try {
     return decoder.decode(fumen);
   } catch (e) {
-    throw new Error(`Fumen ${fumen} could not be decoded`, { cause: e });
+    throw new Error(`Fumen '${fumen}' could not be decoded`, { cause: e });
   }
 }
 

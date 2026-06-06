@@ -528,7 +528,7 @@ function glue(
   return solutions;
 }
 
-export function glueFumen(
+export default function glueFumen(
   fumen: Fumen,
   solutionLimit: number = -1,
   order: string | null = null,

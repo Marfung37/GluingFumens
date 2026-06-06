@@ -1,6 +1,6 @@
 // code very loosely based on https://github.com/Hsterts/Fumenities/blob/main/Fumen%20Utils_files/fumenutil/modified-unglueFumen.js
 import { encoder } from 'tetris-fumen';
-import { Mino, Rotation, HEIGHT } from './defines';
+import { Mino, Rotation, HEIGHT, TETROMINO } from './defines';
 import { decodeWrapper, clearOffset, findLineClears } from './utils';
 import { Piece } from './types';
 import EncodedField from './EncodedField';
@@ -9,7 +9,7 @@ import MinosEncoder from './MinosEncoder';
 /**
  * inverse of glueFumen the takes one fumen with operations and returns fumen with pieces placed
  */
-export function unglueFumen(gluedFumen: string): string {
+export default function unglueFumen(gluedFumen: string): string {
   // only one output for a glued fumen and assumes field isn't changed from first page
   const pages = decodeWrapper(gluedFumen);
   const field = new EncodedField(pages[0].field, HEIGHT);
@@ -34,7 +34,7 @@ export function unglueFumen(gluedFumen: string): string {
     if (minos == -1) throw new Error('One of the pieces goes off the board');
 
     // set the field the corresponding mino and store what rows were modified
-    while (minos > 0) {
+    for (let _ = 0; _ < TETROMINO; _++) {
       const pos = MinosEncoder.getMino(minos);
 
       pos.y = clearOffset(pos.y, rowsCleared);

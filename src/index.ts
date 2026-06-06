@@ -1,7 +1,7 @@
 // src/index.ts
 
-export { glueFumen } from './lib/glueFumen';
-export { unglueFumen } from './lib/unglueFumen';
-export * from './lib/OperationEncoder';
-export * from './lib/EncodedField';
-export * from './lib/MinosEncoder';
+export { default as glueFumen } from './lib/glueFumen';
+export { default as unglueFumen } from './lib/unglueFumen';
+export { default as OperationEncoder } from './lib/OperationEncoder';
+export { default as EncodedField } from './lib/EncodedField';
+export { default as MinosEncoder } from './lib/MinosEncoder';

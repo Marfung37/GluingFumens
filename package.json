@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "build": "npx esbuild src/glue.ts --bundle --minify --format=cjs --outfile=dist/glue.cjs --platform=node",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test": "node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "lint": "eslint ."
