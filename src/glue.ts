@@ -117,7 +117,14 @@ if (require.main == module) {
     const order = argv.order ? argv.order : null;
 
     for (const fumen of input) {
-      const gluedFumens = glueFumen(fumen, argv.solutionLimit, argv.floating, order, argv.hold, argv.srs);
+      const gluedFumens = glueFumen(
+        fumen,
+        argv.solutionLimit,
+        argv.floating,
+        order,
+        argv.hold,
+        argv.srs
+      );
       if (gluedFumens.length == 0) {
         console.log(`Warning: ${fumen} couldn't be glued`);
       }

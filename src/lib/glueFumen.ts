@@ -239,7 +239,13 @@ const hangsLeftTLJZ = (1 << Mino.T) | (1 << Mino.L) | (1 << Mino.L) | (1 << Mino
  * certain placements of a piece allow for placement of a piece previously floating or clears below current piece
  * getNewStart determines if it is possible and takes latest position possible to reduce redundant operations
  */
-function getNewStart(field: EncodedFieldXFill, blx: number, bly: number, minos: EncodedMinos, floatingPieces: boolean): Pos {
+function getNewStart(
+  field: EncodedFieldXFill,
+  blx: number,
+  bly: number,
+  minos: EncodedMinos,
+  floatingPieces: boolean
+): Pos {
   // check if need to clear lines below as current placement could've prevented line clears
   if (!floatingPieces && checkWouldFloatPiece(field, bly, minos)) {
     // starting as far down to possibly get lines below to clear
