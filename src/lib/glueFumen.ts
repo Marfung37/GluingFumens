@@ -239,9 +239,9 @@ const hangsLeftTLJZ = (1 << Mino.T) | (1 << Mino.L) | (1 << Mino.L) | (1 << Mino
  * certain placements of a piece allow for placement of a piece previously floating or clears below current piece
  * getNewStart determines if it is possible and takes latest position possible to reduce redundant operations
  */
-function getNewStart(field: EncodedFieldXFill, blx: number, bly: number, minos: EncodedMinos): Pos {
+function getNewStart(field: EncodedFieldXFill, blx: number, bly: number, minos: EncodedMinos, floatingPieces: boolean): Pos {
   // check if need to clear lines below as current placement could've prevented line clears
-  if (checkWouldFloatPiece(field, bly, minos)) {
+  if (!floatingPieces && checkWouldFloatPiece(field, bly, minos)) {
     // starting as far down to possibly get lines below to clear
     return { x: 0, y: Math.max(0, bly - 4) };
   }
@@ -356,6 +356,7 @@ function findColoredMino(
 function checkPlaceable(
   operation: EncodedOperation,
   field: EncodedField,
+  floatingPieces: boolean,
   srs180: boolean
 ): EncodedMinos {
   const height = field.getHeight();
@@ -367,7 +368,7 @@ function checkPlaceable(
 
   const piece = OperationEncoder.getPiece(operation);
 
-  let floating = true;
+  let floating = !floatingPieces;
   let tmpMinos = minos;
   for (let _ = 0; _ < TETROMINO; _++) {
     const pos = MinosEncoder.getMino(tmpMinos);
@@ -413,6 +414,7 @@ interface glueState {
 function glue(
   initialField: EncodedFieldXFill,
   solutionLimit: number,
+  floatingPieces: boolean,
   initialOrder: Piece[] | null,
   hold: number,
   srs180: boolean
@@ -468,7 +470,7 @@ function glue(
       } as Operation);
 
       // check placeable
-      const minos = checkPlaceable(operation, field, srs180);
+      const minos = checkPlaceable(operation, field, floatingPieces, srs180);
       if (minos == -1) continue;
 
       // place piece
@@ -505,7 +507,7 @@ function glue(
         // only smartly pick new start if no additional settings or line clears happened
         // order could prevent a previous placement that is now placeable
         // srs180 mainly confusing due to placing current piece can allow kick down
-        const start = getNewStart(field, x, y, minos);
+        const start = getNewStart(field, x, y, minos, floatingPieces);
         newX = start.x;
         newY = start.y;
       }
@@ -530,7 +532,8 @@ function glue(
 
 export default function glueFumen(
   fumen: Fumen,
-  solutionLimit: number = -1,
+  solutionLimit: number = 1,
+  floatingPieces: boolean = false,
   order: string | null = null,
   hold: number = 0,
   srs180: boolean = false
@@ -557,9 +560,9 @@ export default function glueFumen(
 
     // optimization due to srs180 with unlimited solutions extremely slow
     if (srs180 && solutionLimit == -1) {
-      solutionLimit = glue(field, solutionLimit, initialOrder, hold, false).length;
+      solutionLimit = glue(field, solutionLimit, floatingPieces, initialOrder, hold, false).length;
     }
-    const solutions = glue(field, solutionLimit, initialOrder, hold, srs180);
+    const solutions = glue(field, solutionLimit, floatingPieces, initialOrder, hold, srs180);
 
     // get field empty of any colored minos
     field.emptyColored();

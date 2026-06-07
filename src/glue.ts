@@ -1,5 +1,5 @@
-import { glueFumen } from './lib/glueFumen';
-import { unglueFumen } from './lib/unglueFumen';
+import glueFumen from './lib/glueFumen';
+import unglueFumen from './lib/unglueFumen';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import * as path from 'path';
@@ -10,23 +10,29 @@ if (require.main == module) {
     .usage(
       `\nUsage: ${path.basename(__filename)} [fumens...] [options] [< inputFile]\n\nTurns single page fumens with color coded pieces into multipage fumens with a piece on each page.`
     )
-    .option('expected-solutions', {
-      alias: 'e',
+    .option('solution-limit', {
+      alias: 'l',
       type: 'number',
       description:
-        'Number of expected solutions for each of the fumens. Stops once the number of expected solutions is found.',
-      default: -1,
+        'Maximum number of solutions for each of the fumens. Stops once the number of solutions is found. Nonpositive values for all solutions.',
+      default: 1,
       coerce: (arg) => {
         if (!Number.isInteger(arg)) {
-          throw new Error('--expected-solutions (-e) must be an integer');
+          throw new Error('--solution-limit (-l) must be an integer');
         }
         return arg;
       }
     })
+    .option('floating', {
+      alias: 'f',
+      type: 'boolean',
+      description: 'Allow for floating pieces.',
+      default: false
+    })
     .option('order', {
       alias: 'o',
       type: 'string',
-      description: 'Given order of pieces to be placed',
+      description: 'Given order of pieces to be placed.',
       default: '',
       coerce: (arg) => {
         if (!arg.match(/^[TILJSZO]*$/)) {
@@ -38,7 +44,7 @@ if (require.main == module) {
     .option('hold', {
       alias: 'd',
       type: 'number',
-      description: 'Number of hold for handling order. Requires order to apply',
+      description: 'Number of hold for handling order. Requires order to apply.',
       default: 0,
       coerce: (arg) => {
         if (!Number.isInteger(arg) && arg >= 0) {
@@ -50,13 +56,13 @@ if (require.main == module) {
     .option('srs', {
       alias: 's',
       type: 'boolean',
-      description: 'Check if pieces are reachable through srs 180 kicktable',
+      description: 'Check if pieces are reachable through srs 180 kicktable.',
       default: false
     })
     .option('unglue', {
       alias: 'x',
       type: 'boolean',
-      description: 'Unglues glued fumens. All other options ignored if this is set',
+      description: 'Unglues glued fumens. All other options are ignored if this is set.',
       default: false
     })
     .help()
@@ -111,7 +117,7 @@ if (require.main == module) {
     const order = argv.order ? argv.order : null;
 
     for (const fumen of input) {
-      const gluedFumens = glueFumen(fumen, argv.expectedSolutions, order, argv.hold, argv.srs);
+      const gluedFumens = glueFumen(fumen, argv.solutionLimit, argv.floating, order, argv.hold, argv.srs);
       if (gluedFumens.length == 0) {
         console.log(`Warning: ${fumen} couldn't be glued`);
       }
