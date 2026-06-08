@@ -116,6 +116,7 @@ if (require.main == module) {
     // run glueFumen with all the input
     const order = argv.order ? argv.order : null;
 
+    const output: string[] = [];
     for (const fumen of input) {
       const gluedFumens = glueFumen(
         fumen,
@@ -126,13 +127,14 @@ if (require.main == module) {
         argv.srs
       );
       if (gluedFumens.length == 0) {
-        console.log(`Warning: ${fumen} couldn't be glued`);
+        output.push(`Warning: ${fumen} couldn't be glued`);
       }
       if (gluedFumens.length > 1) {
-        console.log(`Warning: ${fumen} led to ${gluedFumens.length} outputs`);
+        output.push(`Warning: ${fumen} led to ${gluedFumens.length} outputs`);
       }
-      console.log(gluedFumens.join('\n'));
+      output.push(gluedFumens.join('\n'));
     }
+    console.log(output.join('\n'));
   };
 
   main().catch((err) => {

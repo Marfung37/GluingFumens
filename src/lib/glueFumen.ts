@@ -267,7 +267,8 @@ function getNewStart(
   }
 
   // if on floor no need to check if previous values need to be checked again
-  if (bly == 0 || bly == field.getHeight())
+  // if allow floating pieces then cannot require this piece to be place before previous piece can be placed
+  if (floatingPieces || bly == 0 || bly == field.getHeight())
     return { x: (rmPos.x + 1) % WIDTH, y: bly + ~~((rmPos.x + 1) / WIDTH) };
 
   // if J hanging from left
@@ -583,7 +584,6 @@ export default function glueFumen(
       // set the field
       if (solution.length == 0) {
         pages.push({ field: emptyField } as Page);
-        continue;
       } else {
         pages[0].field = emptyField;
       }
