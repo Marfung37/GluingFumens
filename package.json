@@ -1,6 +1,6 @@
 {
   "name": "glue-fumen",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "license": "MIT",
   "description": "A npm package with CLI to glue/unglue fumens optimized for speed.",
   "type": "module",
