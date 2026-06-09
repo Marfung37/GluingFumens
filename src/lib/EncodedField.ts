@@ -13,7 +13,7 @@ const SHIFT_DIVISOR = new Float32Array(WIDTH).map((_, x) =>
 
 /**
  *  Encodes a field into an array of 64 bit floats,
- *  which can store 40 bit ints where each cell uses 4 bits
+ *  allowing for faster operations of getting and setting cell data
  */
 export default class EncodedField {
   // masks that detect for any empty cells in a row
@@ -24,7 +24,18 @@ export default class EncodedField {
   protected height: number;
 
   /**
-   * encode field into a int array where each int is a row indexing from bottom up
+   * Takes a Field from tetris-fumen and converts to more efficient Field object
+   *
+   * @param field - Field from tetris-fumen
+   * @param height - maximum number of rows the field will ever have, default 20
+   *
+   * @returns An object with the main functions of a Field
+   *
+   * @example
+   * import { Field } from 'tetris-fumen';
+   * const field = new EncodedField(Field.create());
+   * field.set(0, 0, 'I');
+   * console.log(field.toField().str());
    */
   constructor(field: Field, height: number = HEIGHT) {
     // height is assumed to given as upper maximum
@@ -52,7 +63,9 @@ export default class EncodedField {
   }
 
   /**
-   * decode the encoded field back to a Field
+   * Decode the EncodedField back to a Field from tetris-fumen
+   *
+   * @returns Field object from tetris-fumen
    */
   toField(): Field {
     // convert encoded field into a string for Field
@@ -72,14 +85,26 @@ export default class EncodedField {
   }
 
   /**
-   * get value at position
+   * Get value of cell at x, y position
+   *
+   * @param x - The horizontal column index (0-index, left-to-right)
+   * @param y - The vertical row index (0-index, bottom-to-top)
+   *
+   * @returns value of cell as Mino enum value 
+   *
+   * @note Passing coordinates out of bounds results in **undefined behavior**
    */
   at(x: number, y: number): Mino {
     return ~~(this.field[y] / SHIFT_DIVISOR[x]) & CELL_MASK;
   }
 
   /**
-   * unset value at position
+   * Clears value of cell at x, y position to empty cell
+   *
+   * @param x - The horizontal column index (0-index, left-to-right)
+   * @param y - The vertical row index (0-index, bottom-to-top)
+   *
+   * @note Passing coordinates out of bounds results in **undefined behavior**
    */
   unset(x: number, y: number): void {
     const currentCellVal = ~~(this.field[y] / SHIFT_DIVISOR[x]) & CELL_MASK;
@@ -87,22 +112,35 @@ export default class EncodedField {
   }
 
   /**
-   * set value at position assuming empty there
+   * Set value of cell at x, y position if cell is **empty**
+   * 
+   * @param x - The horizontal column index (0-index, left-to-right)
+   * @param y - The vertical row index (0-index, bottom-to-top)
+   * @param mino - The type of mino value from '_TILJSZOX'
+   *
+   * @note Passing coordinates out of bounds results in **undefined behavior**
+   * @note Setting a nonempty cell results in **undefined behavior**
    */
   set(x: number, y: number, mino: MinoType): void {
-    this.height = Math.max(y + 1, this.height);
+    this.height = (y + 1 > this.height) ? y + 1: this.height; // max of y + 1 and current height
     this.field[y] += Mino[mino] * SHIFT_DIVISOR[x];
   }
 
   /**
-   * get the height, only guranteed to be upper bound
+   * Get an upper bound of the height of the field
+   * 
+   * @returns upper bound for the height of the field
    */
   getHeight(): number {
     return this.height;
   }
 
   /**
-   * checks if row at y value is all filled
+   * Checks if given row at y value is all filled
+   * 
+   * @param y - The vertical row index (0-index, bottom-to-top)
+   *
+   * @returns boolean whether the row is all filled
    */
   isLineClear(y: number): boolean {
     const row = this.field[y];
@@ -123,7 +161,9 @@ export default class EncodedField {
   }
 
   /**
-   * clears line at y
+   * Clears given row at y value regardless if row if filled
+   *
+   * @param y - The vertical row index (0-index, bottom-to-top)
    */
   lineClear(y: number): void {
     this.field.copyWithin(y, y + 1, this.height + 1);
@@ -131,7 +171,9 @@ export default class EncodedField {
   }
 
   /**
-   * gives a copy of the field
+   * Gives a copy of the EncodedField
+   * 
+   * @returns a deep copy of current object
    */
   copy(): EncodedField {
     const clone = Object.create(Object.getPrototypeOf(this));
