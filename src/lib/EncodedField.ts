@@ -12,7 +12,8 @@ const SHIFT_DIVISOR = new Float32Array(WIDTH).map((_, x) =>
 );
 
 /**
- *  for a field
+ *  Encodes a field into an array of 64 bit floats, 
+ *  which can store 40 bit ints where each cell uses 4 bits
  */
 export default class EncodedField {
   // masks that detect for any empty cells in a row
