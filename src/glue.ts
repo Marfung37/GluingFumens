@@ -13,7 +13,7 @@ const yargsInstance = yargs(hideBin(process.argv))
     alias: 'l',
     type: 'number',
     description:
-      'Maximum number of solutions for each of the fumens. Stops once the number of solutions is found. Nonpositive values for all solutions.',
+      'Maximum number of solutions to find for each page of the fumens. Nonpositive values for all solutions.',
     default: 1,
     coerce: (arg) => {
       if (!Number.isInteger(arg)) {
@@ -22,16 +22,10 @@ const yargsInstance = yargs(hideBin(process.argv))
       return arg;
     }
   })
-  .option('floating', {
-    alias: 'f',
-    type: 'boolean',
-    description: 'Allow for floating pieces.',
-    default: false
-  })
   .option('order', {
     alias: 'o',
     type: 'string',
-    description: 'Given order of pieces to be placed.',
+    description: 'Order of pieces to be placed.',
     default: '',
     coerce: (arg) => {
       if (!arg.match(/^[TILJSZO]*$/)) {
@@ -56,6 +50,12 @@ const yargsInstance = yargs(hideBin(process.argv))
     alias: 's',
     type: 'boolean',
     description: 'Check if pieces are reachable through SRS 180 kicktable.',
+    default: false
+  })
+  .option('floating', {
+    alias: 'f',
+    type: 'boolean',
+    description: 'Allow for pieces to be placed in the air.',
     default: false
   })
   .option('unglue', {
@@ -113,18 +113,15 @@ const main = async () => {
   }
 
   // run glueFumen with all the input
-  const order = argv.order ? argv.order : null;
-
   const output: string[] = [];
   for (const fumen of input) {
-    const gluedFumens = glueFumen(
-      fumen,
-      argv.solutionLimit,
-      argv.floating,
-      order,
-      argv.hold,
-      argv.srs
-    );
+    const gluedFumens = glueFumen(fumen, {
+      solutionLimit: argv.solutionLimit,
+      order: argv.order,
+      hold: argv.hold,
+      srs180: argv.srs,
+      floatingPieces: argv.floating
+    });
     if (gluedFumens.length == 0) {
       output.push(`Warning: ${fumen} couldn't be glued`);
     }

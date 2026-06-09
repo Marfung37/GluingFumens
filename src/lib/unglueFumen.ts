@@ -2,14 +2,21 @@
 import { encoder } from 'tetris-fumen';
 import { Mino, Rotation, HEIGHT, TETROMINO } from './defines';
 import { decodeWrapper, clearOffset, findLineClears } from './utils';
-import { Piece } from './types';
+import { Piece, Fumen } from './types';
 import EncodedField from './EncodedField';
 import MinosEncoder from './MinosEncoder';
 
 /**
- * inverse of glueFumen the takes one fumen with operations and returns fumen with pieces placed
+ * Unglues a fumen
+ *
+ * @param gluedFumen - Fumen with a piece on each page
+ *
+ * @returns fumen with all pieces drawn onto first page
+ *
+ * @notes fumen initializes with the field given on first page
+ * @notes any pages with no piece placed are ignored
  */
-export default function unglueFumen(gluedFumen: string): string {
+export default function unglueFumen(gluedFumen: Fumen): Fumen {
   // only one output for a glued fumen and assumes field isn't changed from first page
   const pages = decodeWrapper(gluedFumen);
   const field = new EncodedField(pages[0].field, HEIGHT);

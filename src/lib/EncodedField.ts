@@ -90,7 +90,7 @@ export default class EncodedField {
    * @param x - The horizontal column index (0-index, left-to-right)
    * @param y - The vertical row index (0-index, bottom-to-top)
    *
-   * @returns value of cell as Mino enum value 
+   * @returns value of cell as Mino enum value
    *
    * @note Passing coordinates out of bounds results in **undefined behavior**
    */
@@ -113,7 +113,7 @@ export default class EncodedField {
 
   /**
    * Set value of cell at x, y position if cell is **empty**
-   * 
+   *
    * @param x - The horizontal column index (0-index, left-to-right)
    * @param y - The vertical row index (0-index, bottom-to-top)
    * @param mino - The type of mino value from '_TILJSZOX'
@@ -122,13 +122,13 @@ export default class EncodedField {
    * @note Setting a nonempty cell results in **undefined behavior**
    */
   set(x: number, y: number, mino: MinoType): void {
-    this.height = (y + 1 > this.height) ? y + 1: this.height; // max of y + 1 and current height
+    this.height = y + 1 > this.height ? y + 1 : this.height; // max of y + 1 and current height
     this.field[y] += Mino[mino] * SHIFT_DIVISOR[x];
   }
 
   /**
    * Get an upper bound of the height of the field
-   * 
+   *
    * @returns upper bound for the height of the field
    */
   getHeight(): number {
@@ -137,7 +137,7 @@ export default class EncodedField {
 
   /**
    * Checks if given row at y value is all filled
-   * 
+   *
    * @param y - The vertical row index (0-index, bottom-to-top)
    *
    * @returns boolean whether the row is all filled
@@ -172,7 +172,7 @@ export default class EncodedField {
 
   /**
    * Gives a copy of the EncodedField
-   * 
+   *
    * @returns a deep copy of current object
    */
   copy(): EncodedField {

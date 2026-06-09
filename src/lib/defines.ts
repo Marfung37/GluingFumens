@@ -16,8 +16,19 @@ export enum Rotation {
   left
 }
 
+/**
+ * Width of Tetris board
+ */
 export const WIDTH = 10;
+
+/**
+ * Height of Tetris board
+ */
 export const HEIGHT = 20;
+
+/**
+ * Number of minos in a tetromino
+ */
 export const TETROMINO = 4;
 export const NUM_MINOS = 9;
 

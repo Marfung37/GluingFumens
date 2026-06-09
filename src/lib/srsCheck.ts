@@ -264,6 +264,7 @@ function kick(
   return -1;
 }
 
+// get and set the bit corresponding to index in GLOBAL_VISITED
 function getSetVisited(index: number): boolean {
   const wordIndex = index >> 5; // divide by 32 for number of bits in int
   const bitIndex = index & 0x1f;
@@ -274,6 +275,7 @@ function getSetVisited(index: number): boolean {
   return value;
 }
 
+// check if given operation is reachable through srs 180 kicks in field
 export function checkSRS180(field: EncodedField, operation: EncodedOperation) {
   const startOp = getSpawn(operation, field.getHeight());
   if (operation == startOp) return true;

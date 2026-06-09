@@ -47,41 +47,42 @@ describe('glueFumen', () => {
   });
 
   test('Fumens with one piece', () => {
+    const floatingPieces = true;
     // T
-    expect(glueFumen('v115@kgwwHeyw+eAgH', 1, true)).toEqual(['v115@vhA13I']);
-    expect(glueFumen('v115@kgwwIexwHeww1eAgH', 1, true)).toEqual(['v115@vhAt3I']);
-    expect(glueFumen('v115@tgywHeww1eAgH', 1, true)).toEqual(['v115@vhAl3I']);
-    expect(glueFumen('v115@kgwwHexwIeww1eAgH', 1, true)).toEqual(['v115@vhA93I']);
+    expect(glueFumen('v115@kgwwHeyw+eAgH', { floatingPieces })).toEqual(['v115@vhA13I']);
+    expect(glueFumen('v115@kgwwIexwHeww1eAgH', { floatingPieces })).toEqual(['v115@vhAt3I']);
+    expect(glueFumen('v115@tgywHeww1eAgH', { floatingPieces })).toEqual(['v115@vhAl3I']);
+    expect(glueFumen('v115@kgwwHexwIeww1eAgH', { floatingPieces })).toEqual(['v115@vhA93I']);
     // I
-    expect(glueFumen('v115@tgzh9eAgH', 1, true)).toEqual(['v115@vhAx3I']);
-    expect(glueFumen('v115@kgwhIewhIewhIewhreAgH', 1, true)).toEqual(['v115@vhAp3I']);
-    expect(glueFumen('v115@sgzh+eAgH', 1, true)).toEqual(['v115@vhAR3I']);
-    expect(glueFumen('v115@agwhIewhIewhIewh1eAgH', 1, true)).toEqual(['v115@vhApyI']);
+    expect(glueFumen('v115@tgzh9eAgH', { floatingPieces })).toEqual(['v115@vhAx3I']);
+    expect(glueFumen('v115@kgwhIewhIewhIewhreAgH', { floatingPieces })).toEqual(['v115@vhAp3I']);
+    expect(glueFumen('v115@sgzh+eAgH', { floatingPieces })).toEqual(['v115@vhAR3I']);
+    expect(glueFumen('v115@agwhIewhIewhIewh1eAgH', { floatingPieces })).toEqual(['v115@vhApyI']);
     // L
-    expect(glueFumen('v115@lgglGeil+eAgH', 1, true)).toEqual(['v115@vhAy3I']);
-    expect(glueFumen('v115@kgglIeglIehl0eAgH', 1, true)).toEqual(['v115@vhAq3I']);
-    expect(glueFumen('v115@tgilGegl2eAgH', 1, true)).toEqual(['v115@vhAi3I']);
-    expect(glueFumen('v115@jghlIeglIegl1eAgH', 1, true)).toEqual(['v115@vhA63I']);
+    expect(glueFumen('v115@lgglGeil+eAgH', { floatingPieces })).toEqual(['v115@vhAy3I']);
+    expect(glueFumen('v115@kgglIeglIehl0eAgH', { floatingPieces })).toEqual(['v115@vhAq3I']);
+    expect(glueFumen('v115@tgilGegl2eAgH', { floatingPieces })).toEqual(['v115@vhAi3I']);
+    expect(glueFumen('v115@jghlIeglIegl1eAgH', { floatingPieces })).toEqual(['v115@vhA63I']);
     // J
-    expect(glueFumen('v115@jgg0Iei0+eAgH', 1, true)).toEqual(['v115@vhA23I']);
-    expect(glueFumen('v115@kgh0Heg0Ieg01eAgH', 1, true)).toEqual(['v115@vhAu3I']);
-    expect(glueFumen('v115@tgi0Ieg00eAgH', 1, true)).toEqual(['v115@vhAm3I']);
-    expect(glueFumen('v115@kgg0Ieg0Heh01eAgH', 1, true)).toEqual(['v115@vhA+3I']);
+    expect(glueFumen('v115@jgg0Iei0+eAgH', { floatingPieces })).toEqual(['v115@vhA23I']);
+    expect(glueFumen('v115@kgh0Heg0Ieg01eAgH', { floatingPieces })).toEqual(['v115@vhAu3I']);
+    expect(glueFumen('v115@tgi0Ieg00eAgH', { floatingPieces })).toEqual(['v115@vhAm3I']);
+    expect(glueFumen('v115@kgg0Ieg0Heh01eAgH', { floatingPieces })).toEqual(['v115@vhA+3I']);
     // S
-    expect(glueFumen('v115@kgR4GeR4/eAgH', 1, true)).toEqual(['v115@vhA3yI']);
-    expect(glueFumen('v115@kgQ4IeR4IeQ40eAgH', 1, true)).toEqual(['v115@vhAP4I']);
-    expect(glueFumen('v115@ugR4GeR41eAgH', 1, true)).toEqual(['v115@vhA33I']);
-    expect(glueFumen('v115@jgQ4IeR4IeQ41eAgH', 1, true)).toEqual(['v115@vhAv3I']);
+    expect(glueFumen('v115@kgR4GeR4/eAgH', { floatingPieces })).toEqual(['v115@vhA3yI']);
+    expect(glueFumen('v115@kgQ4IeR4IeQ40eAgH', { floatingPieces })).toEqual(['v115@vhAP4I']);
+    expect(glueFumen('v115@ugR4GeR41eAgH', { floatingPieces })).toEqual(['v115@vhA33I']);
+    expect(glueFumen('v115@jgQ4IeR4IeQ41eAgH', { floatingPieces })).toEqual(['v115@vhAv3I']);
     // Z
-    expect(glueFumen('v115@jgBtIeBt+eAgH', 1, true)).toEqual(['v115@vhA0yI']);
-    expect(glueFumen('v115@lgAtHeBtHeAt1eAgH', 1, true)).toEqual(['v115@vhAs3I']);
-    expect(glueFumen('v115@tgBtIeBt0eAgH', 1, true)).toEqual(['v115@vhA03I']);
-    expect(glueFumen('v115@kgAtHeBtHeAt2eAgH', 1, true)).toEqual(['v115@vhAM3I']);
+    expect(glueFumen('v115@jgBtIeBt+eAgH', { floatingPieces })).toEqual(['v115@vhA0yI']);
+    expect(glueFumen('v115@lgAtHeBtHeAt1eAgH', { floatingPieces })).toEqual(['v115@vhAs3I']);
+    expect(glueFumen('v115@tgBtIeBt0eAgH', { floatingPieces })).toEqual(['v115@vhA03I']);
+    expect(glueFumen('v115@kgAtHeBtHeAt2eAgH', { floatingPieces })).toEqual(['v115@vhAM3I']);
     // O
-    expect(glueFumen('v115@kgRpHeRp+eAgH', 1, true)).toEqual(['v115@vhAzyI']);
-    expect(glueFumen('v115@ugRpHeRp0eAgH', 1, true)).toEqual(['v115@vhAz3I']);
-    expect(glueFumen('v115@tgRpHeRp1eAgH', 1, true)).toEqual(['v115@vhAT3I']);
-    expect(glueFumen('v115@jgRpHeRp/eAgH', 1, true)).toEqual(['v115@vhATyI']);
+    expect(glueFumen('v115@kgRpHeRp+eAgH', { floatingPieces })).toEqual(['v115@vhAzyI']);
+    expect(glueFumen('v115@ugRpHeRp0eAgH', { floatingPieces })).toEqual(['v115@vhAz3I']);
+    expect(glueFumen('v115@tgRpHeRp1eAgH', { floatingPieces })).toEqual(['v115@vhAT3I']);
+    expect(glueFumen('v115@jgRpHeRp/eAgH', { floatingPieces })).toEqual(['v115@vhATyI']);
   });
 
   test('Variety of 10p solves', () => {
@@ -98,101 +99,69 @@ describe('glueFumen', () => {
     const targetData = fs.readFileSync(gluesSrs, { encoding: 'utf8' }).trim().split('\n');
 
     for (let i = 0; i < inputData.length; i++) {
-      expect(glueFumen(inputData[i].trim(), 1, false, null, 0, true)).toEqual([
-        targetData[i].trim()
-      ]);
+      expect(glueFumen(inputData[i].trim(), { srs180: true })).toEqual([targetData[i].trim()]);
     }
   });
 
   test('Order and hold', () => {
     // fumen with a strict order
     expect(
-      glueFumen(
-        'v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH',
-        1,
-        false,
-        'ISZTOLJ'
-      )
+      glueFumen('v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH', {
+        order: 'ISZTOLJ'
+      })
     ).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
     expect(
-      glueFumen(
-        'v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH',
-        1,
-        false,
-        'SIZTOLJ'
-      )
+      glueFumen('v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH', {
+        order: 'SIZTOLJ'
+      })
     ).toEqual([]);
     expect(
-      glueFumen(
-        'v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH',
-        1,
-        false,
-        'SIZTOLJ',
-        1
-      )
+      glueFumen('v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH', {
+        order: 'SIZTOLJ',
+        hold: 1
+      })
     ).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
     expect(
-      glueFumen(
-        'v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH',
-        1,
-        false,
-        'JISZTOL',
-        1
-      )
+      glueFumen('v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH', {
+        order: 'JISZTOL',
+        hold: 1
+      })
     ).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
     expect(
-      glueFumen(
-        'v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH',
-        1,
-        false,
-        'JIZSTOL',
-        1
-      )
+      glueFumen('v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH', {
+        order: 'JIZSTOL',
+        hold: 1
+      })
     ).toEqual([]);
     expect(
-      glueFumen(
-        'v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH',
-        1,
-        false,
-        'JIZSTOL',
-        2
-      )
+      glueFumen('v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH', {
+        order: 'JIZSTOL',
+        hold: 2
+      })
     ).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
     expect(
-      glueFumen(
-        'v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH',
-        1,
-        false,
-        'ZISOJTL',
-        2
-      )
+      glueFumen('v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH', {
+        order: 'ZISOJTL',
+        hold: 2
+      })
     ).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
     expect(
-      glueFumen(
-        'v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH',
-        1,
-        false,
-        'JLOTZSI',
-        5
-      )
+      glueFumen('v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH', {
+        order: 'JLOTZSI',
+        hold: 5
+      })
     ).toEqual([]);
     expect(
-      glueFumen(
-        'v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH',
-        1,
-        false,
-        'JLOTZSI',
-        6
-      )
+      glueFumen('v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH', {
+        order: 'JLOTZSI',
+        hold: 6
+      })
     ).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
     expect(
-      glueFumen(
-        'v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH',
-        1,
-        false,
-        'JLOTZSI',
-        7
-      )
+      glueFumen('v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH', {
+        order: 'JLOTZSI',
+        hold: 7
+      })
     ).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
   });
 
@@ -208,7 +177,9 @@ describe('glueFumen', () => {
     ).toEqual(['v115@PgE8neA8AeB8DeC8FeA8geRBJvhEpRBJkBxLBJ8ApU?B']);
 
     // multi output
-    expect(glueFumen('v115@fgi0G8whi0F8whi0F8whi0F8whi0F8h0H8i0G8JeAg?H', 0)).toEqual([
+    expect(
+      glueFumen('v115@fgi0G8whi0F8whi0F8whi0F8whi0F8h0H8i0G8JeAg?H', { solutionLimit: 0 })
+    ).toEqual([
       'v115@igG8DeF8DeF8DeF8DeF8BeH8CeG8Je2OJvhEupBJkB?GlBGqBmpB',
       'v115@igG8DeF8DeF8DeF8DeF8BeH8CeG8Je2OJvhEupBJkB?WlB+qBmpB',
       'v115@igG8DeF8DeF8DeF8DeF8BeH8CeG8Je2OJvhEJfBWqB?+lBupBmpB',
@@ -216,19 +187,19 @@ describe('glueFumen', () => {
     ]);
 
     // piece can lead to overhang in srs
-    expect(glueFumen('v115@1gR4GeR4GeC8Q4I8R4I8Q4E8JeAgH', 1, false, null, 0, true)).toEqual([
+    expect(glueFumen('v115@1gR4GeR4GeC8Q4I8R4I8Q4E8JeAgH', { srs180: true })).toEqual([
       'v115@HhC8AeI8BeI8AeE8JeX7IvhAPrB'
     ]);
 
     // placeable with srs
-    expect(glueFumen('v115@VhA8EeA8zhE8JeAgH', 1, false, null, 0, true)).toEqual([
+    expect(glueFumen('v115@VhA8EeA8zhE8JeAgH', { srs180: true })).toEqual([
       'v115@VhA8EeA8DeE8JeRPJ'
     ]);
     // not placeable with srs as shifted by one
-    expect(glueFumen('v115@WhA8DeB8zhD8JeAgH', 1, false, null, 0, true)).toEqual([]);
+    expect(glueFumen('v115@WhA8DeB8zhD8JeAgH', { srs180: true })).toEqual([]);
 
     // srs check requires doing 180 before able to do Z triple before double
-    expect(glueFumen('v115@zgC8BtI8BtI8AtH8BtH8AtE8JeAgH', 1, false, null, 0, true)).toEqual([
+    expect(glueFumen('v115@zgC8BtI8BtI8AtH8BtH8AtE8JeAgH', { srs180: true })).toEqual([
       'v115@zgC8BeI8BeI8AeH8BeH8AeE8JeMLJvhAUrB'
     ]);
   });

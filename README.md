@@ -115,11 +115,11 @@ glue-fumen 'v115@9gDtQ4glwhi0wwBtilwhRpg0xwT4whRpglwwR4BtQ4?whilJeAgH' -s -o 'TS
 
 #### Options
 
-| Option | Type      | Default | Description                                                                                                                            |
-| :----- | :-------- | :------ | :------------------------------------------------------------------------------------------------------------------------------------- |
-| `-l`   | `number`  | `1`     | Maximum number of solutions for each of the fumens. Stops once the number of solutions is found. Nonpositive values for all solutions. |
-| `-f`   | `boolean` | `false` | Allow for floating pieces.                                                                                                             |
-| `-o`   | `string`  | `''`    | Given order of pieces to be placed.                                                                                                    |
-| `-d`   | `number`  | `0`     | Number of hold for handling order. Requires order to apply.                                                                            |
-| `-s`   | `boolean` | `false` | Check if pieces are reachable through SRS 180 kicktable.                                                                               |
-| `-x`   | `boolean` | `false` | Unglues glued fumens. All other options are ignored if this is set.                                                                    |
+| Option | Type      | Default | Description                                                                                            |
+| :----- | :-------- | :------ | :----------------------------------------------------------------------------------------------------- |
+| `-l`   | `number`  | `1`     | Maximum number of solutions to find for each page of the fumens. Nonpositive values for all solutions. |
+| `-o`   | `string`  | `''`    | Order of pieces to be placed.                                                                          |
+| `-d`   | `number`  | `0`     | Number of hold for handling order. Requires order to apply.                                            |
+| `-s`   | `boolean` | `false` | Check if pieces are reachable through SRS 180 kicktable.                                               |
+| `-f`   | `boolean` | `false` | Allow for pieces to be placed in the air.                                                              |
+| `-x`   | `boolean` | `false` | Unglues glued fumens. All other options are ignored if this is set.                                    |

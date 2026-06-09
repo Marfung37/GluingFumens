@@ -536,20 +536,60 @@ function glue(
   return solutions;
 }
 
+interface GlueFumenOptions {
+  /**
+   * Maximum number of solutions to find for each page. Nonpositive values for all solutions
+   * @default 1
+   */
+  solutionLimit?: number;
+  /**
+   * Order of pieces to be placed. Empty string for any order
+   * @default ''
+   */
+  order?: string;
+  /**
+   * Number of hold for handling order. Requires order to apply
+   * @default 0
+   */
+  hold?: number;
+  /**
+   * Check if pieces are reachable through SRS 180 kicktable
+   * @default false
+   */
+  srs180?: boolean;
+  /**
+   * Allow for pieces to be placed in the air
+   * @default false
+   */
+  floatingPieces?: boolean;
+}
+
+/**
+ * Glues fumens with several options
+ * Guarantees only unique glued fumens up to reordering of piece placements
+ * Each page of the fumen is separately glued
+ *
+ * @param fumen - Fumen with drawn pieces on each page
+ * @param [options={}] - Configuration options
+ *
+ * @returns an array of glued fumens where empty couldn't be glued
+ */
 export default function glueFumen(
   fumen: Fumen,
-  solutionLimit: number = 1,
-  floatingPieces: boolean = false,
-  order: string | null = null,
-  hold: number = 0,
-  srs180: boolean = false
+  {
+    solutionLimit = 1,
+    order = '',
+    hold = 0,
+    srs180 = false,
+    floatingPieces = false
+  }: GlueFumenOptions = {}
 ): Fumen[] {
   const inputPages: Pages = decodeWrapper(fumen);
   const outputFumens: Fumen[] = [];
 
   // convert given order to proper form
   let initialOrder: Piece[] | null = null;
-  if (order !== null) {
+  if (order !== '') {
     // check if order contain only tetris pieces
     const pieces = Array.from(order);
     if (!pieces.every(isValidPieceChar))
