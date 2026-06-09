@@ -66,25 +66,26 @@ import { Field } from 'tetris-fumen';
 
 // basic field operations
 const field = new EncodedField(Field.create());
+console.log('Before setting:', Mino[field.at(0, 0)]);
 field.set(0, 0, 'I');
-console.log(field.at(0, 0));
+console.log('After setting:', Mino[field.at(0, 0)]);
 field.unset(0, 0);
-console.log(field.at(0, 0));
+console.log('After unsetting:', Mino[field.at(0, 0)]);
 
 // packing of operation into number
 const operation: EncodedOperation = op.encode({ x: 1, y: 0, type: 'T', rotation: 'spawn' });
-console.log(operation);
-console.log(op.decode(operation));
+console.log('Encoded Operation:', operation);
+console.log('Operation:', op.decode(operation));
 console.log(
   op.getX(operation),
   op.getY(operation),
-  op.getPiece(operation),
-  op.getRotation(operation)
+  Mino[op.getPiece(operation)],
+  Rotation[op.getRotation(operation)]
 );
 
 // get individual minos of a piece
 let minos: EncodedMinos = mi.positions(1, 0, Mino.T, Rotation.spawn);
-console.log(minos, op.positions(operation)); // same value
+console.log('Encoded Minos:', minos, op.positions(operation)); // same value
 for (let i = 0; i < TETROMINO; i++) {
   console.log(mi.getMino(minos));
   minos = mi.nextMino(minos);
