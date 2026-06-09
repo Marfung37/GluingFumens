@@ -1,6 +1,7 @@
 {
   "name": "glue-fumen",
   "version": "1.0.0",
+  "license": "MIT",
   "description": "A npm package to glue/unglue fumens for tetris. Gluing is finding the pieces from a drawn field.",
   "type": "module",
   "main": "./dist/index.js",
@@ -9,6 +10,9 @@
   "bin": {
     "glue-fumen": "./dist/glue.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "npm run build:lib && npm run build:cli",
     "build:lib": "tsup src/index.ts --format esm --clean --dts --minify",
