@@ -1,0 +1,2 @@
+# force git to recognize all .ts files as Typescript for statistics
+*.ts linguist-language=TypeScript
