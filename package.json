@@ -2,7 +2,7 @@
   "name": "glue-fumen",
   "version": "1.0.0",
   "license": "MIT",
-  "description": "A npm package to glue/unglue fumens for tetris. Gluing is finding the pieces from a drawn field.",
+  "description": "A npm package with CLI to glue/unglue fumens optimized for speed.",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -23,6 +23,13 @@
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "lint": "eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Marfung37/GluingFumens.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Marfung37/GluingFumens/issues"
   },
   "dependencies": {
     "tetris-fumen": "^1.1.3"
