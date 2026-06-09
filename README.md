@@ -11,7 +11,7 @@ The act of **gluing** a fumen is extracting the information of the pieces that a
 
 Unglued PCO                                     |  Glued PCO      
 :----------------------------------------------:|:------------------------------------------------------------------------------------:
-![PCO with LSZ solve](./images/ungluedPCO.png)  |  ![PCO with LSZ solve with separate frame per piece placement](./images/gluedPCO.gif)
+![PCO with LSZ solve](https://github.com/Marfung37/GluingFumens/blob/main/images/ungluedPCO.png)  |  ![PCO with LSZ solve with separate frame per piece placement](https://github.com/Marfung37/GluingFumens/blob/main/images/gluedPCO.gif)
 
 </div>
 
