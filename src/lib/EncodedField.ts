@@ -1,4 +1,4 @@
-import { Mino, WIDTH } from './defines';
+import { Mino, WIDTH, HEIGHT } from './defines';
 import { MinoType } from './types';
 import { Field } from 'tetris-fumen';
 
@@ -12,7 +12,7 @@ const SHIFT_DIVISOR = new Float32Array(WIDTH).map((_, x) =>
 );
 
 /**
- *  Encodes a field into an array of 64 bit floats, 
+ *  Encodes a field into an array of 64 bit floats,
  *  which can store 40 bit ints where each cell uses 4 bits
  */
 export default class EncodedField {
@@ -26,7 +26,7 @@ export default class EncodedField {
   /**
    * encode field into a int array where each int is a row indexing from bottom up
    */
-  constructor(field: Field, height: number) {
+  constructor(field: Field, height: number = HEIGHT) {
     // height is assumed to given as upper maximum
     this.field = new Array(height).fill(0);
 
