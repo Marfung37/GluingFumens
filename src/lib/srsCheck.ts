@@ -1,20 +1,9 @@
-import { Field } from 'tetris-fumen';
-
-import {
-  getHeight,
-  HEIGHT,
-  WIDTH,
-  encodeOp,
-  getX,
-  getY,
-  getRotation,
-  getType,
-  getPieceMinos,
-  inBounds
-} from './defines';
+import { Mino, Rotation, WIDTH } from './defines';
 import NumberRingQueue from './NumberRingQueue';
-import type { Pos, Operation, Piece, Rotation, EncodedOperation } from './defines';
-
+import EncodedField from './EncodedField';
+import OperationEncoder from './OperationEncoder';
+import type { Piece, EncodedOperation } from './types';
+import MinosEncoder from './MinosEncoder';
 
 const GLOBAL_VISITED = new Int32Array(512);
 const MAX_NEIGHBORS = 6;
@@ -159,7 +148,7 @@ const kick_offset_180_2x2: number[][][] = [
 ];
 
 function gen_kick_table(offsets: number[][][], offsets_180: number[][][]) {
-  let table = new Array(4);
+  const table = new Array(4);
   for (let a = 0; a < 4; a++) {
     table[a] = new Array(4);
     // None
@@ -205,36 +194,33 @@ export function spin_ccw(rotation: Rotation): Rotation {
 }
 
 export function get_kicks(piece: Piece, init_rot: Rotation, target_rot: Rotation): number[][] {
-  return kick_map[piece]![init_rot][target_rot];
+  return kick_map[piece - 1][init_rot][target_rot];
 }
 
-function getSpawn(height: number): Pos {
-  return {x: 4, y: height};
+function getSpawn(operation: EncodedOperation, height: number): EncodedOperation {
+  operation = OperationEncoder.setX(operation, 4);
+  operation = OperationEncoder.setY(operation, height);
+  return operation;
 }
 
-function getNeighbors(field: Field, operation: EncodedOperation): void {
+function getNeighbors(field: EncodedField, operation: EncodedOperation): void {
   // shifts
 
   // left 1
-  if (getX(operation) > 0)
-    NEIGHBORS[0] = operation - (1 << 5);
-  else
-    NEIGHBORS[0] = -1;
+  if (OperationEncoder.getX(operation) > 0) NEIGHBORS[0] = operation - (1 << 5);
+  else NEIGHBORS[0] = -1;
 
   // right 1
-  if (getX(operation) < WIDTH - 1)
-    NEIGHBORS[1] = operation + (1 << 5);
-  else
-    NEIGHBORS[1] = -1;
+  if (OperationEncoder.getX(operation) < WIDTH - 1) NEIGHBORS[1] = operation + (1 << 5);
+  else NEIGHBORS[1] = -1;
 
   // down 1
-  if (getY(operation) > 0)
+  if (OperationEncoder.getY(operation) > 0)
     NEIGHBORS[2] = operation - 1; // down 1
-  else
-    NEIGHBORS[2] = -1;
+  else NEIGHBORS[2] = -1;
 
   // rotations
-  const currRotation = getRotation(operation);
+  const currRotation = OperationEncoder.getRotation(operation);
   const base = operation & ~(0x3 << 9);
 
   const cwRot = spin_cw(currRotation);
@@ -251,20 +237,27 @@ function getNeighbors(field: Field, operation: EncodedOperation): void {
 }
 
 // for glue fumen collision only with gray minos (ie can go through colored minos)
-function checkCollision(field: Field, operation: EncodedOperation): boolean {
-  const minos = getPieceMinos(operation);
+function checkCollision(field: EncodedField, operation: EncodedOperation): boolean {
+  let minos = OperationEncoder.positions(operation);
+  if (minos == -1) return true;
 
-  for (let mino of minos) {
-    if (!inBounds(mino, HEIGHT)) return true;
-    if (field.at(mino.x, mino.y) === 'X') return true;
+  while (minos > 0) {
+    const pos = MinosEncoder.getMino(minos);
+    if (field.at(pos.x, pos.y) === Mino.X) return true;
+    minos = MinosEncoder.nextMino(minos);
   }
   return false;
 }
 
 // get x, y new position from srs, assume operation has rotation set to target already
-function kick(field: Field, operation: EncodedOperation, init: Rotation, target: Rotation): EncodedOperation {
-  for(let [dx, dy] of get_kicks(getType(operation), init, target)) {
-    let newOp = operation + (dx << 5) + dy;
+function kick(
+  field: EncodedField,
+  operation: EncodedOperation,
+  init: Rotation,
+  target: Rotation
+): EncodedOperation {
+  for (const [dx, dy] of get_kicks(OperationEncoder.getPiece(operation), init, target)) {
+    const newOp = operation + (dx << 5) + dy;
 
     if (!checkCollision(field, newOp)) return newOp;
   }
@@ -273,20 +266,19 @@ function kick(field: Field, operation: EncodedOperation, init: Rotation, target:
 
 function getSetVisited(index: number): boolean {
   const wordIndex = index >> 5; // divide by 32 for number of bits in int
-  const bitIndex = index & 0x1F;
+  const bitIndex = index & 0x1f;
   const mask = 1 << bitIndex;
 
-  let value = (GLOBAL_VISITED[wordIndex] & mask) !== 0;
+  const value = (GLOBAL_VISITED[wordIndex] & mask) !== 0;
   GLOBAL_VISITED[wordIndex] |= mask;
   return value;
 }
 
-export function checkSRS180(field: Field, operation: Operation) {
-  let targetOp = encodeOp(operation);
-  let startOp = encodeOp({...operation, ...getSpawn(getHeight(field))});
-  if (targetOp == startOp) return true;
+export function checkSRS180(field: EncodedField, operation: EncodedOperation) {
+  const startOp = getSpawn(operation, field.getHeight());
+  if (operation == startOp) return true;
 
-  let queue: NumberRingQueue = new NumberRingQueue(64);
+  const queue: NumberRingQueue = new NumberRingQueue(64);
 
   GLOBAL_VISITED.fill(0);
 
@@ -295,17 +287,16 @@ export function checkSRS180(field: Field, operation: Operation) {
   getSetVisited(startOp);
 
   while (!queue.isEmpty()) {
-    let currOp = queue.dequeue();
+    const currOp = queue.dequeue();
     getNeighbors(field, currOp);
 
     for (let i = 0; i < MAX_NEIGHBORS; i++) {
-      let neighbor = NEIGHBORS[i];
+      const neighbor = NEIGHBORS[i];
       if (neighbor === -1) continue;
-      if (neighbor === targetOp) return true;
+      if (neighbor === operation) return true;
 
       if (!getSetVisited(neighbor)) {
-        if (i >= 3 || !checkCollision(field, neighbor))
-          queue.enqueue(neighbor);
+        if (i >= 3 || !checkCollision(field, neighbor)) queue.enqueue(neighbor);
       }
     }
   }
