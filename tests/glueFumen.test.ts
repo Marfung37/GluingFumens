@@ -19,13 +19,22 @@ describe('glueFumen', () => {
     expect(glueFumen('v115@bhF8NeAgH')).toEqual(['v115@bhF8NeAgH']);
 
     // multipage empty board
-    expect(glueFumen('v115@vhDAgHAgHAgHAgH')).toEqual(['v115@vhAAgH', 'v115@vhAAgH', 'v115@vhAAgH', 'v115@vhAAgH']);
+    expect(glueFumen('v115@vhDAgHAgHAgHAgH')).toEqual([
+      'v115@vhAAgH',
+      'v115@vhAAgH',
+      'v115@vhAAgH',
+      'v115@vhAAgH'
+    ]);
 
     // multipage gray board
-    expect(glueFumen('v115@/gA8DeA8PeA8AeA8CeC8CeA8BeA8JeAgHvhDAgHAgH?AgHAgH')).toEqual(
-      ['v115@/gA8DeA8PeA8AeA8CeC8CeA8BeA8JeAgH', 'v115@/gA8DeA8PeA8AeA8CeC8CeA8BeA8JeAgH', 'v115@/gA8DeA8PeA8AeA8CeC8CeA8BeA8JeAgH', 'v115@/gA8DeA8PeA8AeA8CeC8CeA8BeA8JeAgH', 'v115@/gA8DeA8PeA8AeA8CeC8CeA8BeA8JeAgH']
-    );
-  })
+    expect(glueFumen('v115@/gA8DeA8PeA8AeA8CeC8CeA8BeA8JeAgHvhDAgHAgH?AgHAgH')).toEqual([
+      'v115@/gA8DeA8PeA8AeA8CeC8CeA8BeA8JeAgH',
+      'v115@/gA8DeA8PeA8AeA8CeC8CeA8BeA8JeAgH',
+      'v115@/gA8DeA8PeA8AeA8CeC8CeA8BeA8JeAgH',
+      'v115@/gA8DeA8PeA8AeA8CeC8CeA8BeA8JeAgH',
+      'v115@/gA8DeA8PeA8AeA8CeC8CeA8BeA8JeAgH'
+    ]);
+  });
 
   test('Fumens with invalid number of minos', () => {
     expect(glueFumen('v115@ehywNeAgH')).toEqual([]);
@@ -35,7 +44,7 @@ describe('glueFumen', () => {
     expect(glueFumen('v115@WfA8ReQpReAtReQ4Reg0ReglRewhRewwSeAgH')).toEqual([]);
     expect(glueFumen('v115@chh0xwOeAgH')).toEqual([]);
     expect(glueFumen('v115@9gBtDeh0hlwwBtCeg0RpglxwR4AeA8g0RpglwwR4il?zhJeAgH')).toEqual([]);
-  })
+  });
 
   test('Fumens with one piece', () => {
     // T
@@ -73,7 +82,7 @@ describe('glueFumen', () => {
     expect(glueFumen('v115@ugRpHeRp0eAgH', 1, true)).toEqual(['v115@vhAz3I']);
     expect(glueFumen('v115@tgRpHeRp1eAgH', 1, true)).toEqual(['v115@vhAT3I']);
     expect(glueFumen('v115@jgRpHeRp/eAgH', 1, true)).toEqual(['v115@vhATyI']);
-  })
+  });
 
   test('Variety of 10p solves', () => {
     const inputData = fs.readFileSync(unglues, { encoding: 'utf8' }).trim().split('\n');
@@ -82,48 +91,145 @@ describe('glueFumen', () => {
     for (let i = 0; i < inputData.length; i++) {
       expect(glueFumen(inputData[i].trim())).toEqual([targetData[i].trim()]);
     }
-  })
+  });
 
   test('Variety of 10p solves with srs 180', () => {
     const inputData = fs.readFileSync(unglues, { encoding: 'utf8' }).trim().split('\n');
     const targetData = fs.readFileSync(gluesSrs, { encoding: 'utf8' }).trim().split('\n');
 
     for (let i = 0; i < inputData.length; i++) {
-      expect(glueFumen(inputData[i].trim(), 1, false, null, 0, true)).toEqual([targetData[i].trim()]);
+      expect(glueFumen(inputData[i].trim(), 1, false, null, 0, true)).toEqual([
+        targetData[i].trim()
+      ]);
     }
-  })
+  });
 
   test('Order and hold', () => {
     // fumen with a strict order
-    expect(glueFumen('v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH', 1, false, 'ISZTOLJ')).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
-    expect(glueFumen('v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH', 1, false, 'SIZTOLJ')).toEqual([]);
-    expect(glueFumen('v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH', 1, false, 'SIZTOLJ', 1)).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
-    expect(glueFumen('v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH', 1, false, 'JISZTOL', 1)).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
-    expect(glueFumen('v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH', 1, false, 'JIZSTOL', 1)).toEqual([]);
-    expect(glueFumen('v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH', 1, false, 'JIZSTOL', 2)).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
-    expect(glueFumen('v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH', 1, false, 'ZISOJTL', 2)).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
-    expect(glueFumen('v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH', 1, false, 'JLOTZSI', 5)).toEqual([]);
-    expect(glueFumen('v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH', 1, false, 'JLOTZSI', 6)).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
-    expect(glueFumen('v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH', 1, false, 'JLOTZSI', 7)).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
-  })
+    expect(
+      glueFumen(
+        'v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH',
+        1,
+        false,
+        'ISZTOLJ'
+      )
+    ).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
+    expect(
+      glueFumen(
+        'v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH',
+        1,
+        false,
+        'SIZTOLJ'
+      )
+    ).toEqual([]);
+    expect(
+      glueFumen(
+        'v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH',
+        1,
+        false,
+        'SIZTOLJ',
+        1
+      )
+    ).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
+    expect(
+      glueFumen(
+        'v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH',
+        1,
+        false,
+        'JISZTOL',
+        1
+      )
+    ).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
+    expect(
+      glueFumen(
+        'v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH',
+        1,
+        false,
+        'JIZSTOL',
+        1
+      )
+    ).toEqual([]);
+    expect(
+      glueFumen(
+        'v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH',
+        1,
+        false,
+        'JIZSTOL',
+        2
+      )
+    ).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
+    expect(
+      glueFumen(
+        'v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH',
+        1,
+        false,
+        'ZISOJTL',
+        2
+      )
+    ).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
+    expect(
+      glueFumen(
+        'v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH',
+        1,
+        false,
+        'JLOTZSI',
+        5
+      )
+    ).toEqual([]);
+    expect(
+      glueFumen(
+        'v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH',
+        1,
+        false,
+        'JLOTZSI',
+        6
+      )
+    ).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
+    expect(
+      glueFumen(
+        'v115@ffg0Ieg0Heh0HeglGeilHeRpHeRpHewwHeywGeBtIe?BtIeR4GeR4GezhMeAgH',
+        1,
+        false,
+        'JLOTZSI',
+        7
+      )
+    ).toEqual(['v115@vhGRQJ3mBUcBVXBTIBSDBe1A']);
+  });
 
   test('Edge cases', () => {
     // handling pieces the become floating
-    expect(glueFumen('v115@qgRpHeRpGezhE8whA8HewhIewhIewhJeAgH')).toEqual(['v115@BhE8AeA8mex/IvhBzVBpoB']);
-    expect(glueFumen('v115@jfwhIewhIewhIewhIezhE8whCewhEewhCewhEewhCe?whEewhCewhEeA8whB8zhC8whEeA8CewhIewhSeAgH')).toEqual(['v115@PgE8neA8AeB8DeC8FeA8geRBJvhEpRBJkBxLBJ8ApU?B']);
+    expect(glueFumen('v115@qgRpHeRpGezhE8whA8HewhIewhIewhJeAgH')).toEqual([
+      'v115@BhE8AeA8mex/IvhBzVBpoB'
+    ]);
+    expect(
+      glueFumen(
+        'v115@jfwhIewhIewhIewhIezhE8whCewhEewhCewhEewhCe?whEewhCewhEeA8whB8zhC8whEeA8CewhIewhSeAgH'
+      )
+    ).toEqual(['v115@PgE8neA8AeB8DeC8FeA8geRBJvhEpRBJkBxLBJ8ApU?B']);
 
     // multi output
-    expect(glueFumen('v115@fgi0G8whi0F8whi0F8whi0F8whi0F8h0H8i0G8JeAg?H', 0)).toEqual(['v115@igG8DeF8DeF8DeF8DeF8BeH8CeG8Je2OJvhEupBJkB?GlBGqBmpB', 'v115@igG8DeF8DeF8DeF8DeF8BeH8CeG8Je2OJvhEupBJkB?WlB+qBmpB', 'v115@igG8DeF8DeF8DeF8DeF8BeH8CeG8Je2OJvhEJfBWqB?+lBupBmpB', 'v115@igG8DeF8DeF8DeF8DeF8BeH8CeG8Je2OJvhEJfBGlB?upBGlBmpB']);
+    expect(glueFumen('v115@fgi0G8whi0F8whi0F8whi0F8whi0F8h0H8i0G8JeAg?H', 0)).toEqual([
+      'v115@igG8DeF8DeF8DeF8DeF8BeH8CeG8Je2OJvhEupBJkB?GlBGqBmpB',
+      'v115@igG8DeF8DeF8DeF8DeF8BeH8CeG8Je2OJvhEupBJkB?WlB+qBmpB',
+      'v115@igG8DeF8DeF8DeF8DeF8BeH8CeG8Je2OJvhEJfBWqB?+lBupBmpB',
+      'v115@igG8DeF8DeF8DeF8DeF8BeH8CeG8Je2OJvhEJfBGlB?upBGlBmpB'
+    ]);
 
     // piece can lead to overhang in srs
-    expect(glueFumen('v115@1gR4GeR4GeC8Q4I8R4I8Q4E8JeAgH', 1, false, null, 0, true)).toEqual(['v115@HhC8AeI8BeI8AeE8JeX7IvhAPrB']);
+    expect(glueFumen('v115@1gR4GeR4GeC8Q4I8R4I8Q4E8JeAgH', 1, false, null, 0, true)).toEqual([
+      'v115@HhC8AeI8BeI8AeE8JeX7IvhAPrB'
+    ]);
 
     // placeable with srs
-    expect(glueFumen('v115@VhA8EeA8zhE8JeAgH', 1, false, null, 0, true)).toEqual(['v115@VhA8EeA8DeE8JeRPJ']);
+    expect(glueFumen('v115@VhA8EeA8zhE8JeAgH', 1, false, null, 0, true)).toEqual([
+      'v115@VhA8EeA8DeE8JeRPJ'
+    ]);
     // not placeable with srs as shifted by one
     expect(glueFumen('v115@WhA8DeB8zhD8JeAgH', 1, false, null, 0, true)).toEqual([]);
 
     // srs check requires doing 180 before able to do Z triple before double
-    expect(glueFumen('v115@zgC8BtI8BtI8AtH8BtH8AtE8JeAgH', 1, false, null, 0, true)).toEqual(['v115@zgC8BeI8BeI8AeH8BeH8AeE8JeMLJvhAUrB']);
-  })
-})
+    expect(glueFumen('v115@zgC8BtI8BtI8AtH8BtH8AtE8JeAgH', 1, false, null, 0, true)).toEqual([
+      'v115@zgC8BeI8BeI8AeH8BeH8AeE8JeMLJvhAUrB'
+    ]);
+  });
+});

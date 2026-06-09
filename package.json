@@ -1,8 +1,20 @@
 {
-  "name": "gluing-fumens",
+  "name": "glue-fumen",
+  "version": "1.0.0",
+  "description": "A npm package to glue/unglue fumens for tetris. Gluing is finding the pieces from a drawn field.",
   "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "glue-fumen": "./dist/glue.js"
+  },
   "scripts": {
-    "build": "npx esbuild src/glue.ts --bundle --minify --format=cjs --outfile=dist/glue.cjs --platform=node",
+    "build": "npm run build:lib && npm run build:cli",
+    "build:lib": "tsup src/index.ts --format esm --clean --dts --minify",
+    "build:cli": "tsup src/glue.ts --format esm --minify",
+    "dev": "tsup src/index.ts src/glue.ts --format esm --watch",
+    "prepublishOnly": "npm run test && npm run build",
     "test": "node --no-warnings --experimental-vm-modules node_modules/jest/bin/jest.js",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
@@ -27,6 +39,7 @@
     "prettier": "^3.8.3",
     "ts-jest": "^29.4.11",
     "ts-node": "^10.9.2",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.60.1"
   }
