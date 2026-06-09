@@ -1,5 +1,3 @@
-import type { RotationType } from './types';
-
 export enum Mino {
   _,
   T,
@@ -17,10 +15,9 @@ export enum Rotation {
   reverse,
   left
 }
-export const rotations: RotationType[] = ['spawn', 'right', 'reverse', 'left'];
 
-export const HEIGHT = 20;
 export const WIDTH = 10;
+export const HEIGHT = 20;
 export const TETROMINO = 4;
 export const NUM_MINOS = 9;
 

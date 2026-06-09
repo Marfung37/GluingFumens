@@ -55,7 +55,7 @@ const yargsInstance = yargs(hideBin(process.argv))
   .option('srs', {
     alias: 's',
     type: 'boolean',
-    description: 'Check if pieces are reachable through srs 180 kicktable.',
+    description: 'Check if pieces are reachable through SRS 180 kicktable.',
     default: false
   })
   .option('unglue', {
