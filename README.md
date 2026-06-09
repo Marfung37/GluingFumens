@@ -48,7 +48,14 @@ The main `glueFumen` and `unglueFumen` functions
 ```typescript
 import { glueFumen, unglueFumen } from 'glue-fumen';
 
-const glued = glueFumen('v115@9gDtQ4glwhi0wwBtilwhRpg0xwT4whRpglwwR4BtQ4?whilJeAgH');
+const glued = glueFumen(
+  'v115@9gDtQ4glwhi0wwBtilwhRpg0xwT4whRpglwwR4BtQ4?whilJeAgH',
+  1,
+  false,
+  'TSLOJZILSZ',
+  0,
+  true
+);
 const unglued = unglueFumen('v115@vhJNJJXqBJnBSyBznB0fBSmBGjBvrB0qB');
 
 console.log(glued);
@@ -97,13 +104,13 @@ for (let i = 0; i < TETROMINO; i++) {
 Locally in a NPM project
 
 ```sh
-npx glue-fumen 'v115@9gDtQ4glwhi0wwBtilwhRpg0xwT4whRpglwwR4BtQ4?whilJeAgH'
+npx glue-fumen 'v115@9gDtQ4glwhi0wwBtilwhRpg0xwT4whRpglwwR4BtQ4?whilJeAgH' -s -o 'TSLOJZILSZ'
 ```
 
 Installed globally
 
 ```sh
-glue-fumen 'v115@9gDtQ4glwhi0wwBtilwhRpg0xwT4whRpglwwR4BtQ4?whilJeAgH'
+glue-fumen 'v115@9gDtQ4glwhi0wwBtilwhRpg0xwT4whRpglwwR4BtQ4?whilJeAgH' -s -o 'TSLOJZILSZ'
 ```
 
 #### Options
