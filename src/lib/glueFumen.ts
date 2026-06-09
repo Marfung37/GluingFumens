@@ -566,7 +566,7 @@ export default function glueFumen(
     const field = new EncodedFieldXFill(page.field, HEIGHT);
 
     // optimization due to srs180 with unlimited solutions extremely slow
-    if (srs180 && solutionLimit == -1) {
+    if (srs180 && solutionLimit < 1) {
       solutionLimit = glue(field, solutionLimit, floatingPieces, initialOrder, hold, false).length;
     }
     const solutions = glue(field, solutionLimit, floatingPieces, initialOrder, hold, srs180);
