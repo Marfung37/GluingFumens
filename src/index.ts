@@ -13,7 +13,7 @@ export { default as MinosEncoder } from './lib/MinosEncoder';
 export { Mino, Rotation, WIDTH, HEIGHT, TETROMINO } from './lib/defines';
 
 // types
-export type { 
+export type {
   Pos,
   Operation,
   Piece,

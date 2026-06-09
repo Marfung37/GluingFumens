@@ -7,9 +7,6 @@ const POS_SHIFT = Math.pow(2, 9);
 const MEMO_SIZE = WIDTH * HEIGHT * 7 * 4;
 const memo = new Float64Array(MEMO_SIZE).fill(NaN);
 
-// output for position of a mino to avoid initialization of objects
-const pos = { x: 0, y: 0 };
-
 export default abstract class MinosEncoder {
   private constructor() {}
 
@@ -52,9 +49,9 @@ export default abstract class MinosEncoder {
    * get x, y from right most mino from encoded piece position
    */
   static getMino(minos: EncodedMinos): Pos {
-    pos.y = minos & 0x1f;
-    pos.x = (minos >> 5) & 0xf;
-    return pos;
+    const y = minos & 0x1f;
+    const x = (minos >> 5) & 0xf;
+    return { x, y };
   }
 
   /**

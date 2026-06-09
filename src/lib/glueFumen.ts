@@ -210,7 +210,7 @@ function checkWouldFloatPiece(field: EncodedFieldXFill, y: number, minos: Encode
     supportedAbove &&= pos.y != y && field.at(pos.x, pos.y - 1) == Mino.X;
 
     // find the bottom most minos
-    if (pos.y == y) bottomMinoPositions.push({ ...pos });
+    if (pos.y == y) bottomMinoPositions.push(pos);
 
     minos = MinosEncoder.nextMino(minos);
   }
@@ -254,13 +254,12 @@ function getNewStart(
 
   // get right most mino in current y
   // the first monomino is necessarily same y as bly
-  const rmPos = { ...MinosEncoder.getMino(minos) };
+  let rmPos = MinosEncoder.getMino(minos);
   minos = MinosEncoder.nextMino(minos);
   while (minos > 0) {
     const pos = MinosEncoder.getMino(minos);
     if (pos.x > rmPos.x && bly == pos.y) {
-      rmPos.x = pos.x;
-      rmPos.y = pos.y;
+      rmPos = pos;
     }
 
     minos = MinosEncoder.nextMino(minos);
