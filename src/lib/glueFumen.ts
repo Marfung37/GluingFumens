@@ -417,6 +417,12 @@ interface glueState {
   order: Piece[] | null;
 }
 
+// idea for possibly faster implementation
+// ignoring checking for floating, just get all pieces with absolute y value
+// if have floatingPieces true and solutionLimit 1 then done
+// should be able to separate into required pieces and unknown pieces
+// try to place required pieces with the necessary checks then the unknown ones
+// keep track of how many pieces of each type left to know which pieces to try to match to board
 function glue(
   initialField: EncodedFieldXFill,
   solutionLimit: number,
